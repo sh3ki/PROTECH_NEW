@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PROTECH - Dashboard{% endblock %}</title>
+    <!-- TailwindCSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#023c82',      /* Dark blue */
+                        secondary: '#4c9cfc',    /* Medium blue */
+                        tertiary: '#7cb4fc',     /* Light blue */
+                        accent: '#7c848c',       /* Medium gray */
+                        light: '#c4cfdb',        /* Light gray/blue */
+                        dark: '#3c444c',         /* Dark gray */
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-in': 'slideIn 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            /* Menu item styles */
+            .menu-item {
+                @apply flex items-center px-4 py-2 text-gray-100 hover:bg-secondary/80 rounded-md transition-all duration-200 my-1;
+            }
+            
+            .menu-item.active {
+                @apply bg-secondary text-white font-medium;
+            }
+            
+            .menu-item svg:first-child {
+                @apply mr-3 text-gray-200;
+            }
+            
+            /* Submenu styles */
+            .submenu {
+                @apply max-h-0 overflow-hidden pl-7 transition-all duration-300 ease-in-out;
+            }
+            
+            .submenu.open {
+                @apply max-h-screen;
+            }
+            
+            .submenu-item {
+                @apply flex items-center px-4 py-2 text-gray-100 hover:bg-secondary/60 rounded-md transition-all duration-200 my-0.5;
+            }
+            
+            .submenu-item.active {
+                @apply bg-secondary/40 text-white;
+            }
+            
+            /* Animation for menu items entrance */
+            .menu-animate-item {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            
+            .menu-animate-item.show {
+                opacity: 1;
+                transform: translateX(0);
+                transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            }
+            
+            /* Chevron animation */
+            .menu-chevron {
+                @apply transform transition-transform duration-300;
+            }
+            
+            .menu-chevron.rotate {
+                @apply rotate-180;
+            }
+        }
+        
+        /* Scrollbar styling */
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+        
+        .sidebar-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        
+        /* Dark mode styles */
+        html.dark {
+            @apply bg-dark text-light;
+        }
+        
+        html.dark .sidebar-wrapper {
+            background: linear-gradient(180deg, #023c82 0%, #02306e 100%);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Mobile sidebar backdrop -->
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-800/50 z-20 lg:hidden hidden" onclick="closeSidebar()"></div>
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transform -translate-x-full lg:translate-x-0 bg-primary transition-all duration-300 ease-in-out lg:static lg:inset-0 overflow-hidden flex flex-col">
+            {% block sidebar %}
+                <!-- This block will be overridden with the appropriate sidebar component -->
+            {% endblock %}
+            
+            <!-- Logout button fixed at bottom -->
+            <div class="mt-auto border-t border-blue-700/50 px-4">
+                <a href="{% url 'logout' %}" class="flex items-center px-4 py-2 text-gray-100 hover:bg-red-500/80 rounded-md transition-all duration-200 my-1 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-200 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="group-hover:font-medium">Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Navigation -->
+            <header class="bg-white dark:bg-dark shadow-sm z-10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <!-- Mobile menu button -->
+                        <div class="flex items-center lg:hidden">
+                            <button id="sidebar-open-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none" onclick="openSidebar()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Page title -->
+                        <div class="flex-1 flex items-center justify-center lg:justify-start">
+                            <h1 class="text-xl font-semibold text-gray-800 dark:text-white">{% block page_title %}Dashboard{% endblock %}</h1>
+                        </div>
+                        
+                        <!-- Right side actions -->
+                        <div class="flex items-center space-x-4">
+                            <!-- Dark mode toggle -->
+                            <div class="flex items-center">
+                                <div class="relative inline-block w-12 align-middle select-none">
+                                    <input type="checkbox" id="toggle-dark" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="toggle-dark" class="toggle-label block overflow-hidden h-6 rounded-full bg-accent cursor-pointer"></label>
+                                </div>
+                                <span class="hidden md:inline-block text-gray-500 dark:text-gray-300 ml-2">
+                                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                                    </svg>
+                                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                    </svg>
+                                </span>
+                            </div>
+                            
+                            <!-- Notifications dropdown -->
+                            <div class="relative">
+                                <button class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">2</span>
+                                </button>
+                            </div>
+                            
+                            <!-- User profile dropdown -->
+                            <div class="relative ml-3">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary/20 dark:bg-tertiary/20 flex items-center justify-center">
+                                        <span class="text-primary dark:text-tertiary font-bold">
+                                            {% if user.first_name %}
+                                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                            {% else %}
+                                                {{ user.username|first|upper }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main content area -->
+            <main class="flex-1 overflow-y-auto bg-light/50 dark:bg-dark/50 p-2 md:p-4 animate-fade-in">
+                <!-- Breadcrumbs -->
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                            <li class="inline-flex items-center">
+                            </li>
+                            {% block breadcrumbs %}{% endblock %}
+                        </ol>
+                    </nav>
+                </div>
+                
+                <!-- Page content -->
+                <div class="bg-white dark:bg-dark shadow-sm rounded-lg p-5 md:p-8 animate-slide-in">
+                    {% block content %}
+                    <!-- Main content will go here -->
+                    {% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const html = document.documentElement;
+            const toggleCheckbox = document.getElementById('toggle-dark');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            
+            // Check for user preference or default to light
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            
+            // Apply initial state
+            if (isDarkMode) {
+                html.classList.add('dark');
+                toggleCheckbox.checked = true;
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+            
+            // Toggle dark mode
+            toggleCheckbox.addEventListener('change', () => {
+                if (toggleCheckbox.checked) {
+                    html.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('darkMode', 'false');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            });
+        });
+        
+        // Mobile sidebar functions
+        function openSidebar() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebar').classList.add('translate-x-0');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        }
+        
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar').classList.remove('translate-x-0');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        }
+    </script>
+    
+    {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup collapsible menus
+            const collapsibleMenus = document.querySelectorAll('.collapsible-menu');
+            collapsibleMenus.forEach(menu => {
+                const button = menu.querySelector('.menu-item');
+                const submenu = menu.querySelector('.submenu');
+                const chevron = menu.querySelector('.menu-chevron');
+                
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Toggle submenu
+                    submenu.classList.toggle('open');
+                    
+                    // Rotate chevron
+                    chevron.classList.toggle('rotate');
+                });
+            });
+            
+            // Animate menu items entrance
+            const menuItems = document.querySelectorAll('.menu-animate-item');
+            menuItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('show');
+                }, 50 * (index + 1)); // Staggered animation
+            });
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>

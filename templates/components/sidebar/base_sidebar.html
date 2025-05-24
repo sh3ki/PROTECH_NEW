@@ -1,0 +1,145 @@
+<div class="sidebar-wrapper h-full flex flex-col" style="background: linear-gradient(180deg, #023c82 0%, #02306e 100%);">
+    <!-- Sidebar header with logo -->
+    <div class="sidebar-header flex items-center justify-between p-4 border-b border-blue-800">
+        <div class="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-xl font-bold text-white">PROTECH</span>
+        </div>
+        <!-- Mobile menu close button -->
+        <button id="sidebar-close-btn" class="lg:hidden text-white hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+    
+    <!-- User info section -->
+    <div class="p-4 border-b border-blue-800">
+        <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-tertiary/30 flex items-center justify-center">
+                {% if user.profile_pic %}
+                    <img src="{{ user.profile_pic }}" alt="{{ user.username }}" class="w-full h-full rounded-full object-cover">
+                {% else %}
+                    <span class="text-white font-bold">
+                        {% if user.first_name %}
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        {% else %}
+                            {{ user.username|first|upper }}
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-white">
+                    {% if user.first_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </p>
+                <p class="text-xs text-blue-200">{{ user.get_role_display }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <div class="sidebar-menu py-4 flex-grow overflow-y-auto px-2" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
+        {% block sidebar_menu %}
+        <!-- This block will be overridden by specific sidebar menu items -->
+        {% endblock %}
+    </div>
+</div>
+
+<style>
+    /* Base menu item styles */
+    .menu-item {
+        @apply flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-secondary/10 dark:hover:bg-tertiary/20 rounded-md transition-all duration-200;
+    }
+    
+    .menu-item.active {
+        @apply bg-secondary/20 dark:bg-tertiary/30 text-primary dark:text-tertiary font-medium;
+    }
+    
+    .menu-item svg:first-child {
+        @apply mr-3 text-gray-500 dark:text-gray-400;
+    }
+    
+    /* Submenu styles */
+    .submenu {
+        @apply max-h-0 overflow-hidden pl-7 transition-all duration-300 ease-in-out;
+    }
+    
+    .submenu.open {
+        @apply max-h-screen;
+    }
+    
+    .submenu-item {
+        @apply flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-secondary/10 dark:hover:bg-tertiary/20 rounded-md transition-all duration-200;
+    }
+    
+    .submenu-item.active {
+        @apply bg-secondary/10 dark:bg-tertiary/20 text-primary dark:text-tertiary;
+    }
+    
+    /* Animation for menu items entrance */
+    .menu-animate-item {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    
+    .menu-animate-item.show {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+    
+    /* Chevron animation */
+    .menu-chevron {
+        @apply transform transition-transform duration-300;
+    }
+    
+    .menu-chevron.rotate {
+        @apply rotate-180;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile sidebar toggle
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar').classList.remove('translate-x-0');
+        });
+    }
+    
+    // Setup collapsible menus
+    const collapsibleMenus = document.querySelectorAll('.collapsible-menu');
+    collapsibleMenus.forEach(menu => {
+        const button = menu.querySelector('.menu-item');
+        const submenu = menu.querySelector('.submenu');
+        const chevron = menu.querySelector('.menu-chevron');
+        
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Toggle submenu
+            submenu.classList.toggle('open');
+            
+            // Rotate chevron
+            chevron.classList.toggle('rotate');
+        });
+    });
+    
+    // Animate menu items entrance
+    const menuItems = document.querySelectorAll('.menu-animate-item');
+    menuItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.classList.add('show');
+        }, 50 * (index + 1)); // Staggered animation
+    });
+});
+</script>

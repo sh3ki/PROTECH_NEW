@@ -1,0 +1,46 @@
+{% extends 'components/base_dashboard.html' %}
+
+{% block title %}PROTECH - Registrar Dashboard{% endblock %}
+{% block page_title %}Registrar Dashboard{% endblock %}
+
+{% block sidebar %}
+    {% include 'components/sidebar/registrar_sidebar.html' with active='dashboard' %}
+{% endblock %}
+
+{% block home_url %}{% url 'registrar_dashboard' %}{% endblock %}
+
+{% block welcome_message %}
+You are logged in as Registrar. You can manage student records and enrollment.
+{% endblock %}
+
+{% block content_title %}Student Records Overview{% endblock %}
+
+{% block dashboard_content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-tertiary/10 dark:bg-tertiary/20 p-6 rounded-lg border border-tertiary/20 dark:border-tertiary/30 shadow-sm">
+        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Total Students</h2>
+        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">1,284</p>
+        <div class="mt-2 flex items-center">
+            <span class="text-green-600 dark:text-green-400 text-sm font-medium">+3%</span>
+            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">from last month</span>
+        </div>
+    </div>
+
+    <div class="bg-secondary/10 dark:bg-secondary/20 p-6 rounded-lg border border-secondary/20 dark:border-secondary/30 shadow-sm">
+        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Enrolled with Face ID</h2>
+        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">976</p>
+        <div class="mt-2 flex items-center">
+            <span class="text-green-600 dark:text-green-400 text-sm font-medium">76%</span>
+            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">of total students</span>
+        </div>
+    </div>
+
+    <div class="bg-primary/10 dark:bg-primary/20 p-6 rounded-lg border border-primary/20 dark:border-primary/30 shadow-sm">
+        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Pending Enrollments</h2>
+        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">42</p>
+        <div class="mt-2 flex items-center">
+            <span class="text-yellow-600 dark:text-yellow-400 text-sm font-medium">Needs Attention</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

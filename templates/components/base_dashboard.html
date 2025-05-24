@@ -1,0 +1,92 @@
+{% extends 'components/base_component.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 gap-6">
+    <!-- Welcome Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-secondary animate-fade-in">
+        <div class="flex items-center space-x-4">
+            <div class="p-3 bg-secondary/20 dark:bg-secondary/30 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-2xl font-semibold text-primary dark:text-tertiary">
+                    Welcome, {{ user.first_name|default:user.username }}!
+                </h2>
+                <p class="text-accent dark:text-gray-300 mt-1">
+                    {% block welcome_message %}
+                    You are logged in as {{ user.get_role_display }}.
+                    {% endblock %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% block stats_section %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-t-4 border-secondary animate-slide-in" style="animation-delay: 0.1s;">
+            <div class="flex justify-between">
+                <div>
+                    <p class="text-accent dark:text-gray-400 text-sm">Today's Date</p>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white">{{ current_date|date:"F d, Y" }}</h3>
+                </div>
+                <div class="bg-secondary/20 dark:bg-secondary/30 rounded-full p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-t-4 border-tertiary animate-slide-in" style="animation-delay: 0.2s;">
+            <div class="flex justify-between">
+                <div>
+                    <p class="text-accent dark:text-gray-400 text-sm">Day</p>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white">{{ current_date|date:"l" }}</h3>
+                </div>
+                <div class="bg-tertiary/20 dark:bg-tertiary/30 rounded-full p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-t-4 border-primary animate-slide-in" style="animation-delay: 0.3s;">
+            <div class="flex justify-between">
+                <div>
+                    <p class="text-accent dark:text-gray-400 text-sm">Last Login</p>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white">{{ user.last_login|date:"M d, H:i" }}</h3>
+                </div>
+                <div class="bg-primary/20 dark:bg-primary/30 rounded-full p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-slide-in" style="animation-delay: 0.4s;">
+        <h3 class="text-xl font-semibold text-primary dark:text-tertiary mb-4">
+            {% block content_title %}Dashboard Overview{% endblock %}
+        </h3>
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+            {% block dashboard_content %}
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p class="text-accent dark:text-gray-400 mt-4">Welcome to your dashboard. Select an option from the sidebar to get started.</p>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+    
+    {% block additional_content %}{% endblock %}
+</div>
+{% endblock %}

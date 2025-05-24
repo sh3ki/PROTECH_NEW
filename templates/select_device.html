@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center space-y-8 py-12">
+    <div class="text-center animate-slide-in">
+        <h2 class="text-3xl font-bold text-primary dark:text-tertiary mb-2">Select Attendance Device Option</h2>
+        <p class="text-accent dark:text-light">Choose whether the device is for time in or time out</p>
+    </div>
+    
+    <div class="school-card w-full max-w-2xl animate-slide-in" style="animation-delay: 0.2s;">
+        <div class="py-6 flex flex-col gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <a href="#" class="school-btn block text-center bg-secondary hover:bg-tertiary transform transition-all duration-300 hover:scale-105">
+                    <div class="flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        <span>TIME IN</span>
+                    </div>
+                </a>
+                <a href="#" class="school-btn block text-center bg-primary hover:bg-secondary transform transition-all duration-300 hover:scale-105">
+                    <div class="flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>TIME OUT</span>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="text-center mt-4 animate-slide-in" style="animation-delay: 0.4s;">
+                <a href="{% url 'landing_page' %}" class="school-btn inline-flex items-center justify-center gap-2 bg-primary hover:bg-secondary transform transition-all duration-300 hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
