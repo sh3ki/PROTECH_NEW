@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 
 def landing_page(request):
     """Landing page with SELECT DEVICE and LOGIN buttons"""
@@ -14,9 +15,22 @@ def select_device(request):
 def login_view(request):
     """Login page without registration"""
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username_or_email = request.POST.get('username')
         password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
+        
+        # First try authenticating with the input as username
+        user = authenticate(request, username=username_or_email, password=password)
+        
+        # If that fails, check if it's an email
+        if user is None:
+            User = get_user_model()
+            try:
+                # Find user with the provided email
+                user_obj = User.objects.get(email=username_or_email)
+                # If found, authenticate with their username
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
         
         if user is not None:
             login(request, user)
@@ -38,7 +52,7 @@ def login_view(request):
             else:
                 return redirect('landing_page')
         else:
-            messages.error(request, 'Invalid username or password.')
+            messages.error(request, 'Invalid username, email or password.')
     
     return render(request, 'login.html')
 
