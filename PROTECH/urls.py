@@ -18,6 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    # path('admin/', admin.site.urls), ano nga ulit link sa web pre
+    # path('admin/', admin.site.urls),
     path('', include('PROTECHAPP.urls')),
 ]

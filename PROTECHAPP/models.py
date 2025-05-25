@@ -46,6 +46,7 @@ class ActivityCategory(models.TextChoices):
 
 # 1. Users Model
 class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)  
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     profile_pic = models.CharField(max_length=255, blank=True, null=True)
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.TEACHER)

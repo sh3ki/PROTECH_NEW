@@ -2,41 +2,31 @@
 {% load static %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center space-y-12 py-12">
-    <div class="text-center animate-slide-in">
-        <h2 class="text-4xl font-bold text-primary dark:text-tertiary mb-4">Welcome to PROTECH</h2>
-        <p class="text-xl text-accent dark:text-light max-w-3xl mx-auto">
+<div class="fixed inset-0 z-[-1] bg-black/50">
+    <img src="{% static 'public/images/schoold.svg' %}" alt="Background" class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none" />
+</div>
+
+<div class="flex flex-col items-center justify-center min-h-[80vh]">
+    <div class="bg-black/75 rounded-3xl shadow-2xl border border-white/20 text-white backdrop-blur-lg px-8 py-10 max-w-xl w-full text-center">
+        <h2 class="text-4xl font-extrabold mb-4 drop-shadow">Welcome to PROTECH</h2>
+        <p class="text-lg mb-8 text-gray-200 drop-shadow">
             Our advanced face recognition system makes attendance monitoring easy and reliable.
         </p>
-    </div>
-    
-    <div class="school-card w-full max-w-2xl animate-slide-in" style="animation-delay: 0.2s;">
-        <div class="bg-tertiary/20 dark:bg-tertiary/10 p-6 rounded-t-lg border-b-2 border-tertiary/30">
-            <img src="{% static 'public/images/pr.svg' %}" alt="School Attendance System" class="w-full h-auto rounded object-cover shadow-lg transform transition-transform hover:scale-[1.02] duration-500" style="height: 250px;">
-        </div>
-        
-        <div class="py-8 px-6 flex flex-col gap-6">
-            <h3 class="text-2xl font-semibold text-center text-primary dark:text-tertiary">Attendance Monitoring System</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <a href="{% url 'select_device' %}" class="school-btn block text-center bg-secondary hover:bg-tertiary transform transition-transform hover:scale-105">
-                    <div class="flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>SELECT DEVICE</span>
-                    </div>
-                </a>
-                <a href="{% url 'login' %}" class="school-btn block text-center transform transition-transform hover:scale-105">
-                    <div class="flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                        <span>LOGIN</span>
-                    </div>
-                </a>
-            </div>
+        <h3 class="text-2xl font-bold mb-8">Attendance Monitoring System</h3>
+        <div class="flex flex-col sm:flex-row gap-5 justify-center items-center">
+            <a href="{% url 'select_device' %}" class="bg-secondary hover:bg-tertiary text-white font-semibold py-4 px-8 rounded-lg flex items-center gap-2 transition-transform hover:scale-105 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2 shadow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>SELECT DEVICE</span>
+            </a>
+            <a href="{% url 'login' %}" class="bg-primary hover:bg-tertiary text-white font-semibold py-4 px-8 rounded-lg flex items-center gap-2 transition-transform hover:scale-105 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2 shadow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                <span>LOGIN</span>
+            </a>
         </div>
     </div>
 </div>
