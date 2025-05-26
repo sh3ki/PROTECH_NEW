@@ -121,6 +121,7 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
+    <meta name="ajax-navigation" content="enabled">
 </head>
 <body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
     <!-- Toast Notifications Container -->
@@ -205,7 +206,7 @@
             </header>
             
             <!-- Main content area -->
-            <main class="flex-1 overflow-y-auto bg-light/50 dark:bg-dark/50 p-2 md:p-4 animate-fade-in">
+            <main id="main-content" class="flex-1 overflow-y-auto bg-light/50 dark:bg-dark/50 p-2 md:p-4 animate-fade-in">
                 <!-- Breadcrumbs -->
                 <div>
                     <nav class="flex" aria-label="Breadcrumb">
@@ -218,7 +219,7 @@
                 </div>
                 
                 <!-- Page content -->
-                <div class="bg-white dark:bg-dark shadow-sm rounded-lg p-5 md:p-8 animate-slide-in">
+                <div id="page-content" class="bg-white dark:bg-dark shadow-sm rounded-lg p-5 md:p-8 animate-slide-in">
                     {% block content %}
                     <!-- Main content will go here -->
                     {% endblock %}
@@ -259,6 +260,9 @@
                     moonIcon.classList.add('hidden');
                 }
             });
+            
+            // Initialize AJAX Navigation
+            initAjaxNavigation();
         });
         
         // Mobile sidebar functions
@@ -398,8 +402,170 @@
         function showInfo(message, duration) {
             return showNotification(message, 'info', duration);
         }
+        
+        // AJAX Navigation System
+        function initAjaxNavigation() {
+            // Find all sidebar menu links
+            const sidebarLinks = document.querySelectorAll('.menu-item');
+            
+            sidebarLinks.forEach(link => {
+                // Don't add AJAX behavior to logout links
+                if (link.href && !link.href.includes('logout')) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Show active state in sidebar
+                        document.querySelectorAll('.menu-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        
+                        // Update URL without page reload
+                        const url = this.href;
+                        window.history.pushState({ url: url }, '', url);
+                        
+                        // On mobile, close the sidebar after clicking a link
+                        if (window.innerWidth < 1024) {
+                            closeSidebar();
+                        }
+                        
+                        // Load the content
+                        loadContent(url);
+                    });
+                }
+            });
+            
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', function(event) {
+                if (event.state && event.state.url) {
+                    loadContent(event.state.url);
+                }
+            });
+        }
+        
+        function loadContent(url) {
+            // Show loading indicator
+            const pageContent = document.getElementById('page-content');
+            pageContent.innerHTML = `
+                <div class="flex justify-center items-center h-64">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+                </div>
+            `;
+            
+            // Add AJAX header to tell server this is an AJAX request
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                // Extract only content part from response using a helper function
+                const content = extractContent(html);
+                pageContent.innerHTML = content;
+                
+                // Update page title
+                const title = extractTitle(html);
+                if (title) {
+                    document.title = title;
+                }
+                
+                // Update active state in sidebar based on URL
+                updateActiveSidebarItem(url);
+                
+                // Re-initialize any scripts that were in the loaded content
+                executeScripts(pageContent);
+                
+                // Scroll to top of content
+                document.getElementById('main-content').scrollTop = 0;
+            })
+            .catch(error => {
+                console.error('Error loading content:', error);
+                pageContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Error Loading Content</p>
+                        <p class="text-gray-500 dark:text-gray-400">Please try again or reload the page.</p>
+                        <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90">Reload Page</button>
+                    </div>
+                `;
+            });
+        }
+        
+        function extractContent(html) {
+            // Create a temporary div to parse the HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Try to find the content block
+            const contentElement = doc.getElementById('page-content');
+            if (contentElement) {
+                return contentElement.innerHTML;
+            }
+            
+            // Fallback: Look for main content using query selector
+            const mainContent = doc.querySelector('div.bg-white.dark\\:bg-dark.shadow-sm.rounded-lg');
+            if (mainContent) {
+                return mainContent.innerHTML;
+            }
+            
+            // If we can't find the content, check if this is an AJAX response with just the content
+            // If the HTML doesn't have <html> tags, it might be just the content part
+            if (!html.includes('<html')) {
+                return html;
+            }
+            
+            // If all else fails, just return the whole HTML
+            return html;
+        }
+        
+        function extractTitle(html) {
+            const match = html.match(/<title>(.*?)<\/title>/i);
+            return match ? match[1] : null;
+        }
+        
+        function updateActiveSidebarItem(url) {
+            // Remove 'active' class from all menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find the menu item that matches the current URL and mark it active
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if (item.href === url) {
+                    item.classList.add('active');
+                }
+            });
+        }
+        
+        function executeScripts(element) {
+            // Find all script tags in the new content
+            const scripts = element.querySelectorAll('script');
+            
+            // Execute each script
+            scripts.forEach(script => {
+                const newScript = document.createElement('script');
+                
+                // Copy all attributes
+                Array.from(script.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                
+                // Copy the content
+                newScript.textContent = script.textContent;
+                
+                // Replace the old script with the new one to execute it
+                script.parentNode.replaceChild(newScript, script);
+            });
+        }
     </script>
-    
     {% block extra_js %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -52,7 +52,7 @@
     
     <!-- Logout button - always at the bottom -->
     <div class="px-2 py-3 pt-2 mt-auto">
-        <a href="{% url 'logout' %}" class="menu-item hover:bg-red-700 menu-animate-item">
+        <a href="{% url 'logout' %}" class="menu-item hover:bg-red-700 menu-animate-item" data-ajax-navigation="false">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
@@ -149,6 +149,11 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             item.classList.add('show');
         }, 50 * (index + 1)); // Staggered animation
+    });
+    
+    // Exclude certain links from AJAX navigation (like logout)
+    document.querySelectorAll('a[data-ajax-navigation="false"]').forEach(link => {
+        link.setAttribute('data-ajax-bypass', 'true');
     });
 });
 </script>

@@ -1,9 +1,13 @@
+<html class="dark">
 {% extends 'base.html' %}
 {% load static %}
 
+{% block dark_toggle %}{% endblock %}
+
 {% block content %}
-<div class="fixed inset-0 z-[-1] bg-black/50">
-    <img src="{% static 'public/images/schoold.svg' %}" alt="Background" class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none" />
+<div class="fixed inset-0 z-[-1] bg-black/40 dark:bg-black/60">
+    <img src="{% static 'public/images/schoold.svg' %}" alt="Background"
+         class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none" />
 </div>
 
 <div class="flex flex-col items-center justify-center min-h-[80vh]">
@@ -30,4 +34,8 @@
         </div>
     </div>
 </div>
+<script>
+    // Add this to your dark mode toggle logic
+    document.documentElement.classList.toggle('dark');
+</script>
 {% endblock %}

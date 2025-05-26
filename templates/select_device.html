@@ -2,51 +2,47 @@
 
 {% block content %}
 <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-    <div class="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 shadow-2xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 md:p-14 w-full max-w-2xl text-center animate-fade-in transition-all">
-        <div class="mb-10">
-            <h2 class="text-3xl md:text-4xl font-extrabold text-primary mb-2 drop-shadow">Select Attendance Device Option</h2>
-            <p class="text-gray-600 dark:text-gray-300 text-lg">Choose whether the device is for time in or time out</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-10 mb-8">
+    <div class="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 shadow-2xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 md:p-14 w-full max-w-2xl text-center animate-fade-in transition-all">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-primary mb-3 drop-shadow">Select Attendance Device Option</h2>
+        <p class="text-gray-600 dark:text-gray-300 text-lg mb-10">Choose whether the device is for time in or time out</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
             <!-- TIME IN -->
             <a href="#" role="button" tabindex="0"
-                class="group bg-gradient-to-br from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white rounded-2xl py-10 px-6 shadow-xl flex flex-col items-center justify-center gap-5 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-700">
-                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-6 shadow-lg transition-all duration-300">
-                    <svg class="h-10 w-10 text-white drop-shadow" fill="none" stroke="currentColor"
+                class="group bg-gradient-to-br from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white rounded-2xl py-7 px-6 shadow-xl flex flex-col items-center justify-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-700">
+                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-4 shadow-lg transition-all duration-300">
+                    <svg class="h-9 w-9 text-white drop-shadow" fill="none" stroke="currentColor"
                         stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
                 </span>
-                <span class="font-extrabold text-xl tracking-wide">TIME IN</span>
+                <span class="font-extrabold text-lg tracking-wide">TIME IN</span>
             </a>
 
             <!-- TIME OUT -->
             <a href="#" role="button" tabindex="0"
-                class="group bg-gradient-to-br from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-2xl py-10 px-6 shadow-xl flex flex-col items-center justify-center gap-5 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-indigo-400 dark:focus:ring-indigo-600">
-                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-6 shadow-lg transition-all duration-300">
-                    <svg class="h-10 w-10 text-white drop-shadow" fill="none" stroke="currentColor"
+                class="group bg-gradient-to-br from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-2xl py-7 px-6 shadow-xl flex flex-col items-center justify-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-indigo-400 dark:focus:ring-indigo-600">
+                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-4 shadow-lg transition-all duration-300">
+                    <svg class="h-9 w-9 text-white drop-shadow" fill="none" stroke="currentColor"
                         stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </span>
-                <span class="font-extrabold text-xl tracking-wide">TIME OUT</span>
+                <span class="font-extrabold text-lg tracking-wide">TIME OUT</span>
             </a>
         </div>
 
-        <!-- Divider -->
-        <div class="flex items-center my-8">
-            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-            <span class="mx-4 text-gray-400 font-semibold">or</span>
-            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-        </div>
-
-        <!-- Back to Home -->
-        <div>
+        <!-- Combined "or" and Back Button" INSIDE the card -->
+        <div class="flex flex-col items-center mt-6">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-px w-12 bg-gray-300 dark:bg-gray-700"></div>
+                <span class="text-gray-400 font-semibold">or</span>
+                <div class="h-px w-12 bg-gray-300 dark:bg-gray-700"></div>
+            </div>
             <a href="{% url 'landing_page' %}"
-                class="inline-flex items-center gap-2 bg-white/80 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-primary dark:text-blue-300 font-semibold py-3 px-7 rounded-xl shadow hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-gray-700 transition duration-200">
+                class="inline-flex items-center gap-2 bg-white/90 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-primary dark:text-blue-300 font-semibold py-2 px-7 rounded-xl shadow hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-gray-700 transition duration-200">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
