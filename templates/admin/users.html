@@ -103,19 +103,25 @@
                 </select>
             </div>
         </div>
-        <!-- Add, Import, Export Buttons -->
+        <!-- Add, Print, Import, Export Buttons -->
         <div class="flex space-x-2">
-            <button id="import-users-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all">
+            <button id="import-users-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
-                Import
+                <span>Import</span>
             </button>
-            <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all">
+            <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20V4m8 8H4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                Export
+                <span>Export</span>
+            </button>
+            <button id="print-users-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Print</span>
             </button>
             <!-- Enhanced "Add User" button with animation -->
             <button id="add-user-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
@@ -131,7 +137,7 @@
 <!-- User Table: Remove status, add is_active, larger font, sortable headers, action buttons -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden border border-gray-100 dark:border-gray-700">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                     <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
@@ -150,7 +156,7 @@
                     <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
                         Created
                     </th>
-                    <th scope="col" class="px-6 py-3.5 text-right font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                     </th>
                 </tr>
@@ -530,11 +536,11 @@
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                         <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2" id="modal-headline">
                             Delete User
-                        </div>
+                        </h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500 dark:text-gray-400">
                                 Are you sure you want to delete this user? This action cannot be undone and all associated data will be permanently removed from our servers.
-                            </div>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -549,6 +555,112 @@
                     </span>
                 </button>
                 <button type="button" class="cancel-delete mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Reset Modal -->
+<div id="password-reset-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 sm:mx-0 sm:h-12 sm:w-12">
+                        <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2">Reset Password</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                Please enter a new password for <span id="reset-password-username" class="font-medium text-gray-800 dark:text-gray-200"></span>.
+                            </p>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="new_password" class="form-input block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white" placeholder="Enter new password" minlength="8" required>
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="confirm_password" class="form-input block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white" placeholder="Confirm new password" minlength="8" required>
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Password must be at least 8 characters long.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button id="confirm-reset-password" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-base font-medium text-white hover:from-yellow-700 hover:to-yellow-600 dark:from-yellow-700 dark:to-yellow-600 dark:hover:from-yellow-800 dark:hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                    <span class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        Reset Password
+                    </span>
+                </button>
+                <button type="button" class="cancel-password-reset mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deactivate/Activate User Modal -->
+<div id="status-change-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div id="status-icon-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-12 sm:w-12">
+                        <!-- Icon will be replaced by JavaScript -->
+                        <svg id="status-icon" class="h-6 w-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2" id="status-change-title">
+                            Change User Status
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500 dark:text-gray-400" id="status-change-message">
+                                Are you sure you want to change this user's status?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button id="confirm-status-change" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                    <span class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span id="status-change-button-text">Confirm</span>
+                    </span>
+                </button>
+                <button type="button" class="cancel-status-change mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                     Cancel
                 </button>
             </div>
@@ -612,21 +724,35 @@
         const modalTitle = document.getElementById('modal-title');
         const closeModalXBtn = document.getElementById('close-modal-x');
         
-        // Check if elements exist
-        console.log("Elements found:", {
-            userModal: !!userModal,
-            userForm: !!userForm,
-            addUserBtn: !!addUserBtn,
-            closeModalBtn: !!closeModalBtn
-        });
-        
         // Delete modal elements
         const deleteModal = document.getElementById('delete-modal');
         const deleteButtons = document.querySelectorAll('.delete-user');
         const cancelDeleteButtons = document.querySelectorAll('.cancel-delete');
         const confirmDeleteBtn = document.getElementById('confirm-delete');
         
+        // Password reset modal elements
+        const passwordResetModal = document.getElementById('password-reset-modal');
+        const resetButtons = document.querySelectorAll('.reset-password');
+        const cancelPasswordResetButtons = document.querySelectorAll('.cancel-password-reset');
+        const confirmResetBtn = document.getElementById('confirm-reset-password');
+        const newPasswordInput = document.getElementById('new_password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const resetUsernameSpan = document.getElementById('reset-password-username');
+        
+        // Status change modal elements
+        const statusChangeModal = document.getElementById('status-change-modal');
+        const statusChangeButtons = document.querySelectorAll('.deactivate-user');
+        const cancelStatusChangeButtons = document.querySelectorAll('.cancel-status-change');
+        const confirmStatusChangeBtn = document.getElementById('confirm-status-change');
+        const statusChangeTitle = document.getElementById('status-change-title');
+        const statusChangeMessage = document.getElementById('status-change-message');
+        const statusChangeButtonText = document.getElementById('status-change-button-text');
+        const statusIconContainer = document.getElementById('status-icon-container');
+        const statusIcon = document.getElementById('status-icon');
+        
         let currentUserId = null;
+        let currentUserIsActive = null;
+        let currentUsername = "";
         
         // CSRF token for AJAX requests
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -707,6 +833,44 @@
                             document.getElementById('is_active').value = user.is_active ? "true" : "false";
                         }
                         
+                        // Display profile picture if available
+                        if (user.profile_pic) {
+                            profilePicPreview.src = `/profile-pics/${user.profile_pic}/`;
+                            profilePicPreview.classList.remove('opacity-0');
+                            defaultProfileIcon.classList.add('opacity-0');
+                        } else {
+                            resetProfilePicPreview();
+                        }
+                        
+                        // Handle grade and section fields for teachers
+                        const teacherFields = document.getElementById('teacher-fields');
+                        if (user.role === 'TEACHER') {
+                            teacherFields.classList.remove('hidden');
+                            
+                            // If we have section data for this teacher, select it
+                            if (user.section) {
+                                // First select the grade
+                                const gradeSelect = document.getElementById('grade');
+                                if (gradeSelect && user.grade) {
+                                    gradeSelect.value = user.grade;
+                                    
+                                    // Trigger change event to load sections
+                                    const event = new Event('change');
+                                    gradeSelect.dispatchEvent(event);
+                                    
+                                    // After sections are loaded, select the correct section
+                                    setTimeout(() => {
+                                        const sectionSelect = document.getElementById('section');
+                                        if (sectionSelect && user.section) {
+                                            sectionSelect.value = user.section;
+                                        }
+                                    }, 100);
+                                }
+                            }
+                        } else {
+                            teacherFields.classList.add('hidden');
+                        }
+                        
                         showModalWithAnimation(userModal);
                     } else {
                         showError('Failed to load user data: ' + data.message);
@@ -734,36 +898,174 @@
             });
         });
         
-        // Reset password functionality
-        document.querySelectorAll('.reset-password').forEach(button => {
+        cancelPasswordResetButtons.forEach(button => {
             button.addEventListener('click', function() {
-                const userId = this.dataset.userId;
-                const newPassword = prompt('Enter new password for this user:');
+                passwordResetModal.classList.add('hidden');
+                newPasswordInput.value = '';
+                confirmPasswordInput.value = '';
+            });
+        });
+        
+        cancelStatusChangeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                statusChangeModal.classList.add('hidden');
+            });
+        });
+        
+               
+        // Reset password functionality with new modal
+        resetButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                currentUserId = this.dataset.userId;
                 
-                if (newPassword && newPassword.length >= 8) {
-                    fetch(`/admin/users/${userId}/reset-password/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: JSON.stringify({ new_password: newPassword })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showSuccess(data.message);
-                        } else {
-                            showError('Failed to reset password: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error resetting password:', error);
-                        showError('An error occurred while resetting the password.');
-                    });
-                } else if (newPassword) {
-                    showWarning('Password must be at least 8 characters long.');
+                // Get the username for display in the modal
+                const userRow = this.closest('tr');
+                const userName = userRow.querySelector('.text-lg.font-bold').textContent.trim();
+                resetUsernameSpan.textContent = userName;
+                currentUsername = userName;
+                
+                // Show the modal
+                showModalWithAnimation(passwordResetModal);
+                
+                // Focus the new password input
+                setTimeout(() => {
+                    newPasswordInput.focus();
+                }, 300);
+            });
+        });
+        
+        // Handle reset password confirmation
+        confirmResetBtn.addEventListener('click', function() {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validate password
+            if (!newPassword) {
+                showError("Password cannot be empty");
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showError("Password must be at least 8 characters long");
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showError("Passwords don't match");
+                return;
+            }
+            
+            // Submit the password reset
+            fetch(`/admin/users/${currentUserId}/reset-password/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ new_password: newPassword })
+            })
+            .then(response => response.json())
+            .then(data => {
+                passwordResetModal.classList.add('hidden');
+                
+                if (data.status === 'success') {
+                    showSuccess(`Password for ${currentUsername} has been reset successfully`);
+                    
+                    // Clear the form
+                    newPasswordInput.value = '';
+                    confirmPasswordInput.value = '';
+                } else {
+                    showError('Failed to reset password: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('Error resetting password:', error);
+                showError('An error occurred while resetting the password');
+                passwordResetModal.classList.add('hidden');
+            });
+        });
+        
+        // Show status change modal for each activate/deactivate button
+        statusChangeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                currentUserId = this.dataset.userId;
+                currentUserIsActive = this.dataset.isActive === 'True';
+                
+                // Get the username for display in the modal
+                const userRow = this.closest('tr');
+                const userName = userRow.querySelector('.text-lg.font-bold').textContent.trim();
+                currentUsername = userName;
+                
+                if (currentUserIsActive) {
+                    // Deactivate user
+                    statusChangeTitle.textContent = 'Deactivate User';
+                    statusChangeMessage.textContent = `Are you sure you want to deactivate ${userName}? This user will no longer be able to log in.`;
+                    statusChangeButtonText.textContent = 'Deactivate';
+                    confirmStatusChangeBtn.classList.remove('bg-gradient-to-r', 'from-green-600', 'to-green-500', 'hover:from-green-700', 'hover:to-green-600');
+                    confirmStatusChangeBtn.classList.add('bg-gradient-to-r', 'from-gray-600', 'to-gray-500', 'hover:from-gray-700', 'hover:to-gray-600');
+                    
+                    // Change the icon color
+                    statusIconContainer.classList.remove('bg-green-100', 'dark:bg-green-900');
+                    statusIconContainer.classList.add('bg-gray-100', 'dark:bg-gray-800');
+                    statusIcon.classList.remove('text-green-600', 'dark:text-green-400');
+                    statusIcon.classList.add('text-gray-600', 'dark:text-gray-400');
+                    
+                    // Change the icon
+                    statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />`;
+                } else {
+                    // Activate user
+                    statusChangeTitle.textContent = 'Activate User';
+                    statusChangeMessage.textContent = `Are you sure you want to activate ${userName}? This user will be able to log in.`;
+                    statusChangeButtonText.textContent = 'Activate';
+                    confirmStatusChangeBtn.classList.remove('bg-gradient-to-r', 'from-gray-600', 'to-gray-500', 'hover:from-gray-700', 'hover:to-gray-600');
+                    confirmStatusChangeBtn.classList.add('bg-gradient-to-r', 'from-green-600', 'to-green-500', 'hover:from-green-700', 'hover:to-green-600');
+                    
+                    // Change the icon color
+                    statusIconContainer.classList.remove('bg-gray-100', 'dark:bg-gray-800');
+                    statusIconContainer.classList.add('bg-green-100', 'dark:bg-green-900');
+                    statusIcon.classList.remove('text-gray-600', 'dark:text-gray-400');
+                    statusIcon.classList.add('text-green-600', 'dark:text-green-400');
+                    
+                    // Change the icon
+                    statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+                }
+                
+                // Show the modal
+                showModalWithAnimation(statusChangeModal);
+            });
+        });
+        
+        // Handle status change confirmation
+        confirmStatusChangeBtn.addEventListener('click', function() {
+            // Update the user status
+            fetch(`/admin/users/${currentUserId}/update/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ is_active: !currentUserIsActive })
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusChangeModal.classList.add('hidden');
+                
+                if (data.status === 'success') {
+                    const actionText = currentUserIsActive ? 'deactivated' : 'activated';
+                    showSuccess(`User ${currentUsername} has been ${actionText} successfully`);
+                    
+                    // Reload the page to reflect the changes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showError(`Failed to ${currentUserIsActive ? 'deactivate' : 'activate'} user: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user status:', error);
+                showError(`An error occurred while ${currentUserIsActive ? 'deactivating' : 'activating'} the user`);
+                statusChangeModal.classList.add('hidden');
             });
         });
         
@@ -771,6 +1073,12 @@
         deleteButtons.forEach(button => {
             button.addEventListener('click', function() {
                 currentUserId = this.dataset.userId;
+                
+                // Get the username for display in the modal
+                const userRow = this.closest('tr');
+                const userName = userRow.querySelector('.text-lg.font-bold').textContent.trim();
+                document.getElementById('modal-headline').textContent = `Delete User: ${userName}`;
+                
                 showModalWithAnimation(deleteModal);
             });
         });
@@ -913,6 +1221,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
+                    // Hide modal
+                    userModal.classList.add('hidden');
+                    
                     // Success: user created/updated
                     if (hasProfilePic) {
                         // Now upload the profile picture
@@ -1005,22 +1316,67 @@
         window.addEventListener('click', function(event) {
             if (event.target === userModal) {
                 userModal.classList.add('hidden');
+                resetProfilePicPreview();
             }
             if (event.target === deleteModal) {
                 deleteModal.classList.add('hidden');
+            }
+            if (event.target === passwordResetModal) {
+                passwordResetModal.classList.add('hidden');
+                newPasswordInput.value = '';
+                confirmPasswordInput.value = '';
+            }
+            if (event.target === statusChangeModal) {
+                statusChangeModal.classList.add('hidden');
             }
         });
         
         // Set initial form values from URL params
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('search')) {
+        const userSearch = document.getElementById('user-search');
+        const roleFilter = document.getElementById('role-filter');
+        const activeFilter = document.getElementById('active-filter');
+        
+        if (urlParams.has('search') && userSearch) {
             userSearch.value = urlParams.get('search');
         }
-        if (urlParams.has('role')) {
+        if (urlParams.has('role') && roleFilter) {
             roleFilter.value = urlParams.get('role');
         }
-        if (urlParams.has('status')) {
-            statusFilter.value = urlParams.get('status');
+        if (urlParams.has('status') && activeFilter) {
+            activeFilter.value = urlParams.get('status');
+        }
+        
+        // Add event listeners for the search and filters to auto-submit
+        if (userSearch) {
+            userSearch.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
+        }
+        
+        if (roleFilter) {
+            roleFilter.addEventListener('change', applyFilters);
+        }
+        
+        if (activeFilter) {
+            activeFilter.addEventListener('change', applyFilters);
+        }
+        
+        // Function to apply filters and reload page
+        function applyFilters() {
+            const searchValue = userSearch ? userSearch.value.trim() : '';
+            const roleValue = roleFilter ? roleFilter.value : '';
+            const statusValue = activeFilter ? activeFilter.value : '';
+            
+            let queryParams = [];
+            if (searchValue) queryParams.push(`search=${encodeURIComponent(searchValue)}`);
+            if (roleValue) queryParams.push(`role=${encodeURIComponent(roleValue)}`);
+            if (statusValue) queryParams.push(`status=${encodeURIComponent(statusValue)}`);
+            
+            const queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+            window.location.href = window.location.pathname + queryString;
         }
     });
 </script>

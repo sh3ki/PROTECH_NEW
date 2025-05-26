@@ -225,6 +225,7 @@ def get_user(request, user_id):
     try:
         user = get_object_or_404(CustomUser, id=user_id)
         
+        # Build the user data with additional fields
         user_data = {
             'id': user.id,
             'username': user.username,
@@ -233,9 +234,15 @@ def get_user(request, user_id):
             'last_name': user.last_name,
             'middle_name': user.middle_name or '',
             'role': user.role,
-            'is_active': user.is_active,  # Replace status with is_active
-            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'is_active': user.is_active,
+            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'profile_pic': user.profile_pic,  # Add profile pic path
         }
+        
+        # Add section and grade data if the user is a teacher with assigned section
+        if user.role == UserRole.TEACHER and user.section:
+            user_data['section'] = user.section.id
+            user_data['grade'] = user.section.grade.id
         
         return JsonResponse({'status': 'success', 'user': user_data})
         
