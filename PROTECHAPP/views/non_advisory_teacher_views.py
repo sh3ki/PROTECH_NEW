@@ -10,7 +10,7 @@ def is_teacher(user):
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_dashboard(request):
+def teacher_non_advisory_dashboard(request):
     """View for teacher dashboard"""
     # Retrieve today's date for the dashboard
     current_date = timezone.now()
@@ -27,49 +27,49 @@ def teacher_dashboard(request):
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_students(request):
+def teacher_non_advisory_students(request):
     """View for students listing"""
     students = Student.objects.all()
     context = {
         'students': students
     }
-    return render(request, 'teacher/students.html', context)
+    return render(request, 'teacher/non_advisory/students.html', context)
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_guardians(request):
+def teacher_non_advisory_guardians(request):
     """View for guardians listing"""
     guardians = Guardian.objects.all()
     context = {
         'guardians': guardians
     }
-    return render(request, 'teacher/guardians.html', context)
+    return render(request, 'teacher/non_advisory/guardians.html', context)
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_attendance(request):
+def teacher_non_advisory_attendance(request):
     """View for attendance records"""
     today = timezone.now().date()
     attendance_records = Attendance.objects.filter(date=today)
     context = {
         'attendance_records': attendance_records
     }
-    return render(request, 'teacher/attendance.html', context)
+    return render(request, 'teacher/non_advisory/attendance.html', context)
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_excused(request):
+def teacher_non_advisory_excused(request):
     """View for excused absences"""
-    return render(request, 'teacher/excused.html')
+    return render(request, 'teacher/non_advisory/excused.html')
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_messages(request):
+def teacher_non_advisory_messages(request):
     """View for messages"""
-    return render(request, 'teacher/messages.html')
+    return render(request, 'teacher/non_advisory/messages.html')
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_settings(request):
+def teacher_non_advisory_settings(request):
     """View for settings"""
-    return render(request, 'teacher/settings.html')
+    return render(request, 'teacher/non_advisory/settings.html')

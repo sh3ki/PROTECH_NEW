@@ -48,7 +48,7 @@ def login_view(request):
                 if user.section:
                     return redirect('teacher_advisory_dashboard')
                 else:
-                    return redirect('teacher_dashboard')
+                    return redirect('teacher_non_advisory_dashboard')
             else:
                 return redirect('landing_page')
         else:

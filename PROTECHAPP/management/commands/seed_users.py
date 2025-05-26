@@ -85,7 +85,7 @@ class Command(BaseCommand):
                         'status': UserStatus.APPROVED,
                         'is_staff': False,
                         'is_active': True,
-                        'section': None,  # Will be assigned later
+                        'section': 1,  # Will be assigned later
                     }
                 )
                 if created:

@@ -8,12 +8,12 @@ from .models import (
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'status', 'is_staff']
+    list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_active']
     fieldsets = UserAdmin.fieldsets + (
-        ('Additional Info', {'fields': ('middle_name', 'profile_pic', 'role', 'status')}),
+        ('Additional Info', {'fields': ('middle_name', 'profile_pic', 'role')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Additional Info', {'fields': ('middle_name', 'profile_pic', 'role', 'status')}),
+        ('Additional Info', {'fields': ('middle_name', 'profile_pic', 'role')}),
     )
 
 admin.site.register(CustomUser, CustomUserAdmin)
