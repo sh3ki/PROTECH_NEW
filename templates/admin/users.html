@@ -2084,9 +2084,48 @@
             });
         }
         
+                // Add function to sort grades naturally
+        function sortGradesNaturally(grades) {
+            return grades.sort((a, b) => {
+                // Extract numbers from grade names for proper numeric sorting
+                const extractNumber = (str) => {
+                    const match = str.match(/(\d+)/);
+                    return match ? parseInt(match[1]) : 0;
+                };
+                
+                const numA = extractNumber(a.textContent || a.name);
+                const numB = extractNumber(b.textContent || b.name);
+                
+                // If both have numbers, sort by number
+                if (numA && numB) {
+                    return numA - numB;
+                }
+                
+                // If only one has a number, put numbered ones first
+                if (numA && !numB) return -1;
+                if (!numA && numB) return 1;
+                
+                // If neither has numbers, sort alphabetically
+                const nameA = a.textContent || a.name;
+                const nameB = b.textContent || b.name;
+                return nameA.localeCompare(nameB);
+            });
+        }
+        
         // Grade select change event to populate sections - FIXED VERSION
         const gradeSelect = document.getElementById('grade');
         if (gradeSelect) {
+            // Apply natural sorting to grade dropdown on page load
+            if (gradeSelect.options.length > 1) {
+                const options = Array.from(gradeSelect.options).slice(1); // Skip the first "Select Grade" option
+                const sortedOptions = sortGradesNaturally(options);
+                
+                // Clear and re-add options
+                gradeSelect.innerHTML = gradeSelect.options[0].outerHTML; // Keep the first option
+                sortedOptions.forEach(option => {
+                    gradeSelect.appendChild(option);
+                });
+            }
             gradeSelect.addEventListener('change', function() {
                 const selectedGradeId = this.value;
                 const sectionSelect = document.getElementById('section');

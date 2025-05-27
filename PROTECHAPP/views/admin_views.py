@@ -17,6 +17,7 @@ def is_admin(user):
     """Check if the logged-in user is an admin"""
     return user.is_authenticated and user.role == UserRole.ADMIN
 
+
 # ==========================
 #  USER MANAGEMENT VIEWS
 # ==========================
@@ -452,6 +453,7 @@ def search_users(request):
         'total_count': total_count,
     })
 
+
 # ==========================
 #  TEACHER MANAGEMENT VIEWS
 # ==========================
@@ -778,6 +780,572 @@ def search_teachers(request):
         'total_count': paginator.count,
     })
 
+
+# ==========================
+#  GRADE MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_grades(request):
+    """View for grade management"""
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    page_number = request.GET.get('page', 1)
+    
+    # Base queryset - order by created_at DESC (newest first)
+    grades = Grade.objects.all().order_by('-created_at')
+    
+    # Apply search if provided
+    if search_query:
+        grades = grades.filter(name__icontains=search_query)
+    
+    # Annotate with section and student counts
+    grades = grades.annotate(
+        sections_count=Count('sections'),
+        students_count=Count('sections__students')
+    )
+    
+    # Get stats for dashboard
+    total_grades = Grade.objects.count()
+    grades_with_sections = Grade.objects.filter(sections__isnull=False).distinct().count()
+    total_sections = Section.objects.count()
+    total_students = Student.objects.count()
+    
+    # Pagination
+    paginator = Paginator(grades, 10)
+    page_obj = paginator.get_page(page_number)
+    
+    # Calculate page range for pagination UI
+    page_range = get_pagination_range(paginator, page_obj.number, 5)
+    
+    context = {
+        'grades': page_obj,
+        'search_query': search_query,
+        'total_grades': total_grades,
+        'grades_with_sections': grades_with_sections,
+        'total_sections': total_sections,
+        'total_students': total_students,
+        'page_range': page_range,
+    }
+    return render(request, 'admin/grades.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def search_grades(request):
+    """AJAX search/filter for grades"""
+    search_query = request.GET.get('search', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+    
+    # Base queryset - order by created_at DESC (newest first)
+    grades = Grade.objects.all().order_by('-created_at')
+    
+    # Apply search if provided
+    if search_query:
+        grades = grades.filter(name__icontains=search_query)
+    
+    # Annotate with counts
+    grades = grades.annotate(
+        sections_count=Count('sections'),
+        students_count=Count('sections__students')
+    )
+    
+    # Get total count for pagination
+    total_count = grades.count()
+    
+    # Parse page number and items_per_page
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+    
+    # Create paginator
+    paginator = Paginator(grades, items_per_page)
+    page_obj = paginator.get_page(page_number)
+    
+    # Prepare grade data for JSON response
+    grade_data = []
+    for grade in page_obj:
+        grade_data.append({
+            'id': grade.id,
+            'name': grade.name,
+            'sections_count': grade.sections_count,
+            'students_count': grade.students_count,
+            'created_at': grade.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': grade.created_at.strftime('%b %d, %Y'),
+        })
+    
+    # Prepare pagination data
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+    
+    return JsonResponse({
+        'status': 'success',
+        'grades': grade_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_grade(request):
+    """Create a new grade"""
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Grade name is required.'}, status=400)
+        
+        if Grade.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'status': 'error', 'message': 'Grade with this name already exists.'}, status=400)
+        
+        grade = Grade.objects.create(name=name)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Grade "{name}" created successfully.',
+            'grade': {
+                'id': grade.id,
+                'name': grade.name,
+                'sections_count': 0,
+                'students_count': 0,
+                'created_at': grade.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': grade.created_at.strftime('%b %d, %Y'),
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PATCH"])
+def update_grade(request, grade_id):
+    """Update an existing grade"""
+    try:
+        grade = get_object_or_404(Grade, id=grade_id)
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Grade name is required.'}, status=400)
+        
+        if Grade.objects.filter(name__iexact=name).exclude(id=grade_id).exists():
+            return JsonResponse({'status': 'error', 'message': 'Another grade with this name already exists.'}, status=400)
+        
+        old_name = grade.name
+        grade.name = name
+        grade.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Grade "{old_name}" updated to "{name}" successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_grade(request, grade_id):
+    """Delete a grade"""
+    try:
+        grade = get_object_or_404(Grade, id=grade_id)
+        
+        # Check if grade has sections
+        sections_count = grade.sections.count()
+        students_count = Student.objects.filter(grade=grade).count()
+        
+        if sections_count > 0 or students_count > 0:
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Cannot delete grade "{grade.name}" because it has {sections_count} section(s) and {students_count} student(s). Please remove all sections and students first.'
+            }, status=400)
+        
+        grade_name = grade.name
+        grade.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Grade "{grade_name}" deleted successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_grade_sections(request, grade_id):
+    """Get sections for a specific grade"""
+    try:
+        grade = get_object_or_404(Grade, id=grade_id)
+        sections = Section.objects.filter(grade=grade).annotate(
+            students_count=Count('students')
+        ).order_by('name')
+        
+        sections_data = []
+        for section in sections:
+            sections_data.append({
+                'id': section.id,
+                'name': section.name,
+                'students_count': section.students_count,
+                'created_at': section.created_at.strftime('%b %d, %Y'),
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'grade': {
+                'id': grade.id,
+                'name': grade.name
+            },
+            'sections': sections_data,
+            'total_sections': len(sections_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# ==========================
+#  SECTION MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_sections(request):
+    """View for section management"""
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    advisor_filter = request.GET.get('advisor', '')
+    page_number = request.GET.get('page', 1)
+    
+    # Base queryset - order by created_at DESC (newest first)
+    sections = Section.objects.select_related('grade').order_by('-created_at')
+    
+    # Apply search if provided
+    if search_query:
+        sections = sections.filter(
+            Q(name__icontains=search_query) | 
+            Q(grade__name__icontains=search_query)
+        )
+    
+    # Apply grade filter if provided
+    if grade_filter:
+        try:
+            grade_id = int(grade_filter)
+            sections = sections.filter(grade_id=grade_id)
+        except (ValueError, TypeError):
+            pass
+    
+    # Apply advisor filter if provided
+    if advisor_filter:
+        if advisor_filter == 'with_advisor':
+            sections = sections.filter(advisory_assignments__isnull=False).distinct()
+        elif advisor_filter == 'without_advisor':
+            sections = sections.filter(advisory_assignments__isnull=True)
+    
+    # Annotate with student counts and teacher info
+    sections = sections.annotate(
+        students_count=Count('students')
+    ).prefetch_related('advisory_assignments__teacher')
+    
+    # Get stats for dashboard
+    total_sections = Section.objects.count()
+    sections_with_students = Section.objects.filter(students__isnull=False).distinct().count()
+    sections_with_advisors = Section.objects.filter(advisory_assignments__isnull=False).distinct().count()
+    total_students = Student.objects.count()
+    
+    # Get all grades for filter dropdown
+    all_grades = Grade.objects.all().order_by('name')
+    
+    # Pagination
+    paginator = Paginator(sections, 10)
+    page_obj = paginator.get_page(page_number)
+    
+    # Calculate page range for pagination UI
+    page_range = get_pagination_range(paginator, page_obj.number, 5)
+    
+    context = {
+        'sections': page_obj,
+        'grades': all_grades,
+        'search_query': search_query,
+        'grade_filter': grade_filter,
+        'advisor_filter': advisor_filter,
+        'total_sections': total_sections,
+        'sections_with_students': sections_with_students,
+        'sections_with_advisors': sections_with_advisors,
+        'total_students': total_students,
+        'page_range': page_range,
+    }
+    return render(request, 'admin/sections.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def search_sections(request):
+    """AJAX search/filter for sections"""
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    advisor_filter = request.GET.get('advisor', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+    
+    # Base queryset - order by created_at DESC (newest first)
+    sections = Section.objects.select_related('grade').order_by('-created_at')
+    
+    # Apply search if provided
+    if search_query:
+        sections = sections.filter(
+            Q(name__icontains=search_query) | 
+            Q(grade__name__icontains=search_query)
+        )
+    
+    # Apply grade filter if provided
+    if grade_filter:
+        try:
+            grade_id = int(grade_filter)
+            sections = sections.filter(grade_id=grade_id)
+        except (ValueError, TypeError):
+            pass
+    
+    # Apply advisor filter if provided
+    if advisor_filter:
+        if advisor_filter == 'with_advisor':
+            sections = sections.filter(advisory_assignments__isnull=False).distinct()
+        elif advisor_filter == 'without_advisor':
+            sections = sections.filter(advisory_assignments__isnull=True)
+    
+    # Annotate with counts and prefetch related data
+    sections = sections.annotate(
+        students_count=Count('students')
+    ).prefetch_related('advisory_assignments__teacher')
+    
+    # Get total count for pagination
+    total_count = sections.count()
+    
+    # Parse page number and items_per_page
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+    
+    # Create paginator
+    paginator = Paginator(sections, items_per_page)
+    page_obj = paginator.get_page(page_number)
+    
+    # Prepare section data for JSON response
+    section_data = []
+    for section in page_obj:
+        # Get advisor info
+        advisor = None
+        advisory_assignment = section.advisory_assignments.first()
+        if advisory_assignment:
+            advisor = {
+                'id': advisory_assignment.teacher.id,
+                'name': f"{advisory_assignment.teacher.first_name} {advisory_assignment.teacher.last_name}",
+                'username': advisory_assignment.teacher.username
+            }
+        
+        section_data.append({
+            'id': section.id,
+            'name': section.name,
+            'grade_id': section.grade.id,
+            'grade_name': section.grade.name,
+            'students_count': section.students_count,
+            'advisor': advisor,
+            'created_at': section.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': section.created_at.strftime('%b %d, %Y'),
+        })
+    
+    # Prepare pagination data
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+    
+    return JsonResponse({
+        'status': 'success',
+        'sections': section_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_section(request):
+    """Create a new section"""
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        grade_id = data.get('grade_id')
+        
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Section name is required.'}, status=400)
+        
+        if not grade_id:
+            return JsonResponse({'status': 'error', 'message': 'Grade is required.'}, status=400)
+        
+        # Check if grade exists
+        try:
+            grade = Grade.objects.get(id=grade_id)
+        except Grade.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Selected grade does not exist.'}, status=400)
+        
+        # Check if section with same name exists in the same grade
+        if Section.objects.filter(name__iexact=name, grade=grade).exists():
+            return JsonResponse({'status': 'error', 'message': f'Section "{name}" already exists in {grade.name}.'}, status=400)
+        
+        section = Section.objects.create(name=name, grade=grade)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Section "{name}" created successfully in {grade.name}.',
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'grade_id': section.grade.id,
+                'grade_name': section.grade.name,
+                'students_count': 0,
+                'advisor': None,
+                'created_at': section.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': section.created_at.strftime('%b %d, %Y'),
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PATCH"])
+def update_section(request, section_id):
+    """Update an existing section"""
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        grade_id = data.get('grade_id')
+        
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Section name is required.'}, status=400)
+        
+        if not grade_id:
+            return JsonResponse({'status': 'error', 'message': 'Grade is required.'}, status=400)
+        
+        # Check if grade exists
+        try:
+            grade = Grade.objects.get(id=grade_id)
+        except Grade.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Selected grade does not exist.'}, status=400)
+        
+        # Check if section with same name exists in the same grade (excluding current section)
+        if Section.objects.filter(name__iexact=name, grade=grade).exclude(id=section_id).exists():
+            return JsonResponse({'status': 'error', 'message': f'Section "{name}" already exists in {grade.name}.'}, status=400)
+        
+        old_name = section.name
+        old_grade = section.grade.name
+        section.name = name
+        section.grade = grade
+        section.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Section updated from "{old_name}" ({old_grade}) to "{name}" ({grade.name}) successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_section(request, section_id):
+    """Delete a section"""
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        
+        # Check if section has students
+        students_count = section.students.count()
+        
+        if students_count > 0:
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Cannot delete section "{section.name}" because it has {students_count} student(s). Please move or remove all students first.'
+            }, status=400)
+        
+        section_name = section.name
+        grade_name = section.grade.name
+        section.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Section "{section_name}" from {grade_name} deleted successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_section_students(request, section_id):
+    """Get students for a specific section"""
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        students = Student.objects.filter(section=section).order_by('last_name', 'first_name')
+        
+        students_data = []
+        for student in students:
+            students_data.append({
+                'id': student.id,
+                'lrn': student.lrn,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'full_name': f"{student.first_name} {student.last_name}",
+                'status': student.status,
+                'created_at': student.created_at.strftime('%b %d, %Y'),
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'grade_name': section.grade.name
+            },
+            'students': students_data,
+            'total_students': len(students_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 # ==========================
 #  OTHER ADMIN VIEWS
 # ==========================
@@ -793,26 +1361,6 @@ def admin_dashboard(request):
         'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
     }
     return render(request, 'admin/dashboard.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_grades(request):
-    """View for grade management"""
-    grades = Grade.objects.all()
-    context = {
-        'grades': grades
-    }
-    return render(request, 'admin/grades.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_sections(request):
-    """View for section management"""
-    sections = Section.objects.all()
-    context = {
-        'sections': sections
-    }
-    return render(request, 'admin/sections.html', context)
 
 @login_required
 @user_passes_test(is_admin)
@@ -871,6 +1419,9 @@ os.makedirs(PROFILE_PICS_DIR, exist_ok=True)
 def upload_profile_pic(request):
     """API endpoint to upload a profile picture"""
     try:
+        import uuid
+        import traceback
+        
         if 'profile_pic' not in request.FILES:
             return JsonResponse({'status': 'error', 'message': 'No file uploaded'}, status=400)
             
@@ -897,7 +1448,6 @@ def upload_profile_pic(request):
             return JsonResponse({'status': 'error', 'message': 'File too large. Maximum file size is 5MB.'}, status=400)
         
         # Create a safe filename
-        import uuid
         file_name = f"{uuid.uuid4()}_{uploaded_file.name}"
         
         # Save file to private directory
@@ -924,6 +1474,7 @@ def upload_profile_pic(request):
 def serve_profile_pic(request, path):
     """View to securely serve profile pictures from private directory"""
     try:
+        import traceback
         # The path parameter should now just be the filename
         filename = path
         

@@ -32,6 +32,14 @@ urlpatterns = [
     path('admin/teachers/remove-section/', admin_views.remove_teacher_section, name='remove_teacher_section'),
     
     
+    # admin/grades routes
+    path('admin/grades/', admin_views.admin_grades, name='admin_grades'),
+    path('admin/grades/search/', admin_views.search_grades, name='admin_search_grades'),
+    path('admin/grades/create/', admin_views.create_grade, name='admin_create_grade'),
+    path('admin/grades/<int:grade_id>/update/', admin_views.update_grade, name='admin_update_grade'),
+    path('admin/grades/<int:grade_id>/delete/', admin_views.delete_grade, name='admin_delete_grade'),
+    path('admin/grades/<int:grade_id>/sections/', admin_views.get_grade_sections, name='admin_get_grade_sections'),
+    
     path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('admin/students/', admin_views.admin_students, name='admin_students'),
     path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
@@ -82,5 +90,12 @@ urlpatterns = [
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
+    # admin/sections routes
+    path('admin/sections/', admin_views.admin_sections, name='admin_sections'),
+    path('admin/sections/search/', admin_views.search_sections, name='admin_search_sections'),
+    path('admin/sections/create/', admin_views.create_section, name='admin_create_section'),
+    path('admin/sections/<int:section_id>/update/', admin_views.update_section, name='admin_update_section'),
+    path('admin/sections/<int:section_id>/delete/', admin_views.delete_section, name='admin_delete_section'),
+    path('admin/sections/<int:section_id>/students/', admin_views.get_section_students, name='admin_get_section_students'),
   
 ]
