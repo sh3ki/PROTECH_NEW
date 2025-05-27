@@ -176,7 +176,7 @@ def create_user(request):
     try:
         data = json.loads(request.body)
         
-        # Validate required fields - remove status, add is_active
+        # Validate required fields
         required_fields = ['username', 'email', 'first_name', 'last_name', 'password', 'role']
         for field in required_fields:
             if not data.get(field):
@@ -189,17 +189,29 @@ def create_user(request):
         if CustomUser.objects.filter(email=data['email']).exists():
             return JsonResponse({'status': 'error', 'message': 'Email already exists'}, status=400)
         
-        # Create user with is_active instead of status
-        user = CustomUser.objects.create(
+        # Create user with basic fields
+        user = CustomUser(
             username=data['username'],
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
             middle_name=data.get('middle_name', ''),
             role=data['role'],
-            is_active=data.get('is_active', True),  # Default to active if not specified
-            password=make_password(data['password'])
+            is_active=data.get('is_active', True)  # Default to active if not specified
         )
+        
+        # Set password
+        user.password = make_password(data['password'])
+        
+        # Handle section assignment for teachers
+        if data['role'] == UserRole.TEACHER and 'section' in data and data['section']:
+            try:
+                section = Section.objects.get(id=data['section'])
+                user.section = section
+            except Section.DoesNotExist:
+                pass  # Silently ignore invalid section IDs
+        
+        user.save()
         
         return JsonResponse({
             'status': 'success',
@@ -270,6 +282,21 @@ def update_user(request, user_id):
         # Update is_active instead of status
         if 'is_active' in data:
             user.is_active = data['is_active']
+        
+        # Handle section assignment for teachers
+        if user.role == UserRole.TEACHER:
+            if 'section' in data and data['section']:
+                try:
+                    section = Section.objects.get(id=data['section'])
+                    user.section = section
+                except Section.DoesNotExist:
+                    pass  # Silently ignore invalid section IDs
+            else:
+                # Clear section if not provided or empty
+                user.section = None
+        else:
+            # Non-teachers should not have sections
+            user.section = None
         
         user.save()
         
@@ -436,12 +463,12 @@ def admin_teachers(request):
     # Get query parameters
     search_query = request.GET.get('search', '')
     advisory_filter = request.GET.get('advisory', '')
-    section_filter = request.GET.get('section', '')
     status_filter = request.GET.get('status', '')
+    section_filter = request.GET.get('section', '')
     page_number = request.GET.get('page', 1)
 
-    # Base queryset - only teachers
-    teachers = CustomUser.objects.filter(role=UserRole.TEACHER).order_by('first_name', 'last_name')
+    # Base queryset - only teachers, order by created_at DESC (newest first)
+    teachers = CustomUser.objects.filter(role=UserRole.TEACHER).select_related('section', 'section__grade').order_by('-created_at')
 
     # Apply search if provided
     if search_query:
@@ -469,6 +496,7 @@ def admin_teachers(request):
             'section': assignment.section,
             'section_id': assignment.section_id,
             'section_name': assignment.section.name,
+            'grade_id': assignment.section.grade.id,
             'grade_name': assignment.section.grade.name
         }
 
@@ -477,23 +505,27 @@ def admin_teachers(request):
 
     # Filter by advisory status
     if advisory_filter == 'advisory':
-        teachers = teachers.filter(id__in=teacher_sections.keys())
+        teachers = teachers.filter(Q(id__in=teacher_sections.keys()) | Q(section__isnull=False))
     elif advisory_filter == 'non-advisory':
-        teachers = teachers.exclude(id__in=teacher_sections.keys())
+        teachers = teachers.exclude(Q(id__in=teacher_sections.keys()) | Q(section__isnull=False))
 
-    # Filter by section
+    # Filter by section (if needed)
     if section_filter:
         try:
             section_id = int(section_filter)
             teacher_ids = [teacher_id for teacher_id, data in teacher_sections.items() 
                            if data['section_id'] == section_id]
-            teachers = teachers.filter(id__in=teacher_ids)
+            teachers = teachers.filter(Q(id__in=teacher_ids) | Q(section_id=section_id))
         except Exception:
             pass
 
     # Get counts for dashboard
     total_teachers = CustomUser.objects.filter(role=UserRole.TEACHER).count()
-    advisory_teachers_count = AdvisoryAssignment.objects.values('teacher').distinct().count()
+    advisory_teachers = CustomUser.objects.filter(
+        Q(role=UserRole.TEACHER) & 
+        (Q(id__in=AdvisoryAssignment.objects.values('teacher')) | Q(section__isnull=False))
+    ).distinct()
+    advisory_teachers_count = advisory_teachers.count()
     non_advisory_teachers_count = total_teachers - advisory_teachers_count
     active_teachers_count = CustomUser.objects.filter(role=UserRole.TEACHER, is_active=True).count()
 
@@ -504,15 +536,27 @@ def admin_teachers(request):
     # Calculate page range for pagination UI
     page_range = get_pagination_range(paginator, page_obj.number, 5)
 
-    # Annotate each teacher in the page with section/grade info for template
+    # Annotate each teacher in the page with section/grade info and advisory status
     for teacher in page_obj:
         section_info = teacher_sections.get(teacher.id)
+        teacher.is_advisory = bool(section_info) or teacher.section is not None
         if section_info:
             teacher.section_name = section_info['section_name']
             teacher.grade_name = section_info['grade_name']
+            teacher.section_id = section_info['section_id']
+            teacher.grade_id = section_info['grade_id']
+        elif teacher.section:
+            teacher.section_name = teacher.section.name
+            teacher.grade_name = teacher.section.grade.name
+            teacher.section_id = teacher.section.id
+            teacher.grade_id = teacher.section.grade.id
         else:
             teacher.section_name = None
             teacher.grade_name = None
+            teacher.section_id = None
+            teacher.grade_id = None
+        # Add status for frontend
+        teacher.status = 'Active' if teacher.is_active else 'Inactive'
 
     context = {
         'teachers': page_obj,
@@ -631,11 +675,12 @@ def search_teachers(request):
     """API endpoint to search/filter/paginate teachers for AJAX requests"""
     search_query = request.GET.get('search', '')
     advisory_filter = request.GET.get('advisory', '')
+    status_filter = request.GET.get('status', '')
     section_filter = request.GET.get('section', '')
     page_number = request.GET.get('page', 1)
     items_per_page = request.GET.get('items_per_page', 10)
 
-    teachers = CustomUser.objects.filter(role=UserRole.TEACHER).order_by('first_name', 'last_name')
+    teachers = CustomUser.objects.filter(role=UserRole.TEACHER).select_related('section', 'section__grade').order_by('-created_at')
 
     if search_query:
         teachers = teachers.filter(
@@ -645,7 +690,13 @@ def search_teachers(request):
             Q(last_name__icontains=search_query)
         )
 
-    # Advisory assignments
+    # Status filter
+    if status_filter:
+        if status_filter == 'active':
+            teachers = teachers.filter(is_active=True)
+        elif status_filter == 'inactive':
+            teachers = teachers.filter(is_active=False)
+
     advisory_assignments = AdvisoryAssignment.objects.select_related('section', 'section__grade')
     teacher_sections = {}
     for assignment in advisory_assignments:
@@ -653,21 +704,20 @@ def search_teachers(request):
             'section': assignment.section,
             'section_id': assignment.section_id,
             'section_name': assignment.section.name,
+            'grade_id': assignment.section.grade.id,
             'grade_name': assignment.section.grade.name
         }
 
-    # Advisory filter
     if advisory_filter == 'advisory':
-        teachers = teachers.filter(id__in=teacher_sections.keys())
+        teachers = teachers.filter(Q(id__in=teacher_sections.keys()) | Q(section__isnull=False))
     elif advisory_filter == 'non-advisory':
-        teachers = teachers.exclude(id__in=teacher_sections.keys())
+        teachers = teachers.exclude(Q(id__in=teacher_sections.keys()) | Q(section__isnull=False))
 
-    # Section filter
     if section_filter:
         try:
             section_id = int(section_filter)
             teacher_ids = [tid for tid, data in teacher_sections.items() if data['section_id'] == section_id]
-            teachers = teachers.filter(id__in=teacher_ids)
+            teachers = teachers.filter(Q(id__in=teacher_ids) | Q(section_id=section_id))
         except Exception:
             pass
 
@@ -677,6 +727,21 @@ def search_teachers(request):
     teacher_data = []
     for teacher in page_obj:
         section_info = teacher_sections.get(teacher.id)
+        grade = None
+        section = None
+        grade_id = None
+        section_id = None
+        is_advisory = bool(section_info) or teacher.section is not None
+        if section_info:
+            grade = section_info['grade_name']
+            section = section_info['section_name']
+            grade_id = section_info['grade_id']
+            section_id = section_info['section_id']
+        elif teacher.section:
+            grade = teacher.section.grade.name
+            section = teacher.section.name
+            grade_id = teacher.section.grade.id
+            section_id = teacher.section.id
         teacher_data.append({
             'id': teacher.id,
             'username': teacher.username,
@@ -684,9 +749,15 @@ def search_teachers(request):
             'first_name': teacher.first_name,
             'last_name': teacher.last_name,
             'profile_pic': teacher.profile_pic,
-            'advisory': bool(section_info),
-            'section': section_info['section_name'] if section_info else None,
-            'grade': section_info['grade_name'] if section_info else None,
+            'created_at': teacher.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': teacher.created_at.strftime('%b %d, %Y'),
+            'advisory': is_advisory,
+            'section': section,
+            'section_id': section_id,
+            'grade': grade,
+            'grade_id': grade_id,
+            'is_active': teacher.is_active,  # Include status for frontend
+            'status': 'Active' if teacher.is_active else 'Inactive'
         })
 
     pagination = {

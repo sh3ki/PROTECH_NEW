@@ -96,16 +96,16 @@
                 </div>
             </div>
             <div class="flex flex-wrap md:flex-nowrap gap-2">
-                <!-- Advisory filter -->
+                <!-- Advisory filter with icon -->
                 <div class="relative w-full sm:w-auto">
                     <select id="advisory-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
-                        <option value="">All Advisory</option>
+                        <option value="">All Teachers</option>
                         <option value="advisory" {% if advisory_filter == 'advisory' %}selected{% endif %}>Advisory</option>
                         <option value="non-advisory" {% if advisory_filter == 'non-advisory' %}selected{% endif %}>Non-Advisory</option>
                     </select>
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -114,16 +114,15 @@
                         </svg>
                     </div>
                 </div>
-                <!-- Section filter -->
+                <!-- Status filter (Active/Inactive) with icon -->
                 <div class="relative w-full sm:w-auto">
-                    <select id="section-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
-                        <option value="">All Sections</option>
-                        {% for section in sections %}
-                            <option value="{{ section.id }}" {% if section_filter == section.id|stringformat:"s" %}selected{% endif %}>{{ section.grade.name }} - {{ section.name }}</option>
-                        {% endfor %}
+                    <select id="status-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
                     </select>
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -137,6 +136,24 @@
         </div>
         <!-- Action buttons -->
         <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <button id="import-teachers-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                <span class="hidden sm:inline">Import</span>
+            </button>
+            <button id="export-teachers-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span class="hidden sm:inline">Export</span>
+            </button>
+            <button id="print-teachers-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
             <button id="add-teacher-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -165,14 +182,31 @@
             <table id="teachers-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
-                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teacher</th>
-                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
-                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Advisory</th>
-                        <th class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Teacher
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Advisory
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Grade
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Section
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- Table content will be populated by JavaScript -->
                     {% for teacher in teachers %}
                     <tr class="{% cycle 'bg-white dark:bg-gray-800' 'bg-gray-50 dark:bg-gray-800/50' %} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -182,13 +216,17 @@
                                         <img src="{% url 'serve_profile_pic' path=teacher.profile_pic %}" alt="{{ teacher.username }}" class="h-10 w-10 rounded-full object-cover shadow-inner">
                                     {% else %}
                                         <span class="text-primary dark:text-tertiary font-bold text-lg">
-                                            {{ teacher.first_name|first|upper }}{{ teacher.last_name|first|upper }}
+                                            {% if teacher.first_name %}
+                                                {{ teacher.first_name|first|upper }}{{ teacher.last_name|first|upper }}
+                                            {% else %}
+                                                {{ teacher.username|first|upper }}
+                                            {% endif %}
                                         </span>
                                     {% endif %}
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-lg font-bold text-gray-900 dark:text-white">
-                                        {{ teacher.first_name }} {{ teacher.last_name }}
+                                        {% if teacher.first_name %}{{ teacher.first_name }} {{ teacher.last_name }}{% else %}{{ teacher.username }}{% endif %}
                                     </div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">@{{ teacher.username }}</div>
                                 </div>
@@ -198,54 +236,65 @@
                             <div class="text-lg text-gray-900 dark:text-white">{{ teacher.email }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if teacher.section_name %}
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-sm">
-                                    {{ teacher.section_name }} ({{ teacher.grade_name }})
-                                </span>
-                            {% else %}
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 shadow-sm">
-                                    None
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if teacher.section_name %}
+                            {% if teacher.is_advisory %}
                                 <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
                                     Advisory
                                 </span>
                             {% else %}
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shadow-sm">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 shadow-sm">
                                     Non-Advisory
                                 </span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
-                            <div class="flex justify-end space-x-3">
-                                {% if teacher.section_name %}
-                                    <button class="remove-advisory text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Remove Advisory">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                {% else %}
-                                    <button class="assign-advisory text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200 transition-colors p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Assign Advisory">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </button>
-                                {% endif %}
-                            </div>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ teacher.grade_name|default:"-" }}
                         </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-6 py-10 text-center">
-                            <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span class="text-lg font-medium">No teachers found</span>
-                                <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ teacher.section_name|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if teacher.is_active %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 shadow-sm">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <!-- Assign as Advisor button (existing) -->
+                                <button class="assign-advisory text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Assign as Advisor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </button>
+                                <!-- Reset Password -->
+                                <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Reset Password">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </button>
+                                <!-- Deactivate/Activate -->
+                                <button class="deactivate-teacher text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" data-is-active="{{ teacher.is_active }}" title="{% if teacher.is_active %}Deactivate{% else %}Activate{% endif %} Teacher">
+                                    {% if teacher.is_active %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    {% endif %}
+                                </button>
+                                <!-- Delete -->
+                                <button class="delete-teacher text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Delete Teacher">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -255,50 +304,6 @@
         </div>
         <!-- Pagination (reuse users.html logic) -->
         <div id="teacher-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Showing
-                        <span class="font-medium">{{ teachers.start_index }}</span>
-                        to
-                        <span class="font-medium">{{ teachers.end_index }}</span>
-                        of
-                        <span class="font-medium">{{ teachers.paginator.count }}</span>
-                        results
-                    </p>
-                </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        {% if teachers.has_previous %}
-                        <a href="?page={{ teachers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if advisory_filter %}&advisory={{ advisory_filter }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        {% endif %}
-                        {% for num in teachers.paginator.page_range %}
-                            {% if teachers.number == num %}
-                            <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
-                                {{ num }}
-                            </span>
-                            {% elif num > teachers.number|add:'-3' and num < teachers.number|add:'3' %}
-                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if advisory_filter %}&advisory={{ advisory_filter }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                                {{ num }}
-                            </a>
-                            {% endif %}
-                        {% endfor %}
-                        {% if teachers.has_next %}
-                        <a href="?page={{ teachers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if advisory_filter %}&advisory={{ advisory_filter }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        {% endif %}
-                    </nav>
-                </div>
-            </div>
         </div>
     </div>
     <!-- No results message -->
@@ -312,7 +317,7 @@
         </div>
     </div>
     <!-- Toast Notifications Container -->
-    <div id="teacher-toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+    <div id="teacher-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 </div>
 
 <!-- Add Teacher Modal -->
@@ -394,8 +399,8 @@
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="add-teacher-grade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade *</label>
-                                        <select id="add-teacher-grade" name="grade" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
+                                        <label for="add-teacher-grade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade</label>
+                                        <select id="add-teacher-grade" name="grade" class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
                                             <option value="">Select Grade</option>
                                             {% for grade in grades %}
                                                 <option value="{{ grade.id }}">{{ grade.name }}</option>
@@ -403,8 +408,8 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="add-teacher-section" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section *</label>
-                                        <select id="add-teacher-section" name="section" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
+                                        <label for="add-teacher-section" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section</label>
+                                        <select id="add-teacher-section" name="section" class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
                                             <option value="">Select Grade First</option>
                                         </select>
                                     </div>
@@ -456,6 +461,189 @@
     </div>
 </div>
 
+<!-- Add Section Assignment Modal -->
+<div id="assign-section-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-12 sm:w-12">
+                        <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2" id="assign-section-title">
+                            Assign Teacher to Section
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Select a grade and section to assign to <span id="assign-teacher-name" class="font-medium text-gray-700 dark:text-gray-300"></span>.
+                        </p>
+                        
+                        <form id="assign-section-form" class="space-y-4">
+                            <input type="hidden" id="assign-teacher-id" name="teacher_id">
+                            
+                            <div>
+                                <label for="assign-grade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade</label>
+                                <select id="assign-grade" class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
+                                    <option value="">Select Grade</option>
+                                    {% for grade in grades %}
+                                        <option value="{{ grade.id }}">{{ grade.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="assign-section" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section</label>
+                                <select id="assign-section" name="section_id" class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary sm:text-sm dark:text-white">
+                                    <option value="">Select Grade First</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button id="confirm-assign-section" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-base font-medium text-white hover:from-blue-700 hover:to-blue-600 dark:from-blue-700 dark:to-blue-600 dark:hover:from-blue-800 dark:hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                    <span class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Assign Section
+                    </span>
+                </button>
+                <button type="button" id="cancel-assign-section" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Teacher Modal -->
+<div id="delete-teacher-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2">
+                                Delete Teacher
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    Are you sure you want to delete this teacher? This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="confirm-delete-teacher" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-base font-medium text-white hover:from-red-700 hover:to-red-600 dark:from-red-700 dark:to-red-600 dark:hover:from-red-800 dark:hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        Delete
+                    </button>
+                    <button type="button" class="cancel-delete-teacher mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Reset Modal for Teacher -->
+<div id="password-reset-teacher-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2">Reset Password</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                    Please enter a new password for <span id="reset-password-teacher-username" class="font-medium text-gray-800 dark:text-gray-200"></span>.
+                                </p>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label for="new_teacher_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                                        <input type="password" id="new_teacher_password" class="form-input block w-full pl-3 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white" placeholder="Enter new password" minlength="8" required>
+                                    </div>
+                                    <div>
+                                        <label for="confirm_teacher_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                                        <input type="password" id="confirm_teacher_password" class="form-input block w-full pl-3 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white" placeholder="Confirm new password" minlength="8" required>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Password must be at least 8 characters long.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button id="confirm-reset-teacher-password" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-base font-medium text-white hover:from-yellow-700 hover:to-yellow-600 dark:from-yellow-700 dark:to-yellow-600 dark:hover:from-yellow-800 dark:hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                            Reset Password
+                        </button>
+                        <button type="button" class="cancel-password-reset-teacher mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal for Teacher -->
+<div id="status-change-teacher-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div id="status-icon-teacher-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg id="status-icon-teacher" class="h-6 w-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2" id="status-change-teacher-title">
+                                Change Teacher Status
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400" id="status-change-teacher-message">
+                                    Are you sure you want to change this teacher's status?
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="confirm-status-change-teacher" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-secondary to-secondary/80 text-base font-medium text-white hover:from-secondary/90 hover:to-secondary/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        <span id="status-change-teacher-button-text">Confirm</span>
+                    </button>
+                    <button type="button" class="cancel-status-change-teacher mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* ...copy the relevant CSS from users.html for consistency... */
 </style>
@@ -464,6 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const teacherSearch = document.getElementById('teacher-search');
     const advisoryFilter = document.getElementById('advisory-filter');
+    const statusFilter = document.getElementById('status-filter');
     const sectionFilter = document.getElementById('section-filter');
     const teacherTableContainer = document.getElementById('teacher-table-container');
     const teacherTableLoading = document.getElementById('teacher-table-loading');
@@ -473,6 +662,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherToastContainer = document.getElementById('teacher-toast-container');
     const teacherSearchSpinner = document.getElementById('teacher-search-spinner');
     const teacherSearchResultsCount = document.getElementById('teacher-search-results-count');
+    
+    // Section Assignment Modal Elements
+    const assignSectionModal = document.getElementById('assign-section-modal');
+    const assignTeacherName = document.getElementById('assign-teacher-name');
+    const assignTeacherId = document.getElementById('assign-teacher-id');
+    const assignGrade = document.getElementById('assign-grade');
+    const assignSection = document.getElementById('assign-section');
+    const assignSectionForm = document.getElementById('assign-section-form');
+    const confirmAssignSection = document.getElementById('confirm-assign-section');
+    const cancelAssignSection = document.getElementById('cancel-assign-section');
+    
     let currentPage = 1;
     let searchTimeout = null;
 
@@ -481,47 +681,88 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toast notification
     function showToast(message, type = 'success', duration = 5000) {
+        // Create toast element
         const toast = document.createElement('div');
-        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-4 opacity-0';
+        
+        // Set base classes - change translate-y-4 to translate-y-[-1rem] for top animation
+        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0';
+        
+        // Additional classes based on type
         let iconHTML = '';
         switch (type) {
             case 'success':
                 toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
-                iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
+                iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>`;
                 break;
             case 'error':
                 toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
-                iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`;
+                iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>`;
                 break;
             case 'warning':
                 toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
-                iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
+                iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>`;
                 break;
             case 'info':
                 toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
-                iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+                iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>`;
                 break;
         }
+        
+        // Add content to toast
         toast.innerHTML = `
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center">
                     ${iconHTML}
                     <div class="text-sm font-semibold">${message}</div>
                 </div>
-                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" data-dismiss-target="#toast" aria-label="Close">
                     <span class="sr-only">Close</span>
-                    <svg aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    <svg aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
                 </button>
             </div>
         `;
+        
+        // Add toast to container
         teacherToastContainer.appendChild(toast);
-        setTimeout(() => { toast.classList.remove('translate-y-4', 'opacity-0'); }, 10);
-        toast.querySelector('button').onclick = () => removeToast(toast);
-        if (duration > 0) setTimeout(() => removeToast(toast), duration);
+        
+        // Animate toast in - slide down from top
+        setTimeout(() => {
+            toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
+        }, 10);
+        
+        // Add click event to close button
+        const closeButton = toast.querySelector('button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                removeToast(toast);
+            });
+        }
+        
+        // Auto-dismiss after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
     }
+
     function removeToast(toast) {
-        toast.classList.add('opacity-0', 'translate-y-4');
-        setTimeout(() => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+        // Slide back up when removing (for top position)
+        toast.classList.add('opacity-0', 'translate-y-[-1rem]');
+        setTimeout(() => { 
+            if (toast && toast.parentNode) 
+                toast.parentNode.removeChild(toast); 
+        }, 300);
     }
 
     // Debounce
@@ -550,12 +791,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchTeachers(page = 1) {
         const searchQuery = teacherSearch ? teacherSearch.value.trim() : '';
         const advisoryValue = advisoryFilter ? advisoryFilter.value : '';
+        const statusValue = statusFilter ? statusFilter.value : '';
         const sectionValue = sectionFilter ? sectionFilter.value : '';
         showLoading();
         currentPage = page;
         const params = new URLSearchParams();
         if (searchQuery) params.append('search', searchQuery);
         if (advisoryValue) params.append('advisory', advisoryValue);
+        if (statusValue) params.append('status', statusValue);
         if (sectionValue) params.append('section', sectionValue);
         params.append('page', page);
 
@@ -616,9 +859,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const tableBody = teachersTable.querySelector('tbody');
         if (!tableBody) return;
         let html = '';
+        
         if (teachers.length === 0) {
-            html = `<tr>
-                <td colspan="5" class="px-6 py-10 text-center">
+            html = `
+            <tr>
+                <td colspan="7" class="px-6 py-10 text-center">
                     <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -631,37 +876,59 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             teachers.forEach((teacher, index) => {
                 const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
-                const initials = teacher.first_name && teacher.last_name ?
-                    `${teacher.first_name[0].toUpperCase()}${teacher.last_name[0].toUpperCase()}` :
-                    teacher.username[0].toUpperCase();
-                const displayName = teacher.first_name && teacher.last_name ?
-                    `${teacher.first_name} ${teacher.last_name}` : teacher.username;
+                
+                // Generate initials for avatar fallback
+                const initials = teacher.first_name && teacher.last_name ? 
+                                `${teacher.first_name[0].toUpperCase()}${teacher.last_name[0].toUpperCase()}` :
+                                teacher.username[0].toUpperCase();
+                
+                // Generate full name or username
+                const displayName = teacher.first_name && teacher.last_name ? 
+                                  `${teacher.first_name} ${teacher.last_name}` : 
+                                  teacher.username;
+                
+                // Generate profile picture HTML
                 let profilePic = '';
                 if (teacher.profile_pic) {
                     profilePic = `<img src="/profile-pics/${teacher.profile_pic}/" alt="${teacher.username}" class="h-10 w-10 rounded-full object-cover shadow-inner">`;
                 } else {
                     profilePic = `<span class="text-primary dark:text-tertiary font-bold text-lg">${initials}</span>`;
                 }
-                let sectionBadge = '';
-                let advisoryBadge = '';
-                let actionBtn = '';
-                if (teacher.advisory) {
-                    sectionBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-sm">${teacher.section} (${teacher.grade})</span>`;
-                    advisoryBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">Advisory</span>`;
-                    actionBtn = `<button class="remove-advisory text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Remove Advisory">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>`;
-                } else {
-                    sectionBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 shadow-sm">None</span>`;
-                    advisoryBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shadow-sm">Non-Advisory</span>`;
-                    actionBtn = `<button class="assign-advisory text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200 transition-colors p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Assign Advisory">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                    </button>`;
-                }
+                
+                // Generate advisory badge
+                const advisoryBadge = teacher.advisory ? 
+                    `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                        <span class="flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                            Advisory
+                        </span>
+                    </span>` :
+                    `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 shadow-sm">
+                        <span class="flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-gray-500 dark:bg-gray-400 mr-1.5"></span>
+                            Non-Advisory
+                        </span>
+                    </span>`;
+                
+                // Generate grade and section display with proper fallback
+                const gradeDisplay = teacher.grade ? teacher.grade : '-';
+                const sectionDisplay = teacher.section ? teacher.section : '-';
+                
+                // Status badge
+                const statusBadge = teacher.is_active ?
+                    `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                        <span class="flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                            Active
+                        </span>
+                    </span>` :
+                    `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 shadow-sm">
+                        <span class="flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-red-500 dark:bg-red-400 mr-1.5"></span>
+                            Inactive
+                        </span>
+                    </span>`;
+                
                 html += `
                 <tr class="${rowClass} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -670,7 +937,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${profilePic}
                             </div>
                             <div class="ml-4">
-                                <div class="text-lg font-bold text-gray-900 dark:text-white">${displayName}</div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                    ${displayName}
+                                </div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">@${teacher.username}</div>
                             </div>
                         </div>
@@ -678,14 +947,63 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-lg text-gray-900 dark:text-white">${teacher.email}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">${sectionBadge}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${advisoryBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${advisoryBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-lg text-gray-900 dark:text-white">${gradeDisplay}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-lg text-gray-900 dark:text-white">${sectionDisplay}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${statusBadge}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
-                        <div class="flex justify-end space-x-3">${actionBtn}</div>
+                        <div class="flex justify-end space-x-3">
+                            ${teacher.advisory ? 
+                                `<button class="remove-advisory text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Remove as Advisor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>` :
+                                `<button class="assign-advisory text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Assign as Advisor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                    </svg>
+                                </button>`
+                            }
+                            <!-- Reset Password button -->
+                            <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Reset Password">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </button>
+                            <!-- Deactivate/Activate button -->
+                            ${teacher.is_active ?
+                                `<button class="deactivate-teacher text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-teacher-id="${teacher.id}" data-is-active="${teacher.is_active}" title="Deactivate Teacher">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                </button>` :
+                                `<button class="deactivate-teacher text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-teacher-id="${teacher.id}" data-is-active="${teacher.is_active}" title="Activate Teacher">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>`
+                            }
+                            <!-- Delete button -->
+                            <button class="delete-teacher text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Delete Teacher">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
             });
         }
+        
         tableBody.innerHTML = html;
         tableBody.classList.add('animate-fadeIn');
         setTimeout(() => { tableBody.classList.remove('animate-fadeIn'); }, 500);
@@ -754,36 +1072,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach event listeners to table actions (assign/remove advisory)
     function attachTeacherTableEventListeners() {
+        // Attach assign-advisory button event listeners
         document.querySelectorAll('.assign-advisory').forEach(button => {
             button.addEventListener('click', function() {
                 const teacherId = this.dataset.teacherId;
-                // Show a modal or prompt for section selection, then call assign API
-                showToast('Assign advisory not implemented in this demo.', 'info');
+                
+                // Find the teacher name from the table row
+                const teacherRow = this.closest('tr');
+                const teacherNameElement = teacherRow.querySelector('.text-lg.font-bold');
+                const teacherName = teacherNameElement ? teacherNameElement.textContent.trim() : 'this teacher';
+                
+                // Set values in the modal
+                assignTeacherName.textContent = teacherName;
+                assignTeacherId.value = teacherId;
+                
+                // Reset grade and section selections
+                assignGrade.value = '';
+                assignSection.innerHTML = '<option value="">Select Grade First</option>';
+                
+                // Show the modal
+                assignSectionModal.classList.remove('hidden');
             });
         });
+
         document.querySelectorAll('.remove-advisory').forEach(button => {
             button.addEventListener('click', function() {
                 const teacherId = this.dataset.teacherId;
-                // Confirm removal, then call remove API
-                if (confirm('Remove this teacher as advisory?')) {
-                    fetch('/admin/teachers/remove-section/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: JSON.stringify({ teacher_id: teacherId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showToast(data.message, 'success');
-                            fetchTeachers(currentPage);
-                        } else {
-                            showToast(data.message, 'error');
-                        }
-                    })
-                    .catch(() => showToast('Failed to remove advisory.', 'error'));
+                
+                if (confirm('Are you sure you want to remove this teacher from advisory role?')) {
+                    removeTeacherSection(teacherId);
                 }
             });
         });
@@ -853,6 +1170,130 @@ document.addEventListener('DOMContentLoaded', function() {
         if (addTeacherDefaultProfileIcon) addTeacherDefaultProfileIcon.classList.remove('opacity-0');
     }
 
+    // Grade change event to load sections for assignment modal
+    if (assignGrade) {
+        assignGrade.addEventListener('change', function() {
+            const gradeId = this.value;
+            
+            // Reset section dropdown
+            assignSection.innerHTML = '<option value="">Loading sections...</option>';
+            
+            if (!gradeId) {
+                assignSection.innerHTML = '<option value="">Select Grade First</option>';
+                return;
+            }
+            
+            // Create sections data from Django template
+            const allSections = [];
+            {% for section in sections %}
+                allSections.push({
+                    id: "{{ section.id }}",
+                    name: "{{ section.name }}",
+                    gradeId: "{{ section.grade.id }}"
+                });
+            {% endfor %}
+            
+            // Filter sections for the selected grade
+            const filteredSections = allSections.filter(function(section) {
+                return section.gradeId === gradeId;
+            });
+            
+            if (filteredSections.length === 0) {
+                assignSection.innerHTML = '<option value="">No sections available</option>';
+            } else {
+                assignSection.innerHTML = '<option value="">Select Section</option>';
+                filteredSections.forEach(function(section) {
+                    assignSection.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+                });
+            }
+        });
+    }
+
+    // Confirm section assignment
+    if (confirmAssignSection) {
+        confirmAssignSection.addEventListener('click', function() {
+            const teacherId = assignTeacherId.value;
+            const sectionId = assignSection.value;
+            
+            if (!teacherId || !sectionId) {
+                showToast('Please select a section', 'error');
+                return;
+            }
+            
+            // Make API request to assign teacher to section
+            fetch('/admin/teachers/assign-section/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    teacher_id: teacherId,
+                    section_id: sectionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    assignSectionModal.classList.add('hidden');
+                    
+                    // Refresh table to show updated data
+                    fetchTeachers(currentPage);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while assigning section', 'error');
+            });
+        });
+    }
+
+    // Cancel section assignment
+    if (cancelAssignSection) {
+        cancelAssignSection.addEventListener('click', function() {
+            assignSectionModal.classList.add('hidden');
+        });
+    }
+
+    // Function to remove teacher from section
+    function removeTeacherSection(teacherId) {
+        fetch('/admin/teachers/remove-section/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                teacher_id: teacherId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Refresh table to show updated data
+                fetchTeachers(currentPage);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while removing teacher from section', 'error');
+        });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === assignSectionModal) {
+            assignSectionModal.classList.add('hidden');
+        }
+    });
+
     // Dynamic Section Dropdown
     if (addTeacherGrade && addTeacherSection) {
         addTeacherGrade.addEventListener('change', function() {
@@ -872,22 +1313,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const allSections = [
             {% for section in sections %}
                 {
-                    id: {{ section.id }}, 
-                    name: '{{ section.name|escapejs }}', 
-                    gradeId: {{ section.grade.id }}, 
+                    id: {{ section.id }},
+                    name: '{{ section.name|escapejs }}',
+                    gradeId: {{ section.grade.id }},
                     gradeName: '{{ section.grade.name|escapejs }}'
-                },
+                }{% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
         
-        const filtered = allSections.filter(s => s.gradeId == gradeId);
+        const filtered = allSections.filter(function(s) {
+            return s.gradeId == gradeId;
+        });
         
         if (filtered.length === 0) {
             addTeacherSection.innerHTML = '<option value="">No sections available</option>';
         } else {
             let options = '<option value="">Select Section</option>';
-            filtered.forEach(section => {
-                options += `<option value="${section.id}">${section.name}</option>`;
+            filtered.forEach(function(section) {
+                options += '<option value="' + section.id + '">' + section.name + '</option>';
             });
             addTeacherSection.innerHTML = options;
         }
@@ -1033,11 +1476,198 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (teacherSearch && urlParams.has('search')) teacherSearch.value = urlParams.get('search');
     if (advisoryFilter && urlParams.has('advisory')) advisoryFilter.value = urlParams.get('advisory');
+    if (statusFilter && urlParams.has('status')) statusFilter.value = urlParams.get('status');
     if (sectionFilter && urlParams.has('section')) sectionFilter.value = urlParams.get('section');
     if (urlParams.has('page')) {
         currentPage = parseInt(urlParams.get('page'));
         if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
     }
+    
+    // Attach search event listeners
+    if (teacherSearch) {
+        teacherSearch.addEventListener('input', debounce(function() {
+            fetchTeachers(1);
+        }, 500));
+    }
+    
+    // Attach filter event listeners
+    if (advisoryFilter) {
+        advisoryFilter.addEventListener('change', function() {
+            fetchTeachers(1);
+        });
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            fetchTeachers(1);
+        });
+    }
+    
+    if (sectionFilter) {
+        sectionFilter.addEventListener('change', function() {
+            fetchTeachers(1);
+        });
+    }
+
+    // --- Teacher Actions State ---
+    let currentTeacherId = null;
+    let currentTeacherIsActive = null;
+    let currentTeacherName = "";
+
+    // --- Action Button Handlers ---
+    // Delete Teacher
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-teacher')) {
+            const btn = e.target.closest('.delete-teacher');
+            currentTeacherId = btn.dataset.teacherId;
+            // Find teacher name
+            const row = btn.closest('tr');
+            const nameEl = row.querySelector('.text-lg.font-bold');
+            currentTeacherName = nameEl ? nameEl.textContent.trim() : '';
+            document.getElementById('delete-teacher-modal').classList.remove('hidden');
+        }
+    });
+    // Confirm Delete
+    document.getElementById('confirm-delete-teacher').addEventListener('click', function() {
+        if (!currentTeacherId) return;
+        fetch(`/admin/users/${currentTeacherId}/delete/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                document.getElementById('delete-teacher-modal').classList.add('hidden');
+                fetchTeachers();
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    });
+    // Cancel Delete
+    document.querySelectorAll('.cancel-delete-teacher').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('delete-teacher-modal').classList.add('hidden');
+        });
+    });
+
+    // Reset Password
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.reset-password')) {
+            const btn = e.target.closest('.reset-password');
+            currentTeacherId = btn.dataset.teacherId;
+            // Find teacher name
+            const row = btn.closest('tr');
+            const nameEl = row.querySelector('.text-lg.font-bold');
+            currentTeacherName = nameEl ? nameEl.textContent.trim() : '';
+            document.getElementById('reset-password-teacher-username').textContent = currentTeacherName;
+            document.getElementById('password-reset-teacher-modal').classList.remove('hidden');
+        }
+    });
+    // Confirm Reset Password
+    document.getElementById('confirm-reset-teacher-password').addEventListener('click', function() {
+        const newPass = document.getElementById('new_teacher_password').value;
+        const confirmPass = document.getElementById('confirm_teacher_password').value;
+        if (!newPass || newPass.length < 8) {
+            showToast('Password must be at least 8 characters long.', 'error');
+            return;
+        }
+        if (newPass !== confirmPass) {
+            showToast("Passwords don't match.", 'error');
+            return;
+        }
+        fetch(`/admin/users/${currentTeacherId}/reset-password/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ new_password: newPass })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                document.getElementById('password-reset-teacher-modal').classList.add('hidden');
+                document.getElementById('new_teacher_password').value = '';
+                document.getElementById('confirm_teacher_password').value = '';
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    });
+    // Cancel Password Reset
+    document.querySelectorAll('.cancel-password-reset-teacher').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('password-reset-teacher-modal').classList.add('hidden');
+            document.getElementById('new_teacher_password').value = '';
+            document.getElementById('confirm_teacher_password').value = '';
+        });
+    });
+
+    // Deactivate/Activate Teacher
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.deactivate-teacher')) {
+            const btn = e.target.closest('.deactivate-teacher');
+            currentTeacherId = btn.dataset.teacherId;
+            currentTeacherIsActive = btn.dataset.isActive === 'true';
+            // Find teacher name
+            const row = btn.closest('tr');
+            const nameEl = row.querySelector('.text-lg.font-bold');
+            currentTeacherName = nameEl ? nameEl.textContent.trim() : '';
+            // Setup modal
+            const modal = document.getElementById('status-change-teacher-modal');
+            const title = document.getElementById('status-change-teacher-title');
+            const msg = document.getElementById('status-change-teacher-message');
+            const btnText = document.getElementById('status-change-teacher-button-text');
+            const icon = document.getElementById('status-icon-teacher');
+            const iconContainer = document.getElementById('status-icon-teacher-container');
+            if (currentTeacherIsActive) {
+                title.textContent = 'Deactivate Teacher';
+                msg.textContent = `Are you sure you want to deactivate ${currentTeacherName}?`;
+                btnText.textContent = 'Deactivate';
+                icon.setAttribute('class', 'h-6 w-6 text-red-600 dark:text-red-400');
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />`;
+                iconContainer.setAttribute('class', 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-12 sm:w-12');
+            } else {
+                title.textContent = 'Activate Teacher';
+                msg.textContent = `Are you sure you want to activate ${currentTeacherName}?`;
+                btnText.textContent = 'Activate';
+                icon.setAttribute('class', 'h-6 w-6 text-green-600 dark:text-green-400');
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+                iconContainer.setAttribute('class', 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 sm:mx-0 sm:h-12 sm:w-12');
+            }
+            modal.classList.remove('hidden');
+        }
+    });
+    // Confirm Status Change
+    document.getElementById('confirm-status-change-teacher').addEventListener('click', function() {
+        fetch(`/admin/users/${currentTeacherId}/update/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ is_active: !currentTeacherIsActive })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(`Teacher ${currentTeacherName} has been ${currentTeacherIsActive ? 'deactivated' : 'activated'} successfully`, 'success');
+                document.getElementById('status-change-teacher-modal').classList.add('hidden');
+                fetchTeachers();
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    });
+    // Cancel Status Change
+    document.querySelectorAll('.cancel-status-change-teacher').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('status-change-teacher-modal').classList.add('hidden');
+        });
+    });
 });
 </script>
 {% endblock %}

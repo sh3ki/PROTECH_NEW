@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
-from PROTECHAPP.views import admin_views, advisory_teacher_views, non_advisory_teacher_views, registrar_views, principal_views, public_views
+from PROTECHAPP.views import admin_views, advisory_teacher_views, non_advisory_teacher_views, registrar_views, principal_views, public_views, face_recognition_views
 
 urlpatterns = [
     # Public routes
@@ -9,6 +9,10 @@ urlpatterns = [
     path('select-device/', public_views.select_device, name='select_device'),
     path('login/', public_views.login_view, name='login'),
     path('logout/', public_views.logout_view, name='logout'),
+
+    # Face Recognition routes
+    path('time-in/', face_recognition_views.time_in, name='time_in'),
+    path('time-out/', face_recognition_views.time_out, name='time_out'),
 
     # admin/users routes
     path('admin/users/', admin_views.admin_users, name='admin_users'),

@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Monitoring System - Time In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden bg-white text-black">
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between px-6 py-4" style="background-color: #023c82;">
+      <div class="flex items-center gap-3">
+        <img src="{% static 'public/images/protechlogo.svg' %}" alt="Logo" class="h-8" />
+        <span class="inline-block font-extrabold italic tracking-tight leading-tight text-[20px] ml-1 text-white" style="font-family: 'Arial Black', Arial, sans-serif;">
+          THE TECH<br>TO PROTECT
+        </span>
+      </div>
+      <h1 class="text-lg md:text-2xl font-bold text-center text-white drop-shadow">
+       ATTENDANCE MONITORING - TIME IN  
+      </h1>
+      <div class="flex gap-2">
+        <button class="bg-white/90 hover:bg-white text-blue-900 font-semibold text-sm px-4 py-1 rounded-lg shadow border border-white/40 transition-transform hover:scale-105">Attendance</button>
+        <button class="bg-white/90 hover:bg-white text-blue-900 font-semibold text-sm px-4 py-1 rounded-lg shadow border border-white/40 transition-transform hover:scale-105">Back</button>
+      </div>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="flex p-4 gap-4 min-h-[80vh] flex-1 bg-white">
+      <!-- Webcam Feed -->
+      <div class="flex-1 bg-gray-200 rounded-3xl border border-gray-200 h-[500px] shadow-2xl shadow-black/30"></div>
+
+      <!-- Right Panel -->
+      <div class="w-[320px] flex flex-col gap-4">
+        <div class="flex-1 bg-gray-200 rounded-2xl border border-gray-200 shadow-2xl shadow-black/30"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-between items-center text-sm px-6 py-3 mt-auto" style="background-color: #023c82;">
+      <span id="timestamp" class="text-white"></span>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" checked class="form-checkbox accent-blue-600" id="face-recognition" />
+        <label for="face-recognition" class="text-white">Face Recognition</label>
+      </div>
+    </div>
+    <script>
+      // Real-time date and time for the footer
+      function updateTimestamp() {
+        const now = new Date();
+        document.getElementById('timestamp').textContent = now.toLocaleString();
+      }
+      updateTimestamp();
+      setInterval(updateTimestamp, 1000);
+    </script>
+  </body>
+</html>
