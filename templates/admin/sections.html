@@ -184,12 +184,12 @@
             <table id="sections-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
-                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section Name</th>
-                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
-                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Students</th>
-                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Advisor</th>
-                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                        <th scope="col" class="px-6 py-3.5 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section Name</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Students</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Advisor</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                        <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -323,6 +323,59 @@
     </div>
 </div>
 
+<!-- View Section Modal for Class List -->
+<div id="view-section-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6">
+                    <div class="sm:flex sm:items-start mb-4">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-grow">
+                            <div class="flex items-center justify-between">
+                                <h3 id="view-section-title" class="text-2xl leading-6 font-bold text-gray-900 dark:text-white"></h3>
+                                <button type="button" id="close-view-section-modal-x" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="mt-1 flex items-center">
+                                <div class="text-sm text-gray-500 dark:text-gray-400 font-medium">Section Advisor:</div>
+                                <div id="view-section-advisor" class="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Class List</h4>
+                        <div id="view-section-students" class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                            <!-- Students will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="print-class-list" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-base font-medium text-white hover:from-blue-700 hover:to-blue-600 dark:from-blue-700 dark:to-blue-600 dark:hover:from-blue-800 dark:hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Print Class List
+                        </span>
+                    </button>
+                    <button type="button" id="close-view-section-modal" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Animation styles */
     @keyframes fadeIn {
@@ -345,7 +398,7 @@
     
     @keyframes slideIn {
         from {
-            transform: translateY(1rem);
+            transform: translateY(-1rem);
             opacity: 0;
         }
         to {
@@ -360,7 +413,7 @@
             opacity: 1;
         }
         to {
-            transform: translateY(1rem);
+            transform: translateY(-1rem);
             opacity: 0;
         }
     }
@@ -403,49 +456,68 @@ document.addEventListener('DOMContentLoaded', function() {
     // CSRF token
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    // Toast notification function (same as grades)
+    // Toast notification function - Updated to match users.html and teachers.html style
     function showToast(message, type = 'success', duration = 5000) {
+        // Create toast element
         const toast = document.createElement('div');
         
-        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-4 opacity-0';
+        // Set base classes - using top animation with translate-y-[-1rem]
+        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0';
         
+        // Additional classes based on type
         let iconHTML = '';
         switch (type) {
             case 'success':
-                toast.className += ' text-green-500 bg-white dark:bg-gray-800 dark:text-green-400';
-                iconHTML = `<svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
+                iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                 </svg>`;
                 break;
             case 'error':
-                toast.className += ' text-red-500 bg-white dark:bg-gray-800 dark:text-red-400';
-                iconHTML = `<svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
+                toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
+                iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+            case 'warning':
+                toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
+                iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+            case 'info':
+                toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
+                iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 4a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                 </svg>`;
                 break;
         }
         
+        // Add content to toast
         toast.innerHTML = `
             <div class="flex items-center justify-between w-full">
-                <div class="inline-flex items-center">
+                <div class="flex items-center">
                     ${iconHTML}
-                    <div class="ms-3 text-sm font-normal">${message}</div>
+                    <div class="ml-3 text-sm font-normal">${message}</div>
                 </div>
-                <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" aria-label="Close">
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" data-dismiss-target="#toast" aria-label="Close">
                     <span class="sr-only">Close</span>
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
                     </svg>
                 </button>
             </div>
         `;
         
+        // Add toast to container
         sectionToastContainer.appendChild(toast);
         
+        // Animate toast in - slide down from top
         setTimeout(() => {
-            toast.classList.remove('translate-y-4', 'opacity-0');
+            toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
         }, 10);
         
+        // Add click event to close button
         const closeButton = toast.querySelector('button');
         if (closeButton) {
             closeButton.addEventListener('click', () => {
@@ -453,6 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // Auto-dismiss after duration
         if (duration > 0) {
             setTimeout(() => {
                 removeToast(toast);
@@ -461,12 +534,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function removeToast(toast) {
-        toast.classList.add('opacity-0', 'translate-y-4');
-        
-        setTimeout(() => {
-            if (toast && toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
+        // Slide back up when removing (for top position)
+        toast.classList.add('opacity-0', 'translate-y-[-1rem]');
+        setTimeout(() => { 
+            if (toast && toast.parentNode) 
+                toast.parentNode.removeChild(toast); 
         }, 300);
     }
     
@@ -663,6 +735,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
+                            <button class="view-section text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200 transition-colors p-2 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full" data-section-id="${section.id}" data-section-name="${section.name}" data-grade-name="${section.grade_name}" data-advisor="${section.advisor ? section.advisor.name : ''}" title="View Class List">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
                             <button class="delete-section text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-section-id="${section.id}" data-section-name="${section.name}" data-grade-name="${section.grade_name}" title="Delete Section">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -760,6 +838,102 @@ document.addEventListener('DOMContentLoaded', function() {
                 sectionNameInput.value = sectionName;
                 sectionGradeSelect.value = gradeId;
                 sectionModal.classList.remove('hidden');
+            });
+        });
+        
+        document.querySelectorAll('.view-section').forEach(button => {
+            button.addEventListener('click', function() {
+                const sectionId = this.dataset.sectionId;
+                const sectionName = this.dataset.sectionName;
+                const gradeName = this.dataset.gradeName;
+                const advisorName = this.dataset.advisor || 'No Advisor';
+                
+                // Set modal title and details
+                document.getElementById('view-section-title').textContent = `${gradeName} - ${sectionName}`;
+                document.getElementById('view-section-advisor').textContent = advisorName;
+                
+                // Show loading in student list
+                const studentListContainer = document.getElementById('view-section-students');
+                studentListContainer.innerHTML = `
+                    <div class="flex justify-center py-6">
+                        <svg class="animate-spin h-8 w-8 text-primary dark:text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                `;
+                
+                // Show the modal
+                document.getElementById('view-section-modal').classList.remove('hidden');
+                
+                // Fetch students in this section
+                fetch(`/admin/sections/${sectionId}/students/`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (data.students.length === 0) {
+                            studentListContainer.innerHTML = `
+                                <div class="text-center py-6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    <p class="text-gray-500 dark:text-gray-400">No students in this section</p>
+                                </div>
+                            `;
+                        } else {
+                            let html = `
+                                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <div class="grid grid-cols-12 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 py-2">
+                                        <div class="col-span-1 px-4">#</div>
+                                        <div class="col-span-3 px-4">LRN</div>
+                                        <div class="col-span-8 px-4">Student Name</div>
+                                    </div>
+                            `;
+                            
+                            data.students.forEach((student, index) => {
+                                const rowClass = index % 2 === 0 ? '' : 'bg-gray-50 dark:bg-gray-800/50';
+                                html += `
+                                    <div class="grid grid-cols-12 py-3 ${rowClass}">
+                                        <div class="col-span-1 px-4 text-sm text-gray-500 dark:text-gray-400">${index + 1}</div>
+                                        <div class="col-span-3 px-4 text-sm font-medium">${student.lrn}</div>
+                                        <div class="col-span-8 px-4 font-medium">${student.full_name}</div>
+                                    </div>
+                                `;
+                            });
+                            
+                            html += '</div>';
+                            studentListContainer.innerHTML = html;
+                        }
+                    } else {
+                        studentListContainer.innerHTML = `
+                            <div class="text-center py-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 dark:text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p class="text-red-500 dark:text-red-400">Error loading students</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching section students:', error);
+                    studentListContainer.innerHTML = `
+                        <div class="text-center py-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 dark:text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-red-500 dark:text-red-400">Failed to load students. Please try again later.</p>
+                        </div>
+                    `;
+                });
             });
         });
         
@@ -891,6 +1065,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target === deleteSectionModal) {
             deleteSectionModal.classList.add('hidden');
         }
+        if (event.target === document.getElementById('view-section-modal')) {
+            document.getElementById('view-section-modal').classList.add('hidden');
+        }
     });
     
     // Initialize
@@ -912,6 +1089,94 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPage = parseInt(urlParams.get('page'));
         if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
     }
+    
+    // Add event listeners for the View Section Modal
+    document.getElementById('close-view-section-modal').addEventListener('click', function() {
+        document.getElementById('view-section-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('close-view-section-modal-x').addEventListener('click', function() {
+        document.getElementById('view-section-modal').classList.add('hidden');
+    });
+    
+    // Handle print class list
+    document.getElementById('print-class-list').addEventListener('click', function() {
+        const sectionTitle = document.getElementById('view-section-title').textContent;
+        const advisor = document.getElementById('view-section-advisor').textContent;
+        const studentList = document.getElementById('view-section-students').innerHTML;
+        
+        // Create print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Class List - ${sectionTitle}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { text-align: center; font-size: 18px; margin-bottom: 5px; }
+                    h2 { text-align: center; font-size: 16px; margin-bottom: 20px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
+                    td { padding: 8px; border: 1px solid #ddd; }
+                    .print-header { margin-bottom: 30px; text-align: center; }
+                    .school-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+                    .school-address { font-size: 14px; margin-bottom: 20px; }
+                    .info { text-align: left; margin-bottom: 20px; }
+                    .info p { margin: 5px 0; }
+                    @media print {
+                        button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-header">
+                    <div class="school-name">PROTECH: THE TECH TO PROTECT</div>
+                    <div class="school-address">Face Recognition Attendance Monitoring System</div>
+                </div>
+                <div class="info">
+                    <p><strong>Section:</strong> ${sectionTitle}</p>
+                    <p><strong>Advisory Teacher:</strong> ${advisor}</p>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                <h1>CLASS LIST</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">#</th>
+                            <th style="width: 30%;">LRN</th>
+                            <th style="width: 60%;">Student Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${document.getElementById('view-section-students').querySelectorAll('.grid').length > 1 ? 
+                            Array.from(document.getElementById('view-section-students').querySelectorAll('.grid:not(:first-child)')).map((row, index) => {
+                                const columns = row.querySelectorAll('div[class^="col-span"]');
+                                if (columns.length >= 3) {
+                                    return `<tr>
+                                        <td>${index + 1}</td>
+                                        <td>${columns[1].textContent}</td>
+                                        <td>${columns[2].textContent}</td>
+                                    </tr>`;
+                                }
+                                return '';
+                            }).join('') : 
+                            '<tr><td colspan="3" style="text-align: center;">No students in this section</td></tr>'
+                        }
+                    </tbody>
+                </table>
+                <div style="margin-top: 30px; text-align: center;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background-color: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer;">Print</button>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+    
+    // Initialize grade filter and fetch sections on page load
+    initializeGradeFilter();
+    fetchSections();
 });
 </script>
 {% endblock %}
