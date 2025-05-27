@@ -78,276 +78,342 @@
 
 <div class="mb-6">
     <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
-        <!-- Enhanced Search and Filter Controls -->
-        <div class="flex flex-col md:flex-row gap-4">
-            <div class="relative">
-                <input type="text" id="user-search" placeholder="Search users..." 
-                    class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-lg">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Enhanced Search and Filter Controls with improved styling -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="user-search" placeholder="Search by name, email, or username..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
+                <!-- Live search indicator - visible when typing -->
+                <div id="search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="animate-spin h-5 w-5 text-primary dark:text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="search-results-count" class="hidden absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span></span>
+                </div>
             </div>
-            <div class="flex space-x-2">
-                <select id="role-filter" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-lg">
-                    <option value="">All Roles</option>
-                    {% for role_value, role_name in role_choices %}
-                        <option value="{{ role_value }}" {% if role_filter == role_value %}selected{% endif %}>{{ role_name }}</option>
-                    {% endfor %}
-                </select>
-                <select id="active-filter" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-lg">
-                    <option value="">All Status</option>
-                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                </select>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <!-- Role filter with icon -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="role-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Roles</option>
+                        {% for role_value, role_name in role_choices %}
+                            <option value="{{ role_value }}" {% if role_filter == role_value %}selected{% endif %}>{{ role_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Status filter with icon -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="active-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Add, Print, Import, Export Buttons -->
-        <div class="flex space-x-2">
-            <button id="import-users-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+        
+        <!-- Action buttons -->
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <button id="import-users-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
-                <span>Import</span>
+                <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <span>Export</span>
+                <span class="hidden sm:inline">Export</span>
             </button>
-            <button id="print-users-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <button id="print-users-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                <span>Print</span>
+                <span class="hidden sm:inline">Print</span>
             </button>
-            <!-- Enhanced "Add User" button with animation -->
-            <button id="add-user-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <!-- Enhanced "Add User" button -->
+            <button id="add-user-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
-                <span>Add User</span>
+                <span class="hidden sm:inline">Add User</span>
             </button>
         </div>
     </div>
 </div>
 
-<!-- User Table: Remove status, add is_active, larger font, sortable headers, action buttons -->
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden border border-gray-100 dark:border-gray-700">
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-900/50">
-                <tr>
-                    <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        User
-                        <!-- Sort indicator here if needed -->
-                    </th>
-                    <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        Email
-                    </th>
-                    <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        Role
-                    </th>
-                    <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        Active
-                    </th>
-                    <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        Created
-                    </th>
-                    <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Actions
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {% for user in users %}
-                <tr class="{% cycle 'bg-white dark:bg-gray-800' 'bg-gray-50 dark:bg-gray-800/50' %} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-secondary/20 to-tertiary/20 dark:from-tertiary/20 dark:to-secondary/20 flex items-center justify-center">
-                                {% if user.profile_pic %}
-                                    <img src="{% url 'serve_profile_pic' path=user.profile_pic %}" alt="{{ user.username }}" class="h-10 w-10 rounded-full object-cover shadow-inner">
-                                {% else %}
-                                    <span class="text-primary dark:text-tertiary font-bold text-lg">
-                                        {% if user.first_name %}
-                                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
-                                        {% else %}
-                                            {{ user.username|first|upper }}
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-lg font-bold text-gray-900 dark:text-white">
-                                    {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
-                                </div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">@{{ user.username }}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-lg text-gray-900 dark:text-white">{{ user.email }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <!-- ...existing role badge code... -->
-                        {% if user.role == 'ADMIN' %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400 mr-1.5"></span>
-                                    Administrator
-                                </span>
-                            </span>
-                        {% elif user.role == 'TEACHER' %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400 mr-1.5"></span>
-                                    Teacher
-                                </span>
-                            </span>
-                        {% elif user.role == 'PRINCIPAL' %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
-                                    Principal
-                                </span>
-                            </span>
-                        {% elif user.role == 'REGISTRAR' %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-yellow-500 dark:bg-yellow-400 mr-1.5"></span>
-                                    Registrar
-                                </span>
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        {% if user.is_active %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
-                                    Active
-                                </span>
-                            </span>
-                        {% else %}
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 shadow-sm">
-                                <span class="flex items-center">
-                                    <span class="h-2 w-2 rounded-full bg-red-500 dark:bg-red-400 mr-1.5"></span>
-                                    Inactive
-                                </span>
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-500 dark:text-gray-400">
-                        {{ user.created_at|date:"M d, Y" }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
-                        <div class="flex justify-end space-x-3">
-                            <!-- Edit User Button - Use document/edit icon -->
-                            <button class="edit-user text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-user-id="{{ user.id }}" title="Edit User">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            
-                            <!-- Reset Password Button - Use key/lock icon -->
-                            <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-user-id="{{ user.id }}" title="Reset Password">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </button>
-                            
-                            <!-- Deactivate User Button - Better toggle/power icon -->
-                            <button class="deactivate-user text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-user-id="{{ user.id }}" data-is-active="{{ user.is_active }}" title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} User">
-                                {% if user.is_active %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                {% endif %}
-                            </button>
-                            
-                            <!-- Delete User Button - Use trash icon -->
-                            <button class="delete-user text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-user-id="{{ user.id }}" title="Delete User">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="px-6 py-10 text-center">
-                        <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="text-lg font-medium">No users found</span>
-                            <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- User table container with loading state -->
+<div id="user-table-container" class="relative">
+    <!-- Loading overlay - initially hidden -->
+    <div id="table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-primary dark:text-tertiary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading users...</p>
+        </div>
     </div>
 
-    <!-- Enhanced Pagination -->
-    {% if users.has_other_pages %}
-    <div class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-700 dark:text-gray-300">
-                    Showing
-                    <span class="font-medium">{{ users.start_index }}</span>
-                    to
-                    <span class="font-medium">{{ users.end_index }}</span>
-                    of
-                    <span class="font-medium">{{ users.paginator.count }}</span>
-                    results
-                </p>
-            </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    {% if users.has_previous %}
-                    <a href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                        <span class="sr-only">Previous</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                    {% endif %}
-                    
-                    {% for num in users.paginator.page_range %}
-                        {% if users.number == num %}
-                        <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
-                            {{ num }}
-                        </span>
-                        {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
-                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            {{ num }}
+    <!-- User Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+        <div class="overflow-x-auto">
+            <table id="users-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
+                            User
+                            <!-- Sort indicator here if needed -->
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
+                            Role
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
+                            Active
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
+                            Created
+                        </th>
+                        <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for user in users %}
+                    <tr class="{% cycle 'bg-white dark:bg-gray-800' 'bg-gray-50 dark:bg-gray-800/50' %} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-secondary/20 to-tertiary/20 dark:from-tertiary/20 dark:to-secondary/20 flex items-center justify-center">
+                                    {% if user.profile_pic %}
+                                        <img src="{% url 'serve_profile_pic' path=user.profile_pic %}" alt="{{ user.username }}" class="h-10 w-10 rounded-full object-cover shadow-inner">
+                                    {% else %}
+                                        <span class="text-primary dark:text-tertiary font-bold text-lg">
+                                            {% if user.first_name %}
+                                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                            {% else %}
+                                                {{ user.username|first|upper }}
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                        {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">@{{ user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-lg text-gray-900 dark:text-white">{{ user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <!-- ...existing role badge code... -->
+                            {% if user.role == 'ADMIN' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400 mr-1.5"></span>
+                                        Administrator
+                                    </span>
+                                </span>
+                            {% elif user.role == 'TEACHER' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400 mr-1.5"></span>
+                                        Teacher
+                                    </span>
+                                </span>
+                            {% elif user.role == 'PRINCIPAL' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                                        Principal
+                                    </span>
+                                </span>
+                            {% elif user.role == 'REGISTRAR' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-yellow-500 dark:bg-yellow-400 mr-1.5"></span>
+                                        Registrar
+                                    </span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if user.is_active %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                                        Active
+                                    </span>
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 shadow-sm">
+                                    <span class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-red-500 dark:bg-red-400 mr-1.5"></span>
+                                        Inactive
+                                    </span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-500 dark:text-gray-400">
+                            {{ user.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
+                            <div class="flex justify-end space-x-3">
+                                <!-- Edit User Button - Use document/edit icon -->
+                                <button class="edit-user text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-user-id="{{ user.id }}" title="Edit User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Reset Password Button - Use key/lock icon -->
+                                <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-user-id="{{ user.id }}" title="Reset Password">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Deactivate User Button - Better toggle/power icon -->
+                                <button class="deactivate-user text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-user-id="{{ user.id }}" data-is-active="{{ user.is_active }}" title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} User">
+                                    {% if user.is_active %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    {% endif %}
+                                </button>
+                                
+                                <!-- Delete User Button - Use trash icon -->
+                                <button class="delete-user text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-user-id="{{ user.id }}" title="Delete User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center">
+                            <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="text-lg font-medium">No users found</span>
+                                <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Enhanced Pagination - will be dynamically updated -->
+        <div id="pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing
+                        <span class="font-medium">{{ users.start_index }}</span>
+                        to
+                        <span class="font-medium">{{ users.end_index }}</span>
+                        of
+                        <span class="font-medium">{{ users.paginator.count }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if users.has_previous %}
+                        <a href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
                         </a>
                         {% endif %}
-                    {% endfor %}
-                    
-                    {% if users.has_next %}
-                    <a href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                        <span class="sr-only">Next</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                    {% endif %}
-                </nav>
+                        
+                        {% for num in users.paginator.page_range %}
+                            {% if users.number == num %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
+                                {{ num }}
+                            </span>
+                            {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                {{ num }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if users.has_next %}
+                        <a href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
-    {% endif %}
+
+    <!-- No results message - initially hidden -->
+    <div id="no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No users found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3">
+        <!-- Toast notifications will be dynamically added here -->
+    </div>
 </div>
 
 <!-- User Modal: add profile pic upload, conditional grade/section for teachers -->
@@ -678,6 +744,81 @@
     .animate-fadeIn {
         animation: fadeIn 0.25s ease-out;
     }
+
+    /* Improved animation for row highlighting */
+    @keyframes highlightRow {
+        0% { background-color: rgba(var(--color-primary-rgb), 0.1); }
+        100% { background-color: transparent; }
+    }
+
+    .highlight-row {
+        animation: highlightRow 2s ease-out;
+    }
+    
+    /* Toast notification animations */
+    @keyframes slideIn {
+        from {
+            transform: translateY(1rem);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateY(1rem);
+            opacity: 0;
+        }
+    }
+    
+    #toast-container {
+        pointer-events: none;
+    }
+    
+    #toast-container > div {
+        pointer-events: auto;
+    }
+    
+    /* Filter dropdown custom styling */
+    #role-filter, #active-filter {
+        /* Remove default select styling in Safari */
+        -webkit-appearance: none;
+    }
+    
+    /* Responsive improvements for mobile */
+    @media (max-width: 640px) {
+        .action-buttons-cell {
+            position: relative;
+        }
+        
+        .action-buttons-cell .action-menu-toggle {
+            display: block;
+        }
+        
+        .action-buttons-cell .action-buttons {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            z-index: 10;
+        }
+        
+        .action-buttons-cell.show-menu .action-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+    }
     
     /* Custom scrollbar for modern browsers */
     ::-webkit-scrollbar {
@@ -724,6 +865,18 @@
         const modalTitle = document.getElementById('modal-title');
         const closeModalXBtn = document.getElementById('close-modal-x');
         
+        // Table and search elements
+        const userSearch = document.getElementById('user-search');
+        const roleFilter = document.getElementById('role-filter');
+        const activeFilter = document.getElementById('active-filter');
+        const searchSpinner = document.getElementById('search-spinner');
+        const searchResultsCount = document.getElementById('search-results-count');
+        const userTableContainer = document.getElementById('user-table-container');
+        const tableLoading = document.getElementById('table-loading');
+        const usersTable = document.getElementById('users-table');
+        const noResults = document.getElementById('no-results');
+        const paginationContainer = document.getElementById('pagination-container');
+        
         // Delete modal elements
         const deleteModal = document.getElementById('delete-modal');
         const deleteButtons = document.querySelectorAll('.delete-user');
@@ -753,6 +906,8 @@
         let currentUserId = null;
         let currentUserIsActive = null;
         let currentUsername = "";
+        let currentPage = 1;
+        let searchTimeout = null;
         
         // CSRF token for AJAX requests
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -767,112 +922,729 @@
                 modal.querySelector('div > div > div').classList.add('animate-fadeIn');
             }, 10);
         }
-
-        // Show edit user modal for each edit button
-        document.querySelectorAll('.edit-user').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.dataset.userId;
-                modalTitle.textContent = 'Edit User';
-                currentUserId = userId;
-                
-                // Update form mode and hide password fields
-                document.querySelector('.password-fields').style.display = 'none';
-                
-                // Remove required attribute from password fields in edit mode
-                document.getElementById('password').removeAttribute('required');
-                document.getElementById('password_confirmation').removeAttribute('required');
-                
-                // Fetch user data to populate the form
-                fetch(`/admin/users/${userId}/`, {
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'Accept': 'application/json'
+        
+        // Function to show loading state
+        function showLoading() {
+            if (tableLoading) tableLoading.classList.remove('hidden');
+            if (searchSpinner) searchSpinner.classList.remove('hidden');
+            if (searchResultsCount) searchResultsCount.classList.add('hidden');
+        }
+        
+        // Function to hide loading state
+        function hideLoading() {
+            if (tableLoading) tableLoading.classList.add('hidden');
+            if (searchSpinner) searchSpinner.classList.add('hidden');
+            
+            // Only show results count when there's a search query
+            if (searchResultsCount && userSearch && userSearch.value.trim()) {
+                searchResultsCount.classList.remove('hidden');
+            }
+        }
+        
+        // Toast notification functions
+        function showToast(message, type = 'success', duration = 5000) {
+            // Create toast element
+            const toast = document.createElement('div');
+            
+            // Set base classes
+            toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-4 opacity-0';
+            
+            // Additional classes based on type
+            let iconHTML = '';
+            switch (type) {
+                case 'success':
+                    toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
+                    iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>`;
+                    break;
+                case 'error':
+                    toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
+                    iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>`;
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
+                    iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>`;
+                    break;
+                case 'info':
+                    toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
+                    iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>`;
+                    break;
+            }
+            
+            // Add content to toast
+            toast.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center">
+                        ${iconHTML}
+                        <div class="text-sm font-semibold">${message}</div>
+                    </div>
+                    <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" data-dismiss-target="#toast" aria-label="Close">
+                        <span class="sr-only">Close</span>
+                        <svg aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </button>
+                </div>
+            `;
+            
+            // Add toast to container
+            const toastContainer = document.getElementById('toast-container');
+            toastContainer.appendChild(toast);
+            
+            // Animate toast in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+            
+            // Add click event to close button
+            const closeButton = toast.querySelector('button');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    removeToast(toast);
+                });
+            }
+            
+            // Auto-dismiss after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+            }
+        }
+        
+        function removeToast(toast) {
+            // Fade out
+            toast.classList.add('opacity-0', 'translate-y-4');
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                if (toast && toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }
+        
+        // Replace the simple helper functions with toast notifications
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+        
+        function showError(message) {
+            showToast(message, 'error');
+        }
+        
+        function showWarning(message) {
+            showToast(message, 'warning');
+        }
+        
+        function showInfo(message) {
+            showToast(message, 'info');
+        }
+        
+        // Debounce function to limit API calls while typing
+        function debounce(func, wait) {
+            return function(...args) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+        
+        // Function to fetch and update user data based on search and filters
+        function fetchUsers(page = 1) {
+            const searchQuery = userSearch ? userSearch.value.trim() : '';
+            const roleValue = roleFilter ? roleFilter.value : '';
+            const statusValue = activeFilter ? activeFilter.value : '';
+            
+            showLoading();
+            currentPage = page;
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (roleValue) params.append('role', roleValue);
+            if (statusValue) params.append('status', statusValue);
+            params.append('page', page);
+            
+            // Update URL without refreshing the page
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Fetch users with AJAX
+            fetch(`/admin/users/search/?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update the results count
+                if (searchResultsCount) {
+                    const countSpan = searchResultsCount.querySelector('span');
+                    if (countSpan) {
+                        countSpan.textContent = `${data.total_count} result${data.total_count !== 1 ? 's' : ''}`;
                     }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Populate form fields
-                        const user = data.user;
-                        document.getElementById('username').value = user.username;
-                        document.getElementById('email').value = user.email;
-                        document.getElementById('first_name').value = user.first_name;
-                        document.getElementById('last_name').value = user.last_name;
-                        document.getElementById('middle_name').value = user.middle_name || '';
-                        document.getElementById('role').value = user.role;
-                        
-                        // Properly display profile picture if available
-                        if (user.profile_pic) {
-                            profilePicPreview.src = `/profile-pics/${user.profile_pic}/`;
-                            profilePicPreview.classList.remove('opacity-0');
-                            defaultProfileIcon.classList.add('opacity-0');
-                            console.log("Set profile pic to:", `/profile-pics/${user.profile_pic}/`);
-                        } else {
-                            resetProfilePicPreview();
-                            console.log("No profile pic available, reset to default");
-                        }
-                        
-                        // Handle grade and section fields for teachers
-                        const teacherFields = document.getElementById('teacher-fields');
-                        const roleSelect = document.getElementById('role');
-                        
-                        // Initially hide teacher fields, then show only if role is TEACHER
-                        teacherFields.classList.add('hidden');
-                        
-                        if (user.role === 'TEACHER') {
-                            teacherFields.classList.remove('hidden');
-                            
-                            // If we have section data for this teacher, select it
-                            if (user.section) {
-                                const gradeSelect = document.getElementById('grade');
-                                if (gradeSelect && user.grade) {
-                                    gradeSelect.value = user.grade;
-                                    
-                                    // Trigger change event to load sections
-                                    const event = new Event('change');
-                                    gradeSelect.dispatchEvent(event);
-                                    
-                                    // After sections are loaded, select the correct section
-                                    setTimeout(() => {
-                                        const sectionSelect = document.getElementById('section');
-                                        if (sectionSelect && user.section) {
-                                            sectionSelect.value = user.section;
-                                            console.log("Set section to:", user.section);
-                                        }
-                                    }, 300); // Increased timeout to ensure sections are loaded
-                                }
-                            }
-                        }
-                        
-                        // Add listener for role changes to show/hide teacher fields
-                        roleSelect.addEventListener('change', function() {
-                            if (this.value === 'TEACHER') {
-                                teacherFields.classList.remove('hidden');
-                            } else {
-                                teacherFields.classList.add('hidden');
-                            }
-                        });
-                        
-                        // Show the modal
-                        showModalWithAnimation(userModal);
+                }
+                
+                // If no results, show empty state
+                if (data.total_count === 0) {
+                    if (usersTable) usersTable.closest('.overflow-x-auto').classList.add('hidden');
+                    if (paginationContainer) paginationContainer.classList.add('hidden');
+                    if (noResults) noResults.classList.remove('hidden');
+                } else {
+                    if (usersTable) usersTable.closest('.overflow-x-auto').classList.remove('hidden');
+                    if (paginationContainer) paginationContainer.classList.remove('hidden');
+                    if (noResults) noResults.classList.add('hidden');
+                    
+                    // Update the table with new data
+                    updateUsersTable(data.users);
+                    
+                    // Update pagination
+                    updatePagination(data.pagination);
+                }
+                
+                hideLoading();
+                
+                // Reattach event listeners to new elements
+                attachTableEventListeners();
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+                hideLoading();
+                
+                // Show error state
+                if (usersTable) usersTable.closest('.overflow-x-auto').classList.add('hidden');
+                if (paginationContainer) paginationContainer.classList.add('hidden');
+                if (noResults) {
+                    noResults.classList.remove('hidden');
+                    const errorTitle = noResults.querySelector('h3');
+                    const errorMessage = noResults.querySelector('p');
+                    if (errorTitle) errorTitle.textContent = 'Error loading users';
+                    if (errorMessage) errorMessage.textContent = 'Please try again later';
+                }
+                
+                showError('Failed to load users. Please try again later.');
+            });
+        }
+        
+        // Function to update the users table with new data
+        function updateUsersTable(users) {
+            if (!usersTable) return;
+            
+            const tableBody = usersTable.querySelector('tbody');
+            if (!tableBody) return;
+            
+            let html = '';
+            
+            if (users.length === 0) {
+                html = `
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-lg font-medium">No users found</span>
+                            <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
+                        </div>
+                    </td>
+                </tr>`;
+            } else {
+                // Create HTML for each user row
+                users.forEach((user, index) => {
+                    const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+                    
+                    // Generate user initials for avatar fallback
+                    const initials = user.first_name && user.last_name ? 
+                                    `${user.first_name[0].toUpperCase()}${user.last_name[0].toUpperCase()}` :
+                                    user.username[0].toUpperCase();
+                    
+                    // Generate full name or username
+                    const displayName = user.first_name && user.last_name ? 
+                                      `${user.first_name} ${user.last_name}` : 
+                                      user.username;
+                    
+                    // Generate role badge HTML
+                    let roleBadge = '';
+                    switch(user.role) {
+                        case 'ADMIN':
+                            roleBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 shadow-sm">
+                                <span class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400 mr-1.5"></span>
+                                    Administrator
+                                </span>
+                            </span>`;
+                            break;
+                        case 'TEACHER':
+                            roleBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-sm">
+                                <span class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400 mr-1.5"></span>
+                                    Teacher
+                                </span>
+                            </span>`;
+                            break;
+                        case 'PRINCIPAL':
+                            roleBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                                <span class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                                    Principal
+                                </span>
+                            </span>`;
+                            break;
+                        case 'REGISTRAR':
+                            roleBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shadow-sm">
+                                <span class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-yellow-500 dark:bg-yellow-400 mr-1.5"></span>
+                                    Registrar
+                                </span>
+                            </span>`;
+                            break;
+                    }
+                    
+                    // Generate status badge HTML
+                    const statusBadge = user.is_active ?
+                        `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 shadow-sm">
+                            <span class="flex items-center">
+                                <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></span>
+                                Active
+                            </span>
+                        </span>` :
+                        `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 shadow-sm">
+                            <span class="flex items-center">
+                                <span class="h-2 w-2 rounded-full bg-red-500 dark:bg-red-400 mr-1.5"></span>
+                                Inactive
+                            </span>
+                        </span>`;
+                    
+                    // Generate the status toggle icon
+                    const statusToggleIcon = user.is_active ?
+                        `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>` :
+                        `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>`;
+                    
+                    // Generate profile picture HTML
+                    let profilePic = '';
+                    if (user.profile_pic) {
+                        profilePic = `<img src="/profile-pics/${user.profile_pic}/" alt="${user.username}" class="h-10 w-10 rounded-full object-cover shadow-inner">`;
                     } else {
-                        showError('Failed to load user data: ' + data.message);
+                        profilePic = `<span class="text-primary dark:text-tertiary font-bold text-lg">${initials}</span>`;
                     }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    showError('An error occurred while loading user data.');
+                    
+                    html += `
+                    <tr class="${rowClass} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-secondary/20 to-tertiary/20 dark:from-tertiary/20 dark:to-secondary/20 flex items-center justify-center">
+                                    ${profilePic}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                        ${displayName}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">@${user.username}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-lg text-gray-900 dark:text-white">${user.email}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${roleBadge}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-500 dark:text-gray-400">
+                            ${user.created_at_display}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
+                            <div class="flex justify-end space-x-3">
+                                <!-- Edit User Button -->
+                                <button class="edit-user text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-user-id="${user.id}" title="Edit User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Reset Password Button -->
+                                <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-user-id="${user.id}" title="Reset Password">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Deactivate/Activate User Button -->
+                                <button class="deactivate-user text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" data-user-id="${user.id}" data-is-active="${user.is_active}" title="${user.is_active ? 'Deactivate' : 'Activate'} User">
+                                    ${statusToggleIcon}
+                                </button>
+                                
+                                <!-- Delete User Button -->
+                                <button class="delete-user text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition-colors p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full" data-user-id="${user.id}" title="Delete User">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+            
+            // Update the table with the new HTML
+            tableBody.innerHTML = html;
+            
+            // Add animation class to highlight new results
+            tableBody.classList.add('animate-fadeIn');
+            setTimeout(() => {
+                tableBody.classList.remove('animate-fadeIn');
+            }, 500);
+        }
+        
+        // Function to update pagination controls
+        function updatePagination(pagination) {
+            if (!paginationContainer) return;
+            
+            const {current_page, num_pages, has_next, has_previous, page_range, start_index, end_index, total_count} = pagination;
+            
+            let paginationHtml = `
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing
+                        <span class="font-medium">${start_index}</span>
+                        to
+                        <span class="font-medium">${end_index}</span>
+                        of
+                        <span class="font-medium">${total_count}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">`;
+            
+            // Previous page button
+            if (has_previous) {
+                paginationHtml += `
+                        <a href="javascript:void(0)" data-page="${current_page - 1}" class="page-link relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>`;
+            }
+            
+            // Page numbers
+            page_range.forEach(num => {
+                if (num === current_page) {
+                    paginationHtml += `
+                        <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
+                            ${num}
+                        </span>`;
+                } else {
+                    paginationHtml += `
+                        <a href="javascript:void(0)" data-page="${num}" class="page-link relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            ${num}
+                        </a>`;
+                }
+            });
+            
+            // Next page button
+            if (has_next) {
+                paginationHtml += `
+                        <a href="javascript:void(0)" data-page="${current_page + 1}" class="page-link relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>`;
+            }
+            
+            paginationHtml += `
+                    </nav>
+                </div>
+            </div>`;
+            
+            // Update the pagination container
+            paginationContainer.innerHTML = paginationHtml;
+            
+            // Add event listeners to pagination links
+            const pageLinks = paginationContainer.querySelectorAll('.page-link');
+            pageLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.dataset.page);
+                    fetchUsers(page);
                 });
             });
-        });
+        }
         
-        // Fix: Modify Add User button handler to re-add required attributes
+        // Function to attach event listeners to table elements
+        function attachTableEventListeners() {
+            // Edit user buttons
+            document.querySelectorAll('.edit-user').forEach(button => {
+                button.addEventListener('click', handleEditUser);
+            });
+            
+            // Reset password buttons
+            document.querySelectorAll('.reset-password').forEach(button => {
+                button.addEventListener('click', handleResetPassword);
+            });
+            
+            // Deactivate/activate buttons
+            document.querySelectorAll('.deactivate-user').forEach(button => {
+                button.addEventListener('click', handleStatusChange);
+            });
+            
+            // Delete buttons
+            document.querySelectorAll('.delete-user').forEach(button => {
+                button.addEventListener('click', handleDelete);
+            });
+        }
+        
+        // Handler for edit user button
+        function handleEditUser() {
+            const userId = this.dataset.userId;
+            modalTitle.textContent = 'Edit User';
+            currentUserId = userId;
+            
+            // Update form mode and hide password fields
+            document.querySelector('.password-fields').style.display = 'none';
+            
+            // Remove required attribute from password fields in edit mode
+            document.getElementById('password').removeAttribute('required');
+            document.getElementById('password_confirmation').removeAttribute('required');
+            
+            // Fetch user data to populate the form
+            fetch(`/admin/users/${userId}/`, {
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Populate form fields
+                    const user = data.user;
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('first_name').value = user.first_name;
+                    document.getElementById('last_name').value = user.last_name;
+                    document.getElementById('middle_name').value = user.middle_name || '';
+                    document.getElementById('role').value = user.role;
+                    
+                    // Properly display profile picture if available
+                    if (user.profile_pic) {
+                        profilePicPreview.src = `/profile-pics/${user.profile_pic}/`;
+                        profilePicPreview.classList.remove('opacity-0');
+                        defaultProfileIcon.classList.add('opacity-0');
+                        console.log("Set profile pic to:", `/profile-pics/${user.profile_pic}/`);
+                    } else {
+                        resetProfilePicPreview();
+                        console.log("No profile pic available, reset to default");
+                    }
+                    
+                    // Handle grade and section fields for teachers
+                    const teacherFields = document.getElementById('teacher-fields');
+                    const roleSelect = document.getElementById('role');
+                    
+                    // Initially hide teacher fields, then show only if role is TEACHER
+                    teacherFields.classList.add('hidden');
+                    
+                    if (user.role === 'TEACHER') {
+                        teacherFields.classList.remove('hidden');
+                        
+                        // If we have section data for this teacher, select it
+                        if (user.section) {
+                            const gradeSelect = document.getElementById('grade');
+                            if (gradeSelect && user.grade) {
+                                gradeSelect.value = user.grade;
+                                
+                                // Trigger change event to load sections
+                                const event = new Event('change');
+                                gradeSelect.dispatchEvent(event);
+                                
+                                // After sections are loaded, select the correct section
+                                setTimeout(() => {
+                                    const sectionSelect = document.getElementById('section');
+                                    if (sectionSelect && user.section) {
+                                        sectionSelect.value = user.section;
+                                        console.log("Set section to:", user.section);
+                                    }
+                                }, 300); // Increased timeout to ensure sections are loaded
+                            }
+                        }
+                    }
+                    
+                    // Add listener for role changes to show/hide teacher fields
+                    roleSelect.addEventListener('change', function() {
+                        if (this.value === 'TEACHER') {
+                            teacherFields.classList.remove('hidden');
+                        } else {
+                            teacherFields.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Show the modal
+                    showModalWithAnimation(userModal);
+                } else {
+                    showError('Failed to load user data: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+                showError('An error occurred while loading user data.');
+            });
+        }
+        
+        // Handler for reset password button
+        function handleResetPassword() {
+            const userId = this.dataset.userId;
+            currentUserId = userId;
+            
+            // Find the username to display in the modal
+            const userRow = this.closest('tr');
+            const userNameElement = userRow.querySelector('.text-lg.font-bold');
+            currentUsername = userNameElement.textContent.trim();
+            
+            // Set username in modal
+            resetUsernameSpan.textContent = currentUsername;
+            
+            // Show the password reset modal
+            showModalWithAnimation(passwordResetModal);
+        }
+        
+        // Handler for status change button
+        function handleStatusChange() {
+            const userId = this.dataset.userId;
+            // Fix: Convert string 'true' to boolean properly
+            const isActive = this.dataset.isActive === 'true';
+            currentUserId = userId;
+            currentUserIsActive = isActive;
+            
+            // Find the username
+            const userRow = this.closest('tr');
+            const userNameElement = userRow.querySelector('.text-lg.font-bold');
+            currentUsername = userNameElement.textContent.trim();
+            
+            // Configure modal content based on current status
+            if (isActive) {
+                // Currently active, show deactivate options
+                statusChangeTitle.textContent = 'Deactivate User';
+                statusChangeMessage.textContent = `Are you sure you want to deactivate ${currentUsername}? They will not be able to login until reactivated.`;
+                statusChangeButtonText.textContent = 'Deactivate';
+                
+                // Updated styling with proper gradient and hover states
+                confirmStatusChangeBtn.setAttribute('class', 
+                    'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-base font-medium text-white hover:from-red-700 hover:to-red-600 dark:from-red-700 dark:to-red-600 dark:hover:from-red-800 dark:hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
+                
+                statusIconContainer.setAttribute('class', 
+                    'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-12 sm:w-12');
+                
+                statusIcon.setAttribute('class', 
+                    'h-6 w-6 text-red-600 dark:text-red-400');
+                    
+                statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />`;
+            } else {
+                // Currently inactive, show activate options
+                statusChangeTitle.textContent = 'Activate User';
+                statusChangeMessage.textContent = `Are you sure you want to activate ${currentUsername}? They will be able to login after activation.`;
+                statusChangeButtonText.textContent = 'Activate';
+                
+                // Updated styling with proper gradient and hover states
+                confirmStatusChangeBtn.setAttribute('class', 
+                    'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-base font-medium text-white hover:from-green-700 hover:to-green-600 dark:from-green-700 dark:to-green-600 dark:hover:from-green-800 dark:hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
+                
+                statusIconContainer.setAttribute('class', 
+                    'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 sm:mx-0 sm:h-12 sm:w-12');
+                
+                statusIcon.setAttribute('class', 
+                    'h-6 w-6 text-green-600 dark:text-green-400');
+                    
+                statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            }
+            
+            // Show the status change modal
+            showModalWithAnimation(statusChangeModal);
+        }
+        
+        // Handler for delete button
+        function handleDelete() {
+            const userId = this.dataset.userId;
+            currentUserId = userId;
+            
+            // Find the username
+            const userRow = this.closest('tr');
+            const userNameElement = userRow.querySelector('.text-lg.font-bold');
+            currentUsername = userNameElement.textContent.trim();
+            
+            // Show delete confirmation modal
+            showModalWithAnimation(deleteModal);
+        }
+        
+        // Initialize profile picture preview functions
+        const profilePicInput = document.getElementById('profile_pic');
+        const profilePicPreview = document.getElementById('profile-pic-preview');
+        const defaultProfileIcon = document.getElementById('default-profile-icon');
+        const uploadTrigger = document.getElementById('upload-trigger');
+        
+        if (uploadTrigger) {
+            uploadTrigger.addEventListener('click', function() {
+                if (profilePicInput) profilePicInput.click();
+            });
+        }
+        
+        if (profilePicInput) {
+            profilePicInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        if (profilePicPreview) {
+                            profilePicPreview.src = e.target.result;
+                            // Show the image and hide the default icon
+                            profilePicPreview.classList.remove('opacity-0');
+                            if (defaultProfileIcon) defaultProfileIcon.classList.add('opacity-0');
+                        }
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        // Reset profile picture preview
+        function resetProfilePicPreview() {
+            if (profilePicPreview) {
+                profilePicPreview.src = "#";
+                profilePicPreview.classList.add('opacity-0');
+            }
+            if (defaultProfileIcon) defaultProfileIcon.classList.remove('opacity-0');
+        }
+        
+        // Add User button handler
         if (addUserBtn) {
             addUserBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 console.log("Add user button clicked");
                 modalTitle.textContent = 'Add New User';
-                userForm.reset();
+                resetUserModalForm(); // Use the reset function
                 currentUserId = null;
                 
                 // Show password fields for new users and make them required
@@ -885,550 +1657,556 @@
                 document.getElementById('password').setAttribute('required', 'required');
                 document.getElementById('password_confirmation').setAttribute('required', 'required');
                 
-                // Check if teacher section fields should be shown based on selected role
-                const roleSelect = document.getElementById('role');
-                const teacherFields = document.getElementById('teacher-fields');
-                if (roleSelect && teacherFields) {
-                    if (roleSelect.value === 'TEACHER') {
-                        teacherFields.classList.remove('hidden');
-                    } else {
-                        teacherFields.classList.add('hidden');
-                    }
-                }
-                
-                // Reset profile picture
-                resetProfilePicPreview();
-                
                 // Show the modal
                 showModalWithAnimation(userModal);
             });
-        } else {
-            console.error("Add user button not found");
         }
         
-        // Form submission handler with improved debugging
-        userForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log("Form submitted, currentUserId:", currentUserId);
-            
-            try {
-                // Create FormData and convert to JSON object
-                const formData = new FormData(userForm);
-                const userData = {};
+        // Form submission handler with AJAX
+        if (userForm) {
+            userForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log("Form submitted, currentUserId:", currentUserId);
                 
-                // Convert form data to JSON for API, except file
-                formData.forEach((value, key) => {
-                    if (key !== 'profile_pic' && key !== 'csrfmiddlewaretoken') {
-                        userData[key] = value;
-                    }
-                });
-                
-                console.log("User data to submit:", userData);
-                
-                // Basic validation
-                if (!userData.username || !userData.email || !userData.first_name || !userData.last_name || !userData.role) {
-                    showError("Please fill in all required fields");
-                    return;
-                }
-                
-                // For new users, validate password
-                if (!currentUserId) {
-                    if (!userData.password) {
-                        showError("Password is required for new users");
+                try {
+                    // Create FormData and convert to JSON object
+                    const formData = new FormData(userForm);
+                    const userData = {};
+                    
+                    // Convert form data to JSON for API, except file
+                    formData.forEach((value, key) => {
+                        if (key !== 'profile_pic' && key !== 'csrfmiddlewaretoken') {
+                            userData[key] = value;
+                        }
+                    });
+                    
+                    console.log("User data to submit:", userData);
+                    
+                    // Basic validation
+                    if (!userData.username || !userData.email || !userData.first_name || !userData.last_name || !userData.role) {
+                        showError("Please fill in all required fields");
                         return;
                     }
                     
-                    if (userData.password !== userData.password_confirmation) {
-                        showError("Passwords don't match");
-                        return;
+                    // For new users, validate password
+                    if (!currentUserId) {
+                        if (!userData.password) {
+                            showError("Password is required for new users");
+                            return;
+                        }
+                        
+                        if (userData.password !== userData.password_confirmation) {
+                            showError("Passwords don't match");
+                            return;
+                        }
+                        
+                        if (userData.password.length < 8) {
+                            showError("Password must be at least 8 characters long");
+                            return;
+                        }
                     }
                     
-                    if (userData.password.length < 8) {
-                        showError("Password must be at least 8 characters long");
-                        return;
+                    // Remove password_confirmation field
+                    delete userData.password_confirmation;
+                    
+                    // For edit mode, only include password if it's not empty
+                    if (currentUserId && (!userData.password || userData.password.trim() === '')) {
+                        console.log("Removing empty password field for edit mode");
+                        delete userData.password;
                     }
-                }
-                
-                // Remove password_confirmation field
-                delete userData.password_confirmation;
-                
-                // For edit mode, only include password if it's not empty
-                if (currentUserId && (!userData.password || userData.password.trim() === '')) {
-                    console.log("Removing empty password field for edit mode");
-                    delete userData.password;
-                }
-                
-                // Handle teacher section assignment
-                if (userData.role === 'TEACHER') {
-                    // Keep grade and section if both are provided
-                    if (!userData.grade || !userData.section) {
-                        // Remove grade/section if either one is missing
+                    
+                    // Handle teacher section assignment
+                    if (userData.role === 'TEACHER') {
+                        // Keep grade and section if both are provided
+                        if (!userData.grade || !userData.section) {
+                            // Remove grade/section if either one is missing
+                            delete userData.grade;
+                            delete userData.section;
+                        }
+                    } else {
+                        // Not a teacher, remove these fields
                         delete userData.grade;
                         delete userData.section;
                     }
-                } else {
-                    // Not a teacher, remove these fields
-                    delete userData.grade;
-                    delete userData.section;
+                    
+                    // Prepare request
+                    let url, method;
+                    if (currentUserId) {
+                        url = `/admin/users/${currentUserId}/update/`;
+                        method = 'PUT';
+                        console.log(`Updating user ${currentUserId} with PUT request to ${url}`);
+                    } else {
+                        url = '/admin/users/create/';
+                        method = 'POST';
+                        console.log(`Creating new user with POST request to ${url}`);
+                    }
+                    
+                    const hasProfilePic = profilePicInput && profilePicInput.files.length > 0;
+                    console.log("Has new profile pic:", hasProfilePic);
+                    
+                    // Make API request
+                    fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify(userData)
+                    })
+                    .then(response => {
+                        console.log(`Server response status: ${response.status}`);
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(`Server error: ${data.message || response.statusText}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Response data:", data);
+                        if (data.status === 'success') {
+                            // Hide modal first
+                            userModal.classList.add('hidden');
+                            
+                            if (hasProfilePic) {
+                                console.log("Uploading profile picture for user:", data.user_id || currentUserId);
+                                const fileFormData = new FormData();
+                                fileFormData.append('profile_pic', profilePicInput.files[0]);
+                                fileFormData.append('user_id', data.user_id || currentUserId);
+                                
+                                return fetch('/admin/users/upload-profile-pic/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRFToken': csrfToken
+                                    },
+                                    body: fileFormData
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`Profile pic upload failed: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(fileData => {
+                                    if (fileData.status === 'success') {
+                                        showSuccess(data.message + " Profile picture uploaded successfully.");
+                                    } else {
+                                        showWarning("User saved but profile picture upload failed: " + fileData.message);
+                                    }
+                                    // Refresh the table instead of the whole page
+                                    fetchUsers(currentPage);
+                                });
+                            } else {
+                                showSuccess(data.message);
+                                // Refresh the table instead of the whole page
+                                fetchUsers(currentPage);
+                            }
+                        } else {
+                            // Error in user creation/update
+                            showError('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error processing form submission:', error);
+                        showError(`An error occurred: ${error.message || 'Unknown error'}`);
+                    });
+                } catch (error) {
+                    console.error('Exception in form handling:', error);
+                    showError(`Exception: ${error.message}`);
+                }
+            });
+        }
+        
+        // Confirm delete handler with AJAX
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (!currentUserId) {
+                    showError('No user selected for deletion');
+                    return;
                 }
                 
-                // Prepare request
-                let url, method;
-                if (currentUserId) {
-                    url = `/admin/users/${currentUserId}/update/`;
-                    method = 'PUT';
-                    console.log(`Updating user ${currentUserId} with PUT request to ${url}`);
-                } else {
-                    url = '/admin/users/create/';
-                    method = 'POST';
-                    console.log(`Creating new user with POST request to ${url}`);
+                fetch(`/admin/users/${currentUserId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Error deleting user');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Hide modal
+                        deleteModal.classList.add('hidden');
+                        showSuccess(data.message);
+                        
+                        // Refresh the table instead of the whole page
+                        fetchUsers(currentPage);
+                    } else {
+                        throw new Error(data.message || 'Error deleting user');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError(error.message);
+                });
+            });
+        }
+        
+        // Confirm password reset handler with AJAX
+        if (confirmResetBtn) {
+            confirmResetBtn.addEventListener('click', function() {
+                if (!currentUserId) {
+                    showError('No user selected for password reset');
+                    return;
                 }
                 
-                const hasProfilePic = profilePicInput.files.length > 0;
-                console.log("Has new profile pic:", hasProfilePic);
+                const newPass = newPasswordInput.value;
+                const confirmPass = confirmPasswordInput.value;
                 
-                // Make API request
-                fetch(url, {
-                    method: method,
+                // Validate passwords
+                if (!newPass) {
+                    showError('New password is required');
+                    return;
+                }
+                
+                if (newPass.length < 8) {
+                    showError('Password must be at least 8 characters long');
+                    return;
+                }
+                
+                if (newPass !== confirmPass) {
+                    showError('Passwords do not match');
+                    return;
+                }
+                
+                fetch(`/admin/users/${currentUserId}/reset-password/`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify(userData)
+                    body: JSON.stringify({
+                        new_password: newPass
+                    })
                 })
                 .then(response => {
-                    console.log(`Server response status: ${response.status}`);
                     if (!response.ok) {
                         return response.json().then(data => {
-                            throw new Error(`Server error: ${data.message || response.statusText}`);
+                            throw new Error(data.message || 'Error resetting password');
                         });
                     }
-                    return response.json(); // Fixed: .json() is a method, not a property
+                    return response.json();
                 })
                 .then(data => {
-                    console.log("Response data:", data);
                     if (data.status === 'success') {
-                        // Hide modal first
-                        userModal.classList.add('hidden');
+                        // Clear form and hide modal
+                        newPasswordInput.value = '';
+                        confirmPasswordInput.value = '';
+                        passwordResetModal.classList.add('hidden');
+                        showSuccess(data.message);
                         
-                        if (hasProfilePic) {
-                            console.log("Uploading profile picture for user:", data.user_id || currentUserId);
-                            const fileFormData = new FormData();
-                            fileFormData.append('profile_pic', profilePicInput.files[0]);
-                            fileFormData.append('user_id', data.user_id || currentUserId);
-                            
-                            return fetch('/admin/users/upload-profile-pic/', {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                },
-                                body: fileFormData
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`Profile pic upload failed: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(fileData => {
-                                if (fileData.status === 'success') {
-                                    showSuccess(data.message + " Profile picture uploaded successfully.");
-                                } else {
-                                    showWarning("User saved but profile picture upload failed: " + fileData.message);
-                                }
-                                setTimeout(() => window.location.reload(), 1500);
-                            });
-                        } else {
-                            showSuccess(data.message);
-                            setTimeout(() => window.location.reload(), 1500);
-                        }
+                        // No need to refresh the table for password reset
                     } else {
-                        // Error in user creation/update
-                        showError('Error: ' + data.message);
+                        throw new Error(data.message || 'Error resetting password');
                     }
                 })
                 .catch(error => {
-                    console.error('Error processing form submission:', error);
-                    showError(`An error occurred: ${error.message || 'Unknown error'}`);
+                    console.error('Error:', error);
+                    showError(error.message);
                 });
-            } catch (error) {
-                console.error('Exception in form handling:', error);
-                showError(`Exception: ${error.message}`);
-            }
-        });
-        
-        // Profile picture preview handling
-        const profilePicInput = document.getElementById('profile_pic');
-        const profilePicPreview = document.getElementById('profile-pic-preview');
-        const defaultProfileIcon = document.getElementById('default-profile-icon');
-        const uploadTrigger = document.getElementById('upload-trigger');
-        
-        uploadTrigger.addEventListener('click', function() {
-            profilePicInput.click();
-        });
-        
-        profilePicInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    profilePicPreview.src = e.target.result;
-                    // Show the image and hide the default icon
-                    profilePicPreview.classList.remove('opacity-0');
-                    defaultProfileIcon.classList.add('opacity-0');
-                }
-                
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        // Reset profile picture preview when modal is closed or form is reset
-        function resetProfilePicPreview() {
-            profilePicPreview.src = "#";
-            profilePicPreview.classList.add('opacity-0');
-            defaultProfileIcon.classList.remove('opacity-0');
+            });
         }
         
-        // Add reset listener to modal close buttons - FIXED: add proper modal closing
-        document.getElementById('close-modal').addEventListener('click', function() {
-            resetProfilePicPreview();
-            userModal.classList.add('hidden');
-        });
-
-        document.getElementById('close-modal-x').addEventListener('click', function() {
-            resetProfilePicPreview();
-            userModal.classList.add('hidden');
-        });
+        // Confirm status change handler with AJAX
+        if (confirmStatusChangeBtn) {
+            confirmStatusChangeBtn.addEventListener('click', function() {
+                if (!currentUserId) {
+                    showError('No user selected for status change');
+                    return;
+                }
+                
+                fetch(`/admin/users/${currentUserId}/update/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        is_active: !currentUserIsActive  // Toggle the active status
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Error updating user status');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Hide modal
+                        statusChangeModal.classList.add('hidden');
+                        
+                        // Show success message with appropriate wording
+                        const actionText = currentUserIsActive ? 'deactivated' : 'activated';
+                        showSuccess(`User ${currentUsername} has been ${actionText} successfully`);
+                        
+                        // Refresh the table instead of the whole page
+                        fetchUsers(currentPage);
+                    } else {
+                        throw new Error(data.message || 'Error updating user status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError(error.message);
+                });
+            });
+        }
         
-        // Close modals when clicking outside
+        // Set up search and filter event listeners
+        if (userSearch) {
+            userSearch.addEventListener('input', debounce(() => {
+                fetchUsers(1); // Reset to page 1 when search changes
+            }, 300));
+        }
+        
+        if (roleFilter) {
+            roleFilter.addEventListener('change', () => fetchUsers(1));
+        }
+        
+        if (activeFilter) {
+            activeFilter.addEventListener('change', () => fetchUsers(1));
+        }
+        
+        // Function to reset modal form completely
+        function resetUserModalForm() {
+            userForm.reset();
+            resetProfilePicPreview();
+            
+            // Hide teacher-specific fields
+            const teacherFields = document.getElementById('teacher-fields');
+            if (teacherFields) {
+                teacherFields.classList.add('hidden');
+            }
+            
+            // Reset section dropdown to default
+            const sectionSelect = document.getElementById('section');
+            if (sectionSelect) {
+                sectionSelect.innerHTML = '<option value="">Select Grade First</option>';
+            }
+        }
+        
+        // Role select change event to show/hide teacher fields
+        const roleSelect = document.getElementById('role');
+        if (roleSelect) {
+            roleSelect.addEventListener('change', function() {
+                const teacherFields = document.getElementById('teacher-fields');
+                if (this.value === 'TEACHER') {
+                    teacherFields.classList.remove('hidden');
+                } else {
+                    teacherFields.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Grade select change event to populate sections - FIXED VERSION
+        const gradeSelect = document.getElementById('grade');
+        if (gradeSelect) {
+            gradeSelect.addEventListener('change', function() {
+                const selectedGradeId = this.value;
+                const sectionSelect = document.getElementById('section');
+                
+                // Clear section dropdown
+                sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+                
+                if (!selectedGradeId) {
+                    sectionSelect.innerHTML = '<option value="">Select Grade First</option>';
+                    return;
+                }
+                
+                // Build an array of sections from the Django template data
+                const allSections = [];
+                {% for section in sections %}
+                    allSections.push({
+                        id: "{{ section.id }}",
+                        name: "{{ section.name }}",
+                        gradeId: "{{ section.grade.id }}"
+                    });
+                {% endfor %}
+                
+                // Filter sections for the selected grade
+                const filteredSections = allSections.filter(section => section.gradeId === selectedGradeId);
+                
+                // Update the sections dropdown
+                if (filteredSections.length > 0) {
+                    sectionSelect.innerHTML = '<option value="">Select Section</option>';
+                    filteredSections.forEach(section => {
+                        sectionSelect.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+                    });
+                } else {
+                    sectionSelect.innerHTML = '<option value="">No sections found for this grade</option>';
+                }
+            });
+        }
+        
+        // Add modal close handlers to use the reset function
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', function() {
+                resetUserModalForm();
+                userModal.classList.add('hidden');
+            });
+        }
+        
+        if (closeModalXBtn) {
+            closeModalXBtn.addEventListener('click', function() {
+                resetUserModalForm();
+                userModal.classList.add('hidden');
+            });
+        }
+        
+        // Close modals when clicking outside - enhanced to reset form
         window.addEventListener('click', function(event) {
             if (event.target === userModal) {
+                resetUserModalForm();
                 userModal.classList.add('hidden');
-                resetProfilePicPreview();
             }
             if (event.target === deleteModal) {
                 deleteModal.classList.add('hidden');
             }
             if (event.target === passwordResetModal) {
                 passwordResetModal.classList.add('hidden');
-                newPasswordInput.value = '';
-                confirmPasswordInput.value = '';
+                if (newPasswordInput) newPasswordInput.value = '';
+                if (confirmPasswordInput) confirmPasswordInput.value = '';
             }
             if (event.target === statusChangeModal) {
                 statusChangeModal.classList.add('hidden');
             }
         });
         
-        // Set initial form values from URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const userSearch = document.getElementById('user-search');
-        const roleFilter = document.getElementById('role-filter');
-        const activeFilter = document.getElementById('active-filter');
+        // Update handleEditUser to properly handle grade/section selection
+        function handleEditUser() {
+            const userId = this.dataset.userId;
+            modalTitle.textContent = 'Edit User';
+            resetUserModalForm(); // Reset form before populating
+            currentUserId = userId;
+            
+            // Update form mode and hide password fields
+            document.querySelector('.password-fields').style.display = 'none';
+            
+            // Remove required attribute from password fields in edit mode
+            document.getElementById('password').removeAttribute('required');
+            document.getElementById('password_confirmation').removeAttribute('required');
+            
+            // Fetch user data to populate the form
+            fetch(`/admin/users/${userId}/`, {
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Populate form fields
+                    const user = data.user;
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('first_name').value = user.first_name;
+                    document.getElementById('last_name').value = user.last_name;
+                    document.getElementById('middle_name').value = user.middle_name || '';
+                    document.getElementById('role').value = user.role;
+                    
+                    // Properly display profile picture if available
+                    if (user.profile_pic) {
+                        profilePicPreview.src = `/profile-pics/${user.profile_pic}/`;
+                        profilePicPreview.classList.remove('opacity-0');
+                        defaultProfileIcon.classList.add('opacity-0');
+                        console.log("Set profile pic to:", `/profile-pics/${user.profile_pic}/`);
+                    } else {
+                        resetProfilePicPreview();
+                        console.log("No profile pic available, reset to default");
+                    }
+                    
+                    // Handle grade and section fields for teachers
+                    const teacherFields = document.getElementById('teacher-fields');
+                    const roleSelect = document.getElementById('role');
+                    
+                    // Initially hide teacher fields, then show only if role is TEACHER
+                    teacherFields.classList.add('hidden');
+                    
+                    if (user.role === 'TEACHER') {
+                        teacherFields.classList.remove('hidden');
+                        
+                        // If we have section data for this teacher, select it
+                        if (user.section) {
+                            const gradeSelect = document.getElementById('grade');
+                            if (gradeSelect && user.grade) {
+                                gradeSelect.value = user.grade;
+                                
+                                // Trigger change event to load sections
+                                const event = new Event('change');
+                                gradeSelect.dispatchEvent(event);
+                                
+                                // After sections are loaded, select the correct section
+                                setTimeout(() => {
+                                    const sectionSelect = document.getElementById('section');
+                                    if (sectionSelect && user.section) {
+                                        sectionSelect.value = user.section;
+                                        console.log("Set section to:", user.section);
+                                    }
+                                }, 300); // Increased timeout to ensure sections are loaded
+                            }
+                        }
+                    }
+                    
+                    // Add listener for role changes to show/hide teacher fields
+                    roleSelect.addEventListener('change', function() {
+                        if (this.value === 'TEACHER') {
+                            teacherFields.classList.remove('hidden');
+                        } else {
+                            teacherFields.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Show the modal
+                    showModalWithAnimation(userModal);
+                } else {
+                    showError('Failed to load user data: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+                showError('An error occurred while loading user data.');
+            });
+        }
         
-        if (urlParams.has('search') && userSearch) {
+        // Initialize the table on page load
+        fetchUsers();
+        
+        // Set initial search and filter values from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (userSearch && urlParams.has('search')) {
             userSearch.value = urlParams.get('search');
         }
-        if (urlParams.has('role') && roleFilter) {
+        if (roleFilter && urlParams.has('role')) {
             roleFilter.value = urlParams.get('role');
         }
-        if (urlParams.has('status') && activeFilter) {
+        if (activeFilter && urlParams.has('status')) {
             activeFilter.value = urlParams.get('status');
         }
-        
-        // Add event listeners for the search and filters to auto-submit
-        if (userSearch) {
-            userSearch.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    applyFilters();
-                }
-            });
+        if (urlParams.has('page')) {
+            currentPage = parseInt(urlParams.get('page'));
+            if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
         }
-        
-        if (roleFilter) {
-            roleFilter.addEventListener('change', applyFilters);
-        }
-        
-        if (activeFilter) {
-            activeFilter.addEventListener('change', applyFilters);
-        }
-        
-        // Function to apply filters and reload page
-        function applyFilters() {
-            const searchValue = userSearch ? userSearch.value.trim() : '';
-            const roleValue = roleFilter ? roleFilter.value : '';
-            const statusValue = activeFilter ? activeFilter.value : '';
-            
-            let queryParams = [];
-            if (searchValue) queryParams.push(`search=${encodeURIComponent(searchValue)}`);
-            if (roleValue) queryParams.push(`role=${encodeURIComponent(roleValue)}`);
-            if (statusValue) queryParams.push(`status=${encodeURIComponent(statusValue)}`);
-            
-            const queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
-            window.location.href = window.location.pathname + queryString;
-        }
-        
-        // Add event listeners for password reset buttons
-        document.querySelectorAll('.reset-password').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.dataset.userId;
-                currentUserId = userId;
-                
-                // Find the username to display in the modal
-                const userRow = this.closest('tr');
-                const userNameElement = userRow.querySelector('.text-lg.font-bold');
-                currentUsername = userNameElement.textContent.trim();
-                
-                // Set username in modal
-                resetUsernameSpan.textContent = currentUsername;
-                
-                // Show the password reset modal
-                showModalWithAnimation(passwordResetModal);
-            });
-        });
-        
-        // Add event listeners for deactivate/activate buttons
-        document.querySelectorAll('.deactivate-user').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.dataset.userId;
-                // Fix: Convert string 'True' to boolean properly
-                const isActive = this.dataset.isActive === 'True';
-                currentUserId = userId;
-                currentUserIsActive = isActive;
-                
-                // Find the username
-                const userRow = this.closest('tr');
-                const userNameElement = userRow.querySelector('.text-lg.font-bold');
-                currentUsername = userNameElement.textContent.trim();
-                
-                // Configure modal content based on current status
-                if (isActive) {
-                    // Currently active, show deactivate options
-                    statusChangeTitle.textContent = 'Deactivate User';
-                    statusChangeMessage.textContent = `Are you sure you want to deactivate ${currentUsername}? They will not be able to login until reactivated.`;
-                    statusChangeButtonText.textContent = 'Deactivate';
-                    
-                    // Updated styling with proper gradient and hover states
-                    confirmStatusChangeBtn.setAttribute('class', 
-                        'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-base font-medium text-white hover:from-red-700 hover:to-red-600 dark:from-red-700 dark:to-red-600 dark:hover:from-red-800 dark:hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
-                    
-                    statusIconContainer.setAttribute('class', 
-                        'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-12 sm:w-12');
-                    
-                    statusIcon.setAttribute('class', 
-                        'h-6 w-6 text-red-600 dark:text-red-400');
-                        
-                    statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />`;
-                } else {
-                    // Currently inactive, show activate options
-                    statusChangeTitle.textContent = 'Activate User';
-                    statusChangeMessage.textContent = `Are you sure you want to activate ${currentUsername}? They will be able to login after activation.`;
-                    statusChangeButtonText.textContent = 'Activate';
-                    
-                    // Updated styling with proper gradient and hover states
-                    confirmStatusChangeBtn.setAttribute('class', 
-                        'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-base font-medium text-white hover:from-green-700 hover:to-green-600 dark:from-green-700 dark:to-green-600 dark:hover:from-green-800 dark:hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
-                    
-                    statusIconContainer.setAttribute('class', 
-                        'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 sm:mx-0 sm:h-12 sm:w-12');
-                    
-                    statusIcon.setAttribute('class', 
-                        'h-6 w-6 text-green-600 dark:text-green-400');
-                        
-                    statusIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`;
-                }
-                
-                // Show the status change modal
-                showModalWithAnimation(statusChangeModal);
-            });
-        });
-        
-        // Add event listeners for delete buttons
-        document.querySelectorAll('.delete-user').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.dataset.userId;
-                currentUserId = userId;
-                
-                // Find the username
-                const userRow = this.closest('tr');
-                const userNameElement = userRow.querySelector('.text-lg.font-bold');
-                currentUsername = userNameElement.textContent.trim();
-                
-                // Show delete confirmation modal
-                showModalWithAnimation(deleteModal);
-            });
-        });
-        
-        // Cancel buttons for modals
-        cancelDeleteButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                deleteModal.classList.add('hidden');
-            });
-        });
-        
-        cancelPasswordResetButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                passwordResetModal.classList.add('hidden');
-                newPasswordInput.value = '';
-                confirmPasswordInput.value = '';
-            });
-        });
-        
-        cancelStatusChangeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                statusChangeModal.classList.add('hidden');
-            });
-        });
-        
-        // Confirm delete handler
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (!currentUserId) {
-                showError('No user selected for deletion');
-                return;
-            }
-            
-            fetch(`/admin/users/${currentUserId}/delete/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Error deleting user');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Hide modal
-                    deleteModal.classList.add('hidden');
-                    showSuccess(data.message);
-                    
-                    // Reload the page after a delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    throw new Error(data.message || 'Error deleting user');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError(error.message);
-            });
-        });
-        
-        // Confirm password reset handler
-        confirmResetBtn.addEventListener('click', function() {
-            if (!currentUserId) {
-                showError('No user selected for password reset');
-                return;
-            }
-            
-            const newPass = newPasswordInput.value;
-            const confirmPass = confirmPasswordInput.value;
-            
-            // Validate passwords
-            if (!newPass) {
-                showError('New password is required');
-                return;
-            }
-            
-            if (newPass.length < 8) {
-                showError('Password must be at least 8 characters long');
-                return;
-            }
-            
-            if (newPass !== confirmPass) {
-                showError('Passwords do not match');
-                return;
-            }
-            
-            fetch(`/admin/users/${currentUserId}/reset-password/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    new_password: newPass
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Error resetting password');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Clear form and hide modal
-                    newPasswordInput.value = '';
-                    confirmPasswordInput.value = '';
-                    passwordResetModal.classList.add('hidden');
-                    showSuccess(data.message);
-                } else {
-                    throw new Error(data.message || 'Error resetting password');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError(error.message);
-            });
-        });
-        
-        // Confirm status change handler
-        confirmStatusChangeBtn.addEventListener('click', function() {
-            if (!currentUserId) {
-                showError('No user selected for status change');
-                return;
-            }
-            
-            fetch(`/admin/users/${currentUserId}/update/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    is_active: !currentUserIsActive  // Toggle the active status
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Error updating user status');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Hide modal
-                    statusChangeModal.classList.add('hidden');
-                    
-                    // Show success message with appropriate wording
-                    const actionText = currentUserIsActive ? 'deactivated' : 'activated';
-                    showSuccess(`User ${currentUsername} has been ${actionText} successfully`);
-                    
-                    // Reload the page after a delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    throw new Error(data.message || 'Error updating user status');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError(error.message);
-            });
-        });
     });
 </script>
+
 {% endblock %}

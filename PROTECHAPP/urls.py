@@ -9,18 +9,26 @@ urlpatterns = [
     path('select-device/', public_views.select_device, name='select_device'),
     path('login/', public_views.login_view, name='login'),
     path('logout/', public_views.logout_view, name='logout'),
-    
-    # Admin routes
-    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+
+    # admin/users routes
     path('admin/users/', admin_views.admin_users, name='admin_users'),
     path('admin/users/create/', admin_views.create_user, name='admin_create_user'),
     path('admin/users/<int:user_id>/', admin_views.get_user, name='admin_get_user'),
     path('admin/users/<int:user_id>/update/', admin_views.update_user, name='admin_update_user'),
     path('admin/users/<int:user_id>/delete/', admin_views.delete_user, name='admin_delete_user'),
     path('admin/users/<int:user_id>/reset-password/', admin_views.reset_user_password, name='admin_reset_user_password'),
+    path('admin/users/upload-profile-pic/', admin_views.upload_profile_pic, name='admin_upload_profile_pic'),
+    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
+    path('admin/users/search/', admin_views.search_users, name='admin_search_users'),
+
+    #admin/teachers routes  
     path('admin/teachers/', admin_views.admin_teachers, name='admin_teachers'),
+    path('admin/teachers/search/', admin_views.search_teachers, name='admin_search_teachers'),
     path('admin/teachers/assign-section/', admin_views.assign_teacher_section, name='assign_teacher_section'),
     path('admin/teachers/remove-section/', admin_views.remove_teacher_section, name='remove_teacher_section'),
+    
+    
+    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('admin/students/', admin_views.admin_students, name='admin_students'),
     path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
     path('admin/grades/', admin_views.admin_grades, name='admin_grades'),
@@ -28,8 +36,6 @@ urlpatterns = [
     path('admin/attendance/', admin_views.admin_attendance, name='admin_attendance'),
     path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
     path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
-    path('admin/users/upload-profile-pic/', admin_views.upload_profile_pic, name='admin_upload_profile_pic'),
-    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
 
     # Principal routes
     path('principal/dashboard/', principal_views.principal_dashboard, name='principal_dashboard'),
@@ -72,4 +78,5 @@ urlpatterns = [
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
+  
 ]

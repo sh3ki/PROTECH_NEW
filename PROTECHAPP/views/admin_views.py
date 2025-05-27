@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, UserRole, UserStatus, ExcusedAbsence, AdvisoryAssignment
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.hashers import make_password
 import json
 import os
@@ -17,17 +17,9 @@ def is_admin(user):
     """Check if the logged-in user is an admin"""
     return user.is_authenticated and user.role == UserRole.ADMIN
 
-@login_required
-@user_passes_test(is_admin)
-def admin_dashboard(request):
-    """View for admin dashboard"""
-    context = {
-        'current_date': timezone.now(),
-        'user_count': CustomUser.objects.count(),
-        'student_count': Student.objects.count(),
-        'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
-    }
-    return render(request, 'admin/dashboard.html', context)
+# ==========================
+#  USER MANAGEMENT VIEWS
+# ==========================
 
 @login_required
 @user_passes_test(is_admin)
@@ -349,6 +341,96 @@ def reset_user_password(request, user_id):
 
 @login_required
 @user_passes_test(is_admin)
+def search_users(request):
+    """API endpoint to search and filter users for AJAX requests"""
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    role_filter = request.GET.get('role', '')
+    status_filter = request.GET.get('status', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+    sort_by = request.GET.get('sort_by', '-created_at')
+    
+    # Base queryset
+    users = CustomUser.objects.all().order_by(sort_by)
+    
+    # Apply search if provided
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) | 
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) | 
+            Q(last_name__icontains=search_query)
+        )
+    
+    # Apply role filter if provided
+    if role_filter:
+        users = users.filter(role=role_filter)
+    
+    # Apply status filter
+    if status_filter:
+        if status_filter == 'active':
+            users = users.filter(is_active=True)
+        elif status_filter == 'inactive':
+            users = users.filter(is_active=False)
+    
+    # Get total count for pagination
+    total_count = users.count()
+    
+    # Parse page number and items_per_page
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+    
+    # Create paginator
+    paginator = Paginator(users, items_per_page)
+    page_obj = paginator.get_page(page_number)
+    
+    # Prepare user data for JSON response
+    user_data = []
+    for user in page_obj:
+        user_data.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'role_display': user.get_role_display(),
+            'is_active': user.is_active,
+            'created_at': user.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': user.created_at.strftime('%b %d, %Y'),
+            'profile_pic': user.profile_pic,
+        })
+    
+    # Prepare pagination data
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+    
+    return JsonResponse({
+        'status': 'success',
+        'users': user_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+# ==========================
+#  TEACHER MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
 def admin_teachers(request):
     """View for teacher management with filtering and section assignment"""
     # Get query parameters
@@ -357,10 +439,10 @@ def admin_teachers(request):
     section_filter = request.GET.get('section', '')
     status_filter = request.GET.get('status', '')
     page_number = request.GET.get('page', 1)
-    
+
     # Base queryset - only teachers
     teachers = CustomUser.objects.filter(role=UserRole.TEACHER).order_by('first_name', 'last_name')
-    
+
     # Apply search if provided
     if search_query:
         teachers = teachers.filter(
@@ -369,14 +451,17 @@ def admin_teachers(request):
             Q(first_name__icontains=search_query) | 
             Q(last_name__icontains=search_query)
         )
-    
-    # Apply status filter if provided
+
+    # Apply status filter using is_active
     if status_filter:
-        teachers = teachers.filter(status=status_filter)
-    
+        if status_filter == 'active':
+            teachers = teachers.filter(is_active=True)
+        elif status_filter == 'inactive':
+            teachers = teachers.filter(is_active=False)
+
     # Get all advisory assignments for later use
     advisory_assignments = AdvisoryAssignment.objects.select_related('section', 'section__grade')
-    
+
     # Create a dictionary of teacher_id -> section for quick lookup
     teacher_sections = {}
     for assignment in advisory_assignments:
@@ -386,42 +471,55 @@ def admin_teachers(request):
             'section_name': assignment.section.name,
             'grade_name': assignment.section.grade.name
         }
-    
+
     # Get all available sections for assignment dropdown
     all_sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
-    
+
     # Filter by advisory status
     if advisory_filter == 'advisory':
         teachers = teachers.filter(id__in=teacher_sections.keys())
     elif advisory_filter == 'non-advisory':
         teachers = teachers.exclude(id__in=teacher_sections.keys())
-    
+
     # Filter by section
     if section_filter:
-        # Find teachers assigned to this section
-        section_id = int(section_filter)
-        teacher_ids = [teacher_id for teacher_id, data in teacher_sections.items() 
-                       if data['section_id'] == section_id]
-        teachers = teachers.filter(id__in=teacher_ids)
-    
+        try:
+            section_id = int(section_filter)
+            teacher_ids = [teacher_id for teacher_id, data in teacher_sections.items() 
+                           if data['section_id'] == section_id]
+            teachers = teachers.filter(id__in=teacher_ids)
+        except Exception:
+            pass
+
     # Get counts for dashboard
     total_teachers = CustomUser.objects.filter(role=UserRole.TEACHER).count()
     advisory_teachers_count = AdvisoryAssignment.objects.values('teacher').distinct().count()
     non_advisory_teachers_count = total_teachers - advisory_teachers_count
-    active_teachers_count = CustomUser.objects.filter(role=UserRole.TEACHER, status=UserStatus.APPROVED).count()
-    
+    active_teachers_count = CustomUser.objects.filter(role=UserRole.TEACHER, is_active=True).count()
+
     # Pagination
     paginator = Paginator(teachers, 10)
     page_obj = paginator.get_page(page_number)
-    
+
     # Calculate page range for pagination UI
     page_range = get_pagination_range(paginator, page_obj.number, 5)
-    
+
+    # Annotate each teacher in the page with section/grade info for template
+    for teacher in page_obj:
+        section_info = teacher_sections.get(teacher.id)
+        if section_info:
+            teacher.section_name = section_info['section_name']
+            teacher.grade_name = section_info['grade_name']
+        else:
+            teacher.section_name = None
+            teacher.grade_name = None
+
     context = {
         'teachers': page_obj,
         'teacher_sections': teacher_sections,
         'sections': all_sections,
-        'status_choices': UserStatus.choices,
+        'grades': Grade.objects.all().order_by('name'), 
+        'status_choices': [('active', 'Active'), ('inactive', 'Inactive')],
         'search_query': search_query,
         'advisory_filter': advisory_filter,
         'section_filter': section_filter,
@@ -525,6 +623,105 @@ def remove_teacher_section(request):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def search_teachers(request):
+    """API endpoint to search/filter/paginate teachers for AJAX requests"""
+    search_query = request.GET.get('search', '')
+    advisory_filter = request.GET.get('advisory', '')
+    section_filter = request.GET.get('section', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+
+    teachers = CustomUser.objects.filter(role=UserRole.TEACHER).order_by('first_name', 'last_name')
+
+    if search_query:
+        teachers = teachers.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    # Advisory assignments
+    advisory_assignments = AdvisoryAssignment.objects.select_related('section', 'section__grade')
+    teacher_sections = {}
+    for assignment in advisory_assignments:
+        teacher_sections[assignment.teacher_id] = {
+            'section': assignment.section,
+            'section_id': assignment.section_id,
+            'section_name': assignment.section.name,
+            'grade_name': assignment.section.grade.name
+        }
+
+    # Advisory filter
+    if advisory_filter == 'advisory':
+        teachers = teachers.filter(id__in=teacher_sections.keys())
+    elif advisory_filter == 'non-advisory':
+        teachers = teachers.exclude(id__in=teacher_sections.keys())
+
+    # Section filter
+    if section_filter:
+        try:
+            section_id = int(section_filter)
+            teacher_ids = [tid for tid, data in teacher_sections.items() if data['section_id'] == section_id]
+            teachers = teachers.filter(id__in=teacher_ids)
+        except Exception:
+            pass
+
+    paginator = Paginator(teachers, items_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    teacher_data = []
+    for teacher in page_obj:
+        section_info = teacher_sections.get(teacher.id)
+        teacher_data.append({
+            'id': teacher.id,
+            'username': teacher.username,
+            'email': teacher.email,
+            'first_name': teacher.first_name,
+            'last_name': teacher.last_name,
+            'profile_pic': teacher.profile_pic,
+            'advisory': bool(section_info),
+            'section': section_info['section_name'] if section_info else None,
+            'grade': section_info['grade_name'] if section_info else None,
+        })
+
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': paginator.count,
+    }
+
+    return JsonResponse({
+        'status': 'success',
+        'teachers': teacher_data,
+        'pagination': pagination,
+        'total_count': paginator.count,
+    })
+
+# ==========================
+#  OTHER ADMIN VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    """View for admin dashboard"""
+    context = {
+        'current_date': timezone.now(),
+        'user_count': CustomUser.objects.count(),
+        'student_count': Student.objects.count(),
+        'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
+    }
+    return render(request, 'admin/dashboard.html', context)
 
 @login_required
 @user_passes_test(is_admin)
