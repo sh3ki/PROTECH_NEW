@@ -403,7 +403,7 @@
                         <label for="student-grade" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
+                        </svg>
                             Grade Level
                             <span class="text-red-500 ml-1">*</span>
                         </label>
@@ -466,7 +466,7 @@
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
                         <select id="student-status" name="status" required 
@@ -493,7 +493,7 @@
                     </svg>
                     Cancel
                 </button>
-                <button type="submit" form="student-form" id="save-student-btn" class="group flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-tertiary dark:to-primary dark:hover:from-tertiary/90 dark:hover:to-primary/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button type="submit" form="student-form" id="save-student-btn" class="group flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/70 dark:from-tertiary dark:to-primary dark:hover:from-tertiary/90 dark:hover:to-primary/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     <span id="student-save-text" class="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -539,6 +539,50 @@
     </div>
 </div>
 
+<!-- Replace the existing status toggle modal with the new design -->
+<div id="status-toggle-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+        <div class="modal-animate-target">
+            <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div id="status-icon-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-12 sm:w-12">
+                        <!-- Icon will be replaced by JavaScript -->
+                        <svg id="status-icon" class="h-6 w-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2" id="status-toggle-title">
+                            Change Student Status
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500 dark:text-gray-400" id="status-toggle-message">
+                                Are you sure you want to change this student's status?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button id="confirm-status-toggle" type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-secondary to-secondary/80 text-base font-medium text-white hover:from-secondary/90 hover:to-secondary/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                    <span class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span id="status-toggle-text">Confirm</span>
+                    </span>
+                    <svg id="status-toggle-spinner" class="hidden animate-spin ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+                <button type="button" id="cancel-status-toggle" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-5 py-2.5 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div id="student-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
@@ -548,6 +592,14 @@ let currentStudentData = null;
 let currentPage = 1;
 let isLoading = false;
 let searchTimeout = null;
+
+// Use the default URL for the base, and append the filename when available
+function getProfilePicUrl(filename) {
+    if (!filename) {
+        return "{% url 'serve_profile_pic_default' %}";
+    }
+    return `/profile-pics/${filename}/`;
+}
 
 // DOM Elements
 const studentTableContainer = document.getElementById('student-table-container');
@@ -620,7 +672,7 @@ function initializeDropdownData() {
         return a.name.localeCompare(b.name);
     });
 
-    // Populate grade dropdown
+    // Populate grade dropdown for modal
     const gradeSelect = document.getElementById('student-grade');
     gradeSelect.innerHTML = '<option value="" class="text-gray-500">Select grade level</option>';
     sortedGrades.forEach(grade => {
@@ -630,12 +682,31 @@ function initializeDropdownData() {
         gradeSelect.appendChild(option);
     });
 
+    // POPULATE FILTER DROPDOWNS WITH SORTED GRADES
+    // Clear existing options but keep the "All Grades" option
+    while (gradeFilter.options.length > 1) {
+        gradeFilter.remove(1);
+    }
+    
+    // Add sorted grade options to filter dropdown
+    sortedGrades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade.id;
+        option.textContent = grade.name;
+        // Set selected if it matches the current filter
+        if (grade.id === "{{ grade_filter }}") {
+            option.selected = true;
+        }
+        gradeFilter.appendChild(option);
+    });
+
     // Setup dependent dropdown functionality
     setupDependentDropdowns();
 }
 
 // Setup dependent dropdowns (grade -> section)
 function setupDependentDropdowns() {
+    // Modal dropdowns
     const gradeSelect = document.getElementById('student-grade');
     const sectionSelect = document.getElementById('student-section');
     
@@ -667,6 +738,61 @@ function setupDependentDropdowns() {
             });
         }
     });
+    
+    // FILTER DROPDOWNS - Make section filter dependent on grade filter
+    gradeFilter.addEventListener('change', function() {
+        const selectedGradeId = this.value;
+        
+        if (!selectedGradeId) {
+            // If "All Grades" is selected, show "Select grade first" message
+            sectionFilter.innerHTML = '<option value="">Select grade first</option>';
+            return;
+        }
+        
+        // Reset section filter dropdown with "All Sections" option for a specific grade
+        sectionFilter.innerHTML = '<option value="">All Sections</option>';
+        
+        // Filter sections for the selected grade
+        const filteredSections = allSections.filter(section => 
+            section.gradeId === selectedGradeId
+        );
+        
+        if (filteredSections.length === 0) {
+            const option = document.createElement('option');
+            option.value = "";
+            option.disabled = true;
+            option.textContent = "No sections found";
+            option.className = "text-gray-500";
+            sectionFilter.appendChild(option);
+        } else {
+            filteredSections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.name;
+                // Set selected if it matches the current section filter
+                if (section.id === "{{ section_filter }}") {
+                    option.selected = true;
+                }
+                sectionFilter.appendChild(option);
+            });
+        }
+        
+        // Trigger filter change to update the student list
+        if (this.closest('form')) {
+            // Don't auto-reload if it's inside a form - just change the dropdown
+        } else {
+            // If we're in the filters section, reload with new filter
+            handleFilterChange();
+        }
+    });
+    
+    // Initial population of section filter based on grade selection
+    if (gradeFilter.value) {
+        gradeFilter.dispatchEvent(new Event('change'));
+    } else {
+        // If no grade is selected initially, show "Select grade first"
+        sectionFilter.innerHTML = '<option value="">Select grade first</option>';
+    }
 }
 
 // Profile picture handling
@@ -725,12 +851,121 @@ function resetProfilePicturePreview() {
     const fileInput = document.getElementById('student-profile-pic');
     const imageOverlay = document.getElementById('student-image-overlay');
     
+       
     preview.src = '#';
     preview.classList.add('opacity-0');
     defaultIcon.classList.remove('opacity-0');
     fileInput.value = '';
     // Hide overlay when no image
     imageOverlay.classList.add('opacity-0');
+}
+
+// Utility functions
+function showLoading() {
+    studentTableLoading.classList.remove('hidden');
+}
+
+function hideLoading() {
+    studentTableLoading.classList.add('hidden');
+}
+
+function updateResultsCount(count) {
+    const searchQuery = searchInput.value;
+    if (searchQuery) {
+        const countElement = document.getElementById('student-search-results-count');
+        const spanElement = countElement.querySelector('span');
+        spanElement.textContent = `${count} result${count !== 1 ? 's' : ''}`;
+        countElement.classList.remove('hidden');
+    } else {
+        document.getElementById('student-search-results-count').classList.add('hidden');
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    
+    // Set base classes
+    toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-4 opacity-0';
+    
+    // Additional classes based on type
+    let iconHTML = '';
+    switch (type) {
+        case 'success':
+            toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
+            iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'error':
+            toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
+            iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'warning':
+            toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
+            iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'info':
+        default:
+            toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
+            iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+    }
+    
+    // Add content to toast
+    toast.innerHTML = `
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center">
+                ${iconHTML}
+                <span class="font-medium">${message}</span>
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    // Add toast to container
+    const toastContainer = document.getElementById('student-toast-container');
+    toastContainer.appendChild(toast);
+    
+    // Animate toast in
+    setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+    }, 10);
+    
+    // Add click event to close button
+    const closeButton = toast.querySelector('button');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            removeToast(toast);
+        });
+    }
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        removeToast(toast);
+    }, 5000);
+}
+
+function removeToast(toast) {
+    // Fade out
+    toast.classList.add('opacity-0', 'translate-y-4');
+    
+    // Remove after animation completes
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
 }
 
 // Event Listeners
@@ -748,6 +983,10 @@ function initializeEventListeners() {
     document.getElementById('cancel-delete-student').addEventListener('click', closeDeleteModal);
     document.getElementById('confirm-delete-student').addEventListener('click', confirmDeleteStudent);
 
+    // Status toggle modal buttons
+    document.getElementById('confirm-status-toggle').addEventListener('click', confirmStatusToggle);
+    document.getElementById('cancel-status-toggle').addEventListener('click', closeStatusToggleModal);
+
     // Form submission
     studentForm.addEventListener('submit', handleStudentSubmit);
 
@@ -758,9 +997,23 @@ function initializeEventListeners() {
     deleteStudentModal.addEventListener('click', (e) => {
         if (e.target === deleteStudentModal) closeDeleteModal();
     });
+    document.getElementById('status-toggle-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('status-toggle-modal')) closeStatusToggleModal();
+    });
     
     // Setup profile picture handling
     setupProfilePictureHandling();
+
+    // Add handler for status toggle button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.deactivate-student')) {
+            const button = e.target.closest('.deactivate-student');
+            const studentId = button.dataset.studentId;
+            const status = button.dataset.status;
+            const name = button.dataset.name;
+            toggleStudentStatus(studentId, status, name);
+        }
+    });
 }
 
 // Search with debounce
@@ -787,6 +1040,7 @@ function loadStudents(page = 1) {
     
     const params = new URLSearchParams({
         search: searchInput.value,
+
         grade: gradeFilter.value,
         section: sectionFilter.value,
         status: statusFilter.value,
@@ -833,7 +1087,7 @@ function renderStudentsTable(students) {
                 <div class="flex items-center">
                     <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
                         ${student.profile_pic ? 
-                            `<img src="{% url 'serve_profile_pic' 'placeholder' %}".replace('placeholder', student.profile_pic) alt="${student.full_name}" class="h-10 w-10 rounded-full object-cover">` :
+                            `<img src="${getProfilePicUrl(student.profile_pic)}" alt="${student.full_name}" class="h-10 w-10 rounded-full object-cover">` :
                             `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>`
@@ -842,16 +1096,16 @@ function renderStudentsTable(students) {
                 </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">${student.lrn}</div>
+                <div class="text-lg font-medium text-gray-900 dark:text-white">${student.lrn}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">${student.full_name}</div>
+                <div class="text-lg font-medium text-gray-900 dark:text-white">${student.full_name}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-white">${student.grade || 'N/A'}</div>
+                <div class="text-lg text-gray-900 dark:text-white">${student.grade || 'N/A'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-white">${student.section || 'N/A'}</div>
+                <div class="text-lg text-gray-900 dark:text-white">${student.section || 'N/A'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -863,14 +1117,27 @@ function renderStudentsTable(students) {
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
-                    <button onclick="editStudent(${student.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Edit">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="flex items-center justify-center space-x-3">
+                    <button onclick="editStudent(${student.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full" title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </button>
-                    <button onclick="deleteStudent(${student.id}, '${student.full_name}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Delete">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Updated Toggle Status Button -->
+                    <button class="deactivate-student text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" 
+                            data-student-id="${student.id}" 
+                            data-status="${student.status}" 
+                            data-name="${student.full_name}"
+                            title="${student.status === 'ACTIVE' ? 'Deactivate Student' : 'Activate Student'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            ${student.status === 'ACTIVE' ? 
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />' :
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />'
+                            }
+                        </svg>
+                    </button>
+                    <button onclick="deleteStudent(${student.id}, '${student.full_name}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
@@ -878,6 +1145,16 @@ function renderStudentsTable(students) {
             </td>
         </tr>
     `).join('');
+
+    // Add event listeners for the newly created buttons
+    document.querySelectorAll('.deactivate-student').forEach(button => {
+        button.addEventListener('click', function() {
+            const studentId = this.dataset.studentId;
+            const status = this.dataset.status;
+            const name = this.dataset.name;
+            toggleStudentStatus(studentId, status, name);
+        });
+    });
 }
 
 // Render pagination
@@ -981,33 +1258,89 @@ function populateStudentForm(student) {
     }, 100);
     
     // Handle profile picture if exists
+    const preview = document.getElementById('student-profile-pic-preview');
+    const defaultIcon = document.getElementById('student-default-profile-icon');
+    const imageOverlay = document.getElementById('student-image-overlay');
+    
     if (student.profile_pic) {
-        const preview = document.getElementById('student-profile-pic-preview');
-        const defaultIcon = document.getElementById('student-default-profile-icon');
-        const imageOverlay = document.getElementById('student-image-overlay');
-        
-        preview.src = student.profile_pic;
+        // Generate proper URL using our utility function
+        preview.src = getProfilePicUrl(student.profile_pic);
         preview.classList.remove('opacity-0');
         defaultIcon.classList.add('opacity-0');
         // Show overlay when image is present
         imageOverlay.classList.remove('opacity-0');
+    } else {
+        // Reset to default state if no profile pic
+        preview.src = '#';
+        preview.classList.add('opacity-0');
+        defaultIcon.classList.remove('opacity-0');
+        imageOverlay.classList.add('opacity-0');
     }
 }
 
 // CRUD operations
 function editStudent(studentId) {
-    // You would fetch student details here
-    // For now, using a placeholder
-    const studentData = {
+    // Show loading in the modal title
+    const modalTitle = document.getElementById('student-modal-title');
+    modalTitle.innerHTML = `
+        <div class="flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading Student Data...
+        </div>
+    `;
+    
+    // Open the modal immediately (with loading state)
+    openStudentModal({
         id: studentId,
         lrn: 'Loading...',
         first_name: 'Loading...',
-        last_name: '',
+        last_name: 'Loading...',
+        middle_name: '',
         grade_id: '',
         section_id: '',
         status: 'ACTIVE'
-    };
-    openStudentModal(studentData);
+    });
+    
+    // Fetch the student data from the server
+    fetch(`{% url 'admin_get_student' 0 %}`.replace('0', studentId), {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Failed to fetch student data: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Failed to fetch student data');
+        }
+        
+        // Update the modal title
+        modalTitle.textContent = 'Edit Student';
+        
+        // Store the student data globally
+        currentStudentData = data.student;
+        
+        // Populate the form fields
+        populateStudentForm(data.student);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast(`Failed to load student data: ${error.message}`, 'error');
+        
+        // Close the modal after a brief delay
+        setTimeout(() => {
+            closeStudentModal();
+        }, 1500);
+    });
 }
 
 function deleteStudent(studentId, studentName) {
@@ -1034,7 +1367,9 @@ function handleStudentSubmit(e) {
     const url = isEdit ? 
         `{% url 'admin_update_student' 0 %}`.replace('0', currentStudentData.id) : 
         `{% url 'admin_create_student' %}`;
-    const method = isEdit ? 'PATCH' : 'POST';
+    
+    // Both create and update should use POST method when sending form data with files
+    const method = 'POST';
     
     // Show loading state
     const saveBtn = document.getElementById('save-student-btn');
@@ -1111,69 +1446,173 @@ function confirmDeleteStudent() {
     });
 }
 
-// Utility functions
-function showLoading() {
-    studentTableLoading.classList.remove('hidden');
-}
-
-function hideLoading() {
-    studentTableLoading.classList.add('hidden');
-}
-
-function updateResultsCount(count) {
-    const searchQuery = searchInput.value;
-    if (searchQuery) {
-        const countElement = document.getElementById('student-search-results-count');
-        const spanElement = countElement.querySelector('span');
-        spanElement.textContent = `${count} result${count !== 1 ? 's' : ''}`;
-        countElement.classList.remove('hidden');
+// Update the toggleStudentStatus function to match the new modal design
+function toggleStudentStatus(studentId, currentStatus, studentName) {
+    currentStudentData = { 
+        id: studentId, 
+        name: studentName,
+        status: currentStatus 
+    };
+    
+    const isActive = currentStatus === 'ACTIVE';
+    const statusToggleTitle = document.getElementById('status-toggle-title');
+    const statusToggleMessage = document.getElementById('status-toggle-message');
+    const confirmButton = document.getElementById('confirm-status-toggle');
+    const statusIcon = document.getElementById('status-icon');
+    const iconContainer = document.getElementById('status-icon-container');
+    const toggleText = document.getElementById('status-toggle-text');
+    
+    // Update modal content based on current status
+    if (isActive) {
+        // Deactivate configuration
+        statusToggleTitle.textContent = 'Deactivate Student';
+        statusToggleMessage.textContent = `Are you sure you want to deactivate ${studentName}? They will be marked as inactive.`;
+        toggleText.textContent = 'Deactivate';
+        
+        // Yellow styling for deactivate
+        confirmButton.setAttribute('class', 
+            'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white hover:from-yellow-700 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
+        
+        iconContainer.setAttribute('class', 
+            'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 sm:mx-0 sm:h-12 sm:w-12');
+        
+        statusIcon.setAttribute('class', 'h-6 w-6 text-yellow-600 dark:text-yellow-400');
+        statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />';
     } else {
-        document.getElementById('student-search-results-count').classList.add('hidden');
+        // Activate configuration
+        statusToggleTitle.textContent = 'Activate Student';
+        statusToggleMessage.textContent = `Are you sure you want to activate ${studentName}? They will be marked as active.`;
+        toggleText.textContent = 'Activate';
+        
+        // Green styling for activate
+        confirmButton.setAttribute('class', 
+            'w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300');
+        
+        iconContainer.setAttribute('class', 
+            'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 sm:mx-0 sm:h-12 sm:w-12');
+        
+        statusIcon.setAttribute('class', 'h-6 w-6 text-green-600 dark:text-green-400');
+        statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />';
     }
-}
-
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('student-toast-container');
-    const toast = document.createElement('div');
     
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-    
-    toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 translate-x-full`;
-    toast.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            ${type === 'success' ? 
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />' :
-                type === 'error' ?
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />' :
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
-            }
-        </svg>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" class="ml-2 hover:opacity-80">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-    `;
-    
-    toastContainer.appendChild(toast);
+    // Show the modal with animation
+    const modal = document.getElementById('status-toggle-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
     
     // Animate in
     setTimeout(() => {
-        toast.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        toast.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 300);
-   
-    }, 5000);
+        const modalTarget = modal.querySelector('.modal-animate-target');
+        if (modalTarget) {
+            modalTarget.classList.add('animate-fadeIn');
+        }
+    }, 10);
 }
+
+// Fix the confirmStatusToggle function to fetch student data first, then update only the status
+function confirmStatusToggle() {
+    if (!currentStudentData) return;
+    
+    const toggleBtn = document.getElementById('confirm-status-toggle');
+    const toggleText = document.getElementById('status-toggle-text');
+    const toggleSpinner = document.getElementById('status-toggle-spinner');
+    
+    // Disable button and show spinner
+    toggleBtn.disabled = true;
+    toggleText.classList.add('hidden');
+    toggleSpinner.classList.remove('hidden');
+    
+    // Determine the new status (opposite of current)
+    const newStatus = currentStudentData.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    
+    // First, fetch the current student data
+    fetch(`{% url 'admin_get_student' 0 %}`.replace('0', currentStudentData.id), {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Failed to fetch student data: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Failed to fetch student data');
+        }
+        
+        // Create a FormData object for the status update
+        const formData = new FormData();
+        formData.append('status', newStatus);
+        
+        // For status toggle, we only need to update the status field
+        // Use POST method to ensure the update works
+        return fetch(`{% url 'admin_update_student' 0 %}`.replace('0', currentStudentData.id), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        });
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    throw new Error(data.message || `Error: ${response.status}`);
+                } catch (e) {
+                    throw new Error(text || `Error: ${response.status}`);
+                }
+            });
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            showToast(data.message || `Student status changed to ${newStatus}`, 'success');
+            closeStatusToggleModal();
+            loadStudents(currentPage);
+        } else {
+            showToast(data.message || 'Failed to update student status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast(`Failed to update status: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        toggleBtn.disabled = false;
+        toggleText.classList.remove('hidden');
+        toggleSpinner.classList.add('hidden');
+    });
+}
+
+// Improved modal closing with animation
+function closeStatusToggleModal() {
+    const modal = document.getElementById('status-toggle-modal');
+    
+    // Start animation out
+    const modalTarget = modal.querySelector('.modal-animate-target');
+    if (modalTarget) {
+        modalTarget.classList.remove('animate-fadeIn');
+    }
+    
+    // Hide modal after animation completes
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+        currentStudentData = null;
+    }, 150);
+}
+
+// Add these styles to the <style> section
 </script>
 
 <style>
@@ -1216,6 +1655,16 @@ function showToast(message, type = 'info') {
 
 .modal-enter .modal-content {
     transform: scale(1);
+}
+
+/* Animation for modal fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease-out forwards;
 }
 </style>
 {% endblock %}

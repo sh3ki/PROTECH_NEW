@@ -2208,6 +2208,18 @@
             });
         }
         
+        // --- BEGIN: Make search behave like guardians.html ---
+        if (typeof fetchUsers === "function" && userSearch) {
+            let guardiansSearchTimeout = null;
+            userSearch.addEventListener('input', function() {
+                clearTimeout(guardiansSearchTimeout);
+                guardiansSearchTimeout = setTimeout(function() {
+                    fetchUsers(1);
+                }, 300);
+            });
+        }
+        // --- END: Make search behave like guardians.html ---
+        
         // Set up search and filter event listeners
         if (userSearch) {
             userSearch.addEventListener('input', debounce(() => {

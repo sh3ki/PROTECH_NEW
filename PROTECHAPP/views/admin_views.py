@@ -1151,7 +1151,7 @@ def search_sections(request):
     # Create paginator
     paginator = Paginator(sections, items_per_page)
     page_obj = paginator.get_page(page_number)
-    
+
     # Prepare section data for JSON response
     section_data = []
     for section in page_obj:
@@ -1458,6 +1458,12 @@ def search_students(request):
 
     student_data = []
     for student in page_obj:
+        # Add the student data with properly formatted profile_pic
+        profile_pic = None
+        if student.profile_pic:
+            # Just return the filename, the template will construct the URL
+            profile_pic = student.profile_pic
+
         student_data.append({
             'id': student.id,
             'lrn': student.lrn,
@@ -1469,7 +1475,7 @@ def search_students(request):
             'section': student.section.name if student.section else '',
             'section_id': student.section.id if student.section else None,
             'status': student.status,
-            'profile_pic': student.profile_pic,
+            'profile_pic': profile_pic,
             'created_at': student.created_at.strftime('%Y-%m-%d'),
             'created_at_display': student.created_at.strftime('%b %d, %Y'),
         })
@@ -1498,61 +1504,259 @@ def search_students(request):
 def create_student(request):
     """Create a new student"""
     try:
-        data = json.loads(request.body)
-        lrn = data.get('lrn', '').strip()
-        first_name = data.get('first_name', '').strip()
-        last_name = data.get('last_name', '').strip()
-        grade_id = data.get('grade_id')
-        section_id = data.get('section_id')
-        status = data.get('status', 'ACTIVE')
-
+        # Handle form data with file upload
+        lrn = request.POST.get('lrn', '')
+        first_name = request.POST.get('first_name', '')
+        middle_name = request.POST.get('middle_name', '')
+        last_name = request.POST.get('last_name', '')
+        grade_id = request.POST.get('grade_id', '')
+        section_id = request.POST.get('section_id', '')
+        status = request.POST.get('status', 'ACTIVE')
+        
+        # Validate required fields
         if not lrn or not first_name or not last_name or not grade_id or not section_id:
-            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        
+        # Check if LRN is unique
         if Student.objects.filter(lrn=lrn).exists():
-            return JsonResponse({'status': 'error', 'message': 'LRN already exists.'}, status=400)
-        grade = Grade.objects.get(id=grade_id)
-        section = Section.objects.get(id=section_id)
-        student = Student.objects.create(
+            return JsonResponse({'status': 'error', 'message': 'LRN already exists'}, status=400)
+        
+        # Get grade and section objects
+        try:
+            grade = Grade.objects.get(id=grade_id)
+            section = Section.objects.get(id=section_id)
+        except (Grade.DoesNotExist, Section.DoesNotExist):
+            return JsonResponse({'status': 'error', 'message': 'Invalid grade or section'}, status=400)
+        
+        # Create the student
+        student = Student(
             lrn=lrn,
             first_name=first_name,
+            middle_name=middle_name,
             last_name=last_name,
             grade=grade,
             section=section,
             status=status
         )
-        return JsonResponse({'status': 'success', 'message': 'Student created successfully.', 'student_id': student.id})
+        
+        # Handle profile picture if provided
+        if 'profile_pic' in request.FILES:
+            profile_pic = request.FILES['profile_pic']
+            
+            # Validate file size and type
+            if profile_pic.size > 2 * 1024 * 1024:  # 2MB limit
+                return JsonResponse({'status': 'error', 'message': 'File size must be less than 2MB'}, status=400)
+            
+            if not profile_pic.content_type.startswith('image/'):
+                return JsonResponse({'status': 'error', 'message': 'Only image files are allowed'}, status=400)
+            
+            # Save the profile picture
+            filename = f"student_{int(timezone.now().timestamp())}_{profile_pic.name}"
+            fs = FileSystemStorage(location=PROFILE_PICS_DIR)
+            filename = fs.save(filename, profile_pic)
+            student.profile_pic = filename
+        
+        student.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Student {first_name} {last_name} created successfully',
+            'student_id': student.id
+        })
+        
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_admin)
-@require_http_methods(["PATCH"])
-def update_student(request, student_id):
-    """Update an existing student"""
+def get_student(request, student_id):
+    """
+    Endpoint to retrieve a specific student's data for editing
+    """
     try:
         student = get_object_or_404(Student, id=student_id)
-        data = json.loads(request.body)
-        lrn = data.get('lrn', '').strip()
-        first_name = data.get('first_name', '').strip()
-        last_name = data.get('last_name', '').strip()
-        grade_id = data.get('grade_id')
-        section_id = data.get('section_id')
-        status = data.get('status', student.status)
+        
+        # Build the student data for response
+        student_data = {
+            'id': student.id,
+            'lrn': student.lrn,
+            'first_name': student.first_name,
+            'middle_name': student.middle_name or '',
+            'last_name': student.last_name,
+            'grade_id': str(student.grade.id) if student.grade else '',
+            'grade': student.grade.name if student.grade else '',
+            'section_id': str(student.section.id) if student.section else '',
+            'section': student.section.name if student.section else '',
+            'status': student.status,
+            'full_name': f"{student.first_name} {student.last_name}",
+            'created_at': student.created_at.strftime('%Y-%m-%d'),
+            'profile_pic': student.profile_pic or None
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'student': student_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST", "PATCH"])
+def update_student(request, student_id):
+    """Update an existing student (supports file upload via POST)"""
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        
+        # Check if the request is a PATCH request
+        if request.method == 'PATCH':
+            # Check content type to determine how to process data
+            if 'multipart/form-data' in request.content_type:
+                # Handle form data the same way as POST request
+                # For PATCH with form data, use request.POST and request.FILES
+                lrn = request.POST.get('lrn', student.lrn)
+                first_name = request.POST.get('first_name', student.first_name)
+                middle_name = request.POST.get('middle_name', '')
+                last_name = request.POST.get('last_name', student.last_name)
+                grade_id = request.POST.get('grade_id', student.grade.id if student.grade else None)
+                section_id = request.POST.get('section_id', student.section.id if student.section else None)
+                status = request.POST.get('status', student.status)
+                
+                # Validate required fields
+                if not lrn or not first_name or not last_name or not grade_id or not section_id:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Missing required fields'
+                    }, status=400)
+                
+                # Check if LRN already exists for another student
+                if Student.objects.filter(lrn=lrn).exclude(id=student_id).exists():
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Student with LRN {lrn} already exists'
+                    }, status=400)
+                
+                # Get grade and section objects
+                try:
+                    grade = Grade.objects.get(id=grade_id)
+                    section = Section.objects.get(id=section_id)
+                except (Grade.DoesNotExist, Section.DoesNotExist):
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Invalid grade or section'
+                    }, status=400)
+                
+                # Update student fields
+                student.lrn = lrn
+                student.first_name = first_name
+                student.middle_name = middle_name
+                student.last_name = last_name
+                student.grade = grade
+                student.section = section
+                student.status = status
+                
+                # Handle profile picture if provided
+                if 'profile_pic' in request.FILES:
+                    student.profile_pic = request.FILES['profile_pic']
+                
+                student.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Student {first_name} {last_name} updated successfully',
+                    'student_id': student.id
+                })
+                
+            elif request.content_type == 'application/json':
+                # Handle JSON data
+                data = json.loads(request.body)
+                
+                # Update student fields from JSON data
+                if 'lrn' in data:
+                    student.lrn = data.get('lrn')
+                if 'first_name' in data:
+                    student.first_name = data.get('first_name')
+                if 'middle_name' in data:
+                    student.middle_name = data.get('middle_name', '')
+                if 'last_name' in data:
+                    student.last_name = data.get('last_name')
+                if 'grade_id' in data and data['grade_id']:
+                    student.grade = get_object_or_404(Grade, id=data['grade_id'])
+                if 'section_id' in data and data['section_id']:
+                    student.section = get_object_or_404(Section, id=data['section_id'])
+                if 'status' in data:
+                    student.status = data.get('status')
+                
+                student.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Student {student.first_name} {student.last_name} updated successfully',
+                    'student_id': student.id
+                })
+            else:
+                # Unsupported content-type
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Unsupported content type. Use multipart/form-data for file uploads or application/json for JSON data.'
+                }, status=400)
+        
+        # Handle POST requests (usually form data with files)
+        # Get values from POST data
+        lrn = request.POST.get('lrn', student.lrn)
+        first_name = request.POST.get('first_name', student.first_name)
+        middle_name = request.POST.get('middle_name', '')
+        last_name = request.POST.get('last_name', student.last_name)
+        grade_id = request.POST.get('grade_id', student.grade.id if student.grade else None)
+        section_id = request.POST.get('section_id', student.section.id if student.section else None)
+        status = request.POST.get('status', student.status)
+        
+        # Validate required fields
         if not lrn or not first_name or not last_name or not grade_id or not section_id:
-            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required fields'
+            }, status=400)
+        
+        # Check if LRN already exists for another student
         if Student.objects.filter(lrn=lrn).exclude(id=student_id).exists():
-            return JsonResponse({'status': 'error', 'message': 'LRN already exists.'}, status=400)
-        grade = Grade.objects.get(id=grade_id)
-        section = Section.objects.get(id=section_id)
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Student with LRN {lrn} already exists'
+            }, status=400)
+        
+        # Get grade and section objects
+        try:
+            grade = Grade.objects.get(id=grade_id)
+            section = Section.objects.get(id=section_id)
+        except (Grade.DoesNotExist, Section.DoesNotExist):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid grade or section'
+            }, status=400)
+        
+        # Update student fields
         student.lrn = lrn
         student.first_name = first_name
+        student.middle_name = middle_name
         student.last_name = last_name
         student.grade = grade
         student.section = section
         student.status = status
+        
+        # Handle profile picture if provided
+        if 'profile_pic' in request.FILES:
+            student.profile_pic = request.FILES['profile_pic']
+        
         student.save()
-        return JsonResponse({'status': 'success', 'message': 'Student updated successfully.'})
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Student {first_name} {last_name} updated successfully',
+            'student_id': student.id
+        })
+        
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -1563,8 +1767,24 @@ def delete_student(request, student_id):
     """Delete a student"""
     try:
         student = get_object_or_404(Student, id=student_id)
+        
+        # Store student name for success message
+        student_name = f"{student.first_name} {student.last_name}"
+        
+        # Delete the profile picture file if it exists
+        if student.profile_pic:
+            profile_pic_path = os.path.join(PROFILE_PICS_DIR, student.profile_pic)
+            if os.path.exists(profile_pic_path):
+                os.remove(profile_pic_path)
+        
+        # Delete the student
         student.delete()
-        return JsonResponse({'status': 'success', 'message': 'Student deleted successfully.'})
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Student {student_name} deleted successfully'
+        })
+        
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -1576,6 +1796,39 @@ def reset_student_password(request, student_id):
     # If students have user accounts, implement password reset logic here.
     return JsonResponse({'status': 'error', 'message': 'Not implemented.'}, status=400)
 
+@login_required
+@user_passes_test(is_admin)
+def get_student(request, student_id):
+    """
+    Endpoint to retrieve a specific student's data for editing
+    """
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        
+        # Build the student data for response
+        student_data = {
+            'id': student.id,
+            'lrn': student.lrn,
+            'first_name': student.first_name,
+            'middle_name': student.middle_name or '',
+            'last_name': student.last_name,
+            'grade_id': str(student.grade.id) if student.grade else '',
+            'grade': student.grade.name if student.grade else '',
+            'section_id': str(student.section.id) if student.section else '',
+            'section': student.section.name if student.section else '',
+            'status': student.status,
+            'full_name': f"{student.first_name} {student.last_name}",
+            'created_at': student.created_at.strftime('%Y-%m-%d'),
+            'profile_pic': student.profile_pic or None
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'student': student_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 # ==========================
 #  GUARDIAN MANAGEMENT VIEWS
@@ -1584,94 +1837,578 @@ def reset_student_password(request, student_id):
 @login_required
 @user_passes_test(is_admin)
 def admin_guardians(request):
-    """View for guardian management"""
-    # Get query parameters
-    search_query = request.GET.get('search', '')
-    relationship_filter = request.GET.get('relationship', '')
-    status_filter = request.GET.get('status', '')
-    page_number = request.GET.get('page', 1)
-
-    # Base queryset
-    guardians = Guardian.objects.all().order_by('-created_at')
-
-    # Apply search
-    if search_query:
-        guardians = guardians.filter(
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(phone__icontains=search_query)
-        )
-
-    # Apply relationship filter - Guardian model might use 'relationship' field
-    if relationship_filter:
-        guardians = guardians.filter(relationship=relationship_filter)
-
-    # Remove status filter since Guardian model doesn't have is_active field
-    # The Guardian model appears to not have a status field based on the available fields
-
-    # Dashboard stats - update to use correct fields
+    """Guardian management view with dashboard cards"""
+    # Calculate dashboard statistics
     total_guardians = Guardian.objects.count()
-    # Remove active/inactive counts since there's no is_active field
-    guardians_with_children = Guardian.objects.filter(student__isnull=False).distinct().count()
-
-    # Pagination
-    paginator = Paginator(guardians, 10)
-    page_obj = paginator.get_page(page_number)
-    page_range = get_pagination_range(paginator, page_obj.number, 5)
-
-    # Update relationship choices based on Guardian model
+    
+    # Count guardians with children (since each guardian has exactly one student)
+    guardians_with_children = Guardian.objects.exclude(student=None).count()
+    
+    # Count mother guardians
+    mother_count = Guardian.objects.filter(relationship='MOTHER').count()
+    
+    # Count father guardians
+    father_count = Guardian.objects.filter(relationship='FATHER').count()
+    
+    # Get relationship choices for filter dropdown
     relationship_choices = [
         ('FATHER', 'Father'),
         ('MOTHER', 'Mother'),
-        ('GRANDFATHER', 'Grandfather'),
-        ('GRANDMOTHER', 'Grandmother'),
-        ('UNCLE', 'Uncle'),
-        ('AUNT', 'Aunt'),
-        ('SIBLING', 'Sibling'),
         ('GUARDIAN', 'Guardian'),
-        ('OTHER', 'Other')
+        ('GRANDMOTHER', 'Grandmother'),
+        ('GRANDFATHER', 'Grandfather'),
+        ('AUNT', 'Aunt'),
+        ('UNCLE', 'Uncle'),
+        ('SIBLING', 'Sibling'),
+        ('OTHER', 'Other'),
     ]
-
+    
+    # Get all grades for filter dropdown
+    grades = Grade.objects.all().order_by('name')
+    
+    # Get all sections for filter dropdown
+    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
+    
+    # Get students for children dropdown
+    students = Student.objects.select_related('grade', 'section').filter(status='ACTIVE')
+    
     context = {
-        'guardians': page_obj,
-        'search_query': search_query,
-        'relationship_filter': relationship_filter,
-        'status_filter': status_filter,
         'total_guardians': total_guardians,
         'guardians_with_children': guardians_with_children,
-        'page_range': page_range,
+        'mother_count': mother_count,
+        'father_count': father_count,
         'relationship_choices': relationship_choices,
+        'grades': grades,
+        'sections': sections,
+        'students': students,
     }
+    
     return render(request, 'admin/guardians.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
 def search_guardians(request):
-    """AJAX search/filter for guardians"""
-    search_query = request.GET.get('search', '')
-    relationship_filter = request.GET.get('relationship', '')
+    """API endpoint to search and filter guardians for AJAX requests"""
+    try:
+        # Get query parameters
+        search_query = request.GET.get('search', '')
+        relationship_filter = request.GET.get('relationship', '')
+        grade_filter = request.GET.get('grade', '')
+        section_filter = request.GET.get('section', '')
+        page_number = request.GET.get('page', 1)
+        items_per_page = request.GET.get('items_per_page', 10)
+        
+        # Base queryset with related data
+        guardians = Guardian.objects.select_related('student', 'student__grade', 'student__section').order_by('-created_at')
+        
+        # Apply search if provided
+        if search_query:
+            guardians = guardians.filter(
+                Q(first_name__icontains=search_query) |
+                Q(middle_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(phone_number__icontains=search_query)
+            )
+        
+        # Apply relationship filter if provided
+        if relationship_filter:
+            guardians = guardians.filter(relationship=relationship_filter)
+        
+        # Apply grade filter if provided
+        if grade_filter:
+            guardians = guardians.filter(student__grade_id=grade_filter)
+        
+        # Apply section filter if provided
+        if section_filter:
+            guardians = guardians.filter(student__section_id=section_filter)
+        
+        # Get total count for pagination
+        total_count = guardians.count()
+        
+        # Parse page number and items_per_page
+        try:
+            page_number = int(page_number)
+            items_per_page = int(items_per_page)
+        except (ValueError, TypeError):
+            page_number = 1
+            items_per_page = 10
+        
+        # Create paginator
+        paginator = Paginator(guardians, items_per_page)
+        page_obj = paginator.get_page(page_number)
+        
+        # Prepare guardian data for JSON response
+        guardian_data = []
+        for guardian in page_obj:
+            # Calculate children count and preview
+            children_count = 1 if guardian.student else 0
+            children_preview = guardian.student.get_full_name() if guardian.student else 'No children'
+            
+            guardian_data.append({
+                'id': guardian.id,
+                'full_name': guardian.get_full_name(),
+                'first_name': guardian.first_name,
+                'middle_name': guardian.middle_name or '',
+                'last_name': guardian.last_name,
+                'email': guardian.email or 'No email',
+                'phone_number': guardian.phone_number,
+                'relationship': guardian.relationship,
+                'relationship_display': guardian.get_relationship_display(),
+                'children_count': children_count,
+                'children_preview': children_preview,
+                'created_at_display': guardian.created_at.strftime('%B %d, %Y') if guardian.created_at else 'Unknown'
+            })
+        
+        # Prepare pagination data
+        pagination = {
+            'current_page': page_obj.number,
+            'num_pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+            'start_index': page_obj.start_index(),
+            'end_index': page_obj.end_index(),
+            'total_count': total_count,
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'guardians': guardian_data,
+            'pagination': pagination,
+            'total_count': total_count,
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_guardian(request):
+    """Create a new guardian"""
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'phone_number', 'relationship', 'student_id']
+        for field in required_fields:
+            if not data.get(field):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'{field.replace("_", " ").title()} is required'
+                }, status=400)
+        
+        # Check if student exists and doesn't already have a guardian
+        try:
+            student = Student.objects.get(id=data['student_id'])
+            if hasattr(student, 'guardian') and student.guardian:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'This student already has a guardian assigned'
+                }, status=400)
+        except Student.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Selected student does not exist'
+            }, status=400)
+        
+        # Validate email if provided
+        email = data.get('email', '').strip()
+        if email:
+            from django.core.validators import validate_email
+            from django.core.exceptions import ValidationError
+            try:
+                validate_email(email)
+            except ValidationError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Please enter a valid email address'
+                }, status=400)
+        
+        # Create guardian
+        guardian = Guardian.objects.create(
+            first_name=data['first_name'].strip(),
+            middle_name=data.get('middle_name', '').strip(),
+            last_name=data['last_name'].strip(),
+            email=email,
+            phone_number=data['phone_number'].strip(),
+            relationship=data['relationship'],
+            student=student
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Guardian created successfully',
+            'guardian': {
+                'id': guardian.id,
+                'full_name': guardian.get_full_name(),
+                'email': guardian.email or '',
+                'phone_number': guardian.phone_number,
+                'relationship': guardian.relationship,
+                'student_name': student.get_full_name(),
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PATCH"])
+def update_guardian(request, guardian_id):
+    """Update an existing guardian"""
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'phone_number', 'relationship', 'student_id']
+        for field in required_fields:
+            if not data.get(field):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'{field.replace("_", " ").title()} is required'
+                }, status=400)
+        
+        # Check if student exists and validate assignment
+        try:
+            student = Student.objects.get(id=data['student_id'])
+            # Check if another guardian is assigned to this student (excluding current guardian)
+            existing_guardian = Guardian.objects.filter(student=student).exclude(id=guardian_id).first()
+            if existing_guardian:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'This student already has another guardian assigned'
+                }, status=400)
+        except Student.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Selected student does not exist'
+            }, status=400)
+        
+        # Validate email if provided
+        email = data.get('email', '').strip()
+        if email:
+            from django.core.validators import validate_email
+            from django.core.exceptions import ValidationError
+            try:
+                validate_email(email)
+            except ValidationError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Please enter a valid email address'
+                }, status=400)
+        
+
+        
+        # Update guardian
+        guardian.first_name = data['first_name'].strip()
+        guardian.middle_name = data.get('middle_name', '').strip()
+        guardian.last_name = data['last_name'].strip()
+        guardian.email = email
+        guardian.phone_number = data['phone_number'].strip()
+        guardian.relationship = data['relationship']
+        guardian.student = student
+        guardian.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Guardian updated successfully',
+            'guardian': {
+                'id': guardian.id,
+                'full_name': guardian.get_full_name(),
+                'email': guardian.email or '',
+                'phone_number': guardian.phone_number,
+                'relationship': guardian.relationship,
+                'student_name': student.get_full_name(),
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_guardian(request, guardian_id):
+    """Delete a guardian"""
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        guardian_name = guardian.get_full_name()
+        guardian.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Guardian {guardian_name} deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_guardian_children(request, guardian_id):
+    """Get children for a specific guardian"""
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        
+        children = []
+        if guardian.student:
+            child = guardian.student
+            children.append({
+                'id': child.id,
+                'full_name': child.get_full_name(),
+                'lrn': child.lrn,
+                'grade': child.grade.name if child.grade else 'N/A',
+                'section': child.section.name if child.section else 'N/A',
+                'status': child.status
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'guardian': {
+                'name': guardian.get_full_name(),
+                'relationship': guardian.get_relationship_display()
+            },
+            'children': children
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_get_sections_by_grade(request):
+    """Get sections for a specific grade"""
+    try:
+        grade_id = request.GET.get('grade_id')
+        if not grade_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Grade ID is required'
+            }, status=400)
+        
+        sections = Section.objects.filter(grade_id=grade_id).order_by('name')
+        sections_data = [
+            {
+                'id': section.id,
+                'name': section.name,
+                'grade_id': section.grade.id,
+                'grade_name': section.grade.name
+            }
+            for section in sections
+        ]
+        
+        return JsonResponse({
+            'status': 'success',
+            'sections': sections_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_get_students_by_section(request):
+    """Get students for a specific section"""
+    try:
+        section_id = request.GET.get('section_id')
+        if not section_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Section ID is required'
+            }, status=400)
+        
+
+        
+        # Get students who don't already have a guardian assigned (for create) or are assigned to the current guardian (for edit)
+        students = Student.objects.filter(
+            section_id=section_id,
+            status='ACTIVE'
+        ).select_related('grade', 'section').order_by('first_name', 'last_name')
+        
+        students_data = [
+            {
+                'id': student.id,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'lrn': student.lrn,
+                'grade': student.grade.name if student.grade else 'N/A',
+                'section': student.section.name if student.section else 'N/A',
+                'has_guardian': hasattr(student, 'guardian') and student.guardian is not None
+            }
+            for student in students
+        ]
+        
+        return JsonResponse({
+            'status': 'success',
+            'students': students_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_guardian_details(request, guardian_id):
+    """
+    Endpoint to retrieve a specific guardian's data for editing
+    """
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        
+        # Prepare children data
+        children = []
+        if guardian.student:
+            child = guardian.student
+            children.append({
+                'id': child.id,
+                'first_name': child.first_name,
+                'last_name': child.last_name,
+                'full_name': child.get_full_name(),
+                'lrn': child.lrn,
+                'grade_id': child.grade.id if child.grade else None,
+                'grade': child.grade.name if child.grade else None,
+                'section_id': child.section.id if child.section else None,
+                'section': child.section.name if child.section else None,
+                'status': child.status
+            })
+        
+        guardian_data = {
+            'id': guardian.id,
+            'first_name': guardian.first_name,
+            'middle_name': guardian.middle_name or '',
+            'last_name': guardian.last_name,
+            'email': guardian.email or '',
+            'phone_number': guardian.phone_number,
+            'relationship': guardian.relationship,
+            'children': children,
+            'created_at': guardian.created_at.isoformat() if guardian.created_at else None
+        };
+        
+        return JsonResponse({
+            'status': 'success',
+            'guardian': guardian_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+
+# ==========================
+#  ATTENDANCE MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_attendance_records(request):
+    """Attendance management view with dashboard cards and filters"""
+    from django.db.models import Q
+    from datetime import date
+
+    # Dashboard stats
+    total_records = Attendance.objects.count()
+    present_count = Attendance.objects.filter(status='PRESENT').count()
+    absent_count = Attendance.objects.filter(status='ABSENT').count()
+    excused_count = Attendance.objects.filter(status='EXCUSED').count()
+
+    grades = Grade.objects.all().order_by('name')
+    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
+
+    # Filters (for initial page load)
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
     status_filter = request.GET.get('status', '')
+    date_filter = request.GET.get('date', '')
+
+    context = {
+
+        'grades': grades,
+        'sections': sections,
+        'grade_filter': grade_filter,
+        'section_filter': section_filter,
+        'status_filter': status_filter,
+        'date_filter': date_filter,
+        'total_records': total_records,
+        'present_count': present_count,
+        'absent_count': absent_count,
+        'excused_count': excused_count,
+    }
+    return render(request, 'admin/attendance.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def search_attendance_records(request):
+    """AJAX search/filter for attendance records"""
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
+    status_filter = request.GET.get('status', '')
+    date_filter = request.GET.get('date', '')
     page_number = request.GET.get('page', 1)
     items_per_page = request.GET.get('items_per_page', 10)
 
-    guardians = Guardian.objects.all().order_by('-created_at')
+    records = Attendance.objects.select_related('student', 'student__grade', 'student__section').all().order_by('-date', '-student__last_name')
 
     if search_query:
-        guardians = guardians.filter(
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(phone__icontains=search_query)
+        records = records.filter(
+            Q(student__first_name__icontains=search_query) |
+            Q(student__last_name__icontains=search_query) |
+            Q(student__lrn__icontains=search_query) |
+            Q(student__section__name__icontains=search_query)
         )
-    
-    if relationship_filter:
-        guardians = guardians.filter(relationship=relationship_filter)
-    
-    # Remove status filter since Guardian model doesn't have is_active field
+    if grade_filter:
+        records = records.filter(student__grade_id=grade_filter)
+    if section_filter:
+        records = records.filter(student__section_id=section_filter)
+    if status_filter:
+        records = records.filter(status=status_filter)
+    if date_filter:
+        records = records.filter(date=date_filter)
 
-    total_count = guardians.count()
+    total_count = records.count()
     try:
         page_number = int(page_number)
         items_per_page = int(items_per_page)
@@ -1679,35 +2416,21 @@ def search_guardians(request):
         page_number = 1
         items_per_page = 10
 
-    paginator = Paginator(guardians, items_per_page)
+    paginator = Paginator(records, items_per_page)
     page_obj = paginator.get_page(page_number)
 
-    guardian_data = []
-    for guardian in page_obj:
-        # Use correct field name 'student' instead of 'students'
-        children_count = guardian.student_set.count() if hasattr(guardian, 'student_set') else 0
-        children_names = []
-        
-        # Get children names - adjust based on actual relationship
-        if hasattr(guardian, 'student_set'):
-            children = guardian.student_set.all()[:3]
-            children_names = [f"{student.first_name} {student.last_name}" for student in children]
-        
-        guardian_data.append({
-            'id': guardian.id,
-            'first_name': guardian.first_name,
-            'last_name': guardian.last_name,
-            'full_name': f"{guardian.first_name} {guardian.last_name}",
-            'email': guardian.email or 'N/A',
-            'phone_number': guardian.phone or 'N/A',  # Use 'phone' instead of 'phone_number'
-            'relationship': getattr(guardian, 'relationship', 'N/A'),
-            'relationship_display': getattr(guardian, 'get_relationship_display', lambda: getattr(guardian, 'relationship', 'N/A'))(),
-            # Remove is_active and status since they don't exist
-            'children_count': children_count,
-            'children_names': children_names,
-            'children_preview': ', '.join(children_names) + ('...' if children_count > 3 else ''),
-            'created_at': guardian.created_at.strftime('%Y-%m-%d'),
-            'created_at_display': guardian.created_at.strftime('%b %d, %Y'),
+    attendance_data = []
+    for record in page_obj:
+        attendance_data.append({
+            'id': record.id,
+            'lrn': record.student.lrn,
+            'full_name': f"{record.student.first_name} {record.student.last_name}",
+            'grade': record.student.grade.name if record.student.grade else '',
+            'section': record.student.section.name if record.student.section else '',
+            'date': record.date.strftime('%Y-%m-%d'),
+            'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
+            'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
+            'status': record.status,
         })
 
     pagination = {
@@ -1723,165 +2446,16 @@ def search_guardians(request):
 
     return JsonResponse({
         'status': 'success',
-        'guardians': guardian_data,
+        'records': attendance_data,
         'pagination': pagination,
         'total_count': total_count,
     })
 
-@login_required
-@user_passes_test(is_admin)
-@require_http_methods(["POST"])
-def create_guardian(request):
-    """Create a new guardian"""
-    try:
-        data = json.loads(request.body)
-        
-        # Validate required fields
-        required_fields = ['first_name', 'last_name']
-        for field in required_fields:
-            if not data.get(field, '').strip():
-                return JsonResponse({'status': 'error', 'message': f'{field.replace("_", " ").title()} is required'}, status=400)
-        
-        # Check if email already exists (if provided)
-        email = data.get('email', '').strip()
-        if email and Guardian.objects.filter(email=email).exists():
-            return JsonResponse({'status': 'error', 'message': 'Email already exists'}, status=400)
-        
-        # Create guardian with available fields
-        guardian_data = {
-            'first_name': data['first_name'].strip(),
-            'last_name': data['last_name'].strip(),
-            'middle_name': data.get('middle_name', '').strip(),
-            'email': email if email else None,
-            'phone': data.get('phone_number', '').strip() if data.get('phone_number', '').strip() else None,
-        }
-        
-        # Add relationship if the field exists
-        if 'relationship' in data and hasattr(Guardian, 'relationship'):
-            guardian_data['relationship'] = data['relationship']
-        
-        guardian = Guardian.objects.create(**guardian_data)
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': f'Guardian {guardian.first_name} {guardian.last_name} created successfully',
-            'guardian_id': guardian.id
-        })
-        
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-@login_required
-@user_passes_test(is_admin)
-@require_http_methods(["PATCH"])
-def update_guardian(request, guardian_id):
-    """Update an existing guardian"""
-    try:
-        guardian = get_object_or_404(Guardian, id=guardian_id)
-        data = json.loads(request.body)
-        
-        # Validate required fields
-        required_fields = ['first_name', 'last_name']
-        for field in required_fields:
-            if not data.get(field, '').strip():
-                return JsonResponse({'status': 'error', 'message': f'{field.replace("_", " ").title()} is required'}, status=400)
-        
-        # Check if email already exists (if provided and different)
-        email = data.get('email', '').strip()
-        if email and email != guardian.email:
-            if Guardian.objects.filter(email=email).exists():
-                return JsonResponse({'status': 'error', 'message': 'Email already exists'}, status=400)
-        
-        # Update fields
-        guardian.first_name = data['first_name'].strip()
-        guardian.last_name = data['last_name'].strip()
-        guardian.middle_name = data.get('middle_name', '').strip()
-        guardian.email = email if email else None
-        guardian.phone = data.get('phone_number', '').strip() if data.get('phone_number', '').strip() else None
-        
-        # Update relationship if the field exists
-        if 'relationship' in data and hasattr(guardian, 'relationship'):
-            guardian.relationship = data['relationship']
-        
-        guardian.save()
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': f'Guardian {guardian.first_name} {guardian.last_name} updated successfully'
-        })
-        
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+# ==========================
+#  OTHER VIEWS
+# ==========================
 
-@login_required
-@user_passes_test(is_admin)
-@require_http_methods(["DELETE"])
-def delete_guardian(request, guardian_id):
-    """Delete a guardian"""
-    try:
-        guardian = get_object_or_404(Guardian, id=guardian_id)
-        
-        # Check if guardian has children - adjust based on actual relationship
-        children_count = 0
-        if hasattr(guardian, 'student_set'):
-            children_count = guardian.student_set.count()
-        
-        if children_count > 0:
-            return JsonResponse({
-                'status': 'error', 
-                'message': f'Cannot delete guardian with {children_count} associated student(s). Please remove associations first.'
-            }, status=400)
-        
-        guardian_name = f"{guardian.first_name} {guardian.last_name}"
-        guardian.delete()
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': f'Guardian {guardian_name} deleted successfully'
-        })
-        
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@login_required
-@user_passes_test(is_admin)
-@require_GET
-def get_guardian_children(request, guardian_id):
-    """Get children for a specific guardian"""
-    try:
-        guardian = get_object_or_404(Guardian, id=guardian_id)
-        
-        # Get children - adjust based on actual relationship
-        children = []
-        if hasattr(guardian, 'student_set'):
-            children = guardian.student_set.select_related('grade', 'section').order_by('first_name', 'last_name')
-        
-        children_data = []
-        for child in children:
-            children_data.append({
-                'id': child.id,
-                'lrn': getattr(child, 'lrn', 'N/A'),
-                'first_name': child.first_name,
-                'last_name': child.last_name,
-                'full_name': f"{child.first_name} {child.last_name}",
-                'grade': child.grade.name if child.grade else 'N/A',
-                'section': child.section.name if child.section else 'N/A',
-                'status': getattr(child, 'status', 'ACTIVE')
-            })
-        
-        return JsonResponse({
-            'status': 'success',
-            'guardian': {
-                'id': guardian.id,
-                'name': f"{guardian.first_name} {guardian.last_name}",
-                'relationship': getattr(guardian, 'get_relationship_display', lambda: getattr(guardian, 'relationship', 'Guardian'))()
-            },
-            'children': children_data,
-            'total_children': len(children_data)
-        })
-        
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_admin)
@@ -1894,17 +2468,6 @@ def admin_dashboard(request):
         'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
     }
     return render(request, 'admin/dashboard.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_attendance(request):
-    """View for attendance management"""
-    today = timezone.now().date()
-    attendance_records = Attendance.objects.filter(date=today)
-    context = {
-        'attendance_records': attendance_records
-    }
-    return render(request, 'admin/attendance.html', context)
 
 @login_required
 @user_passes_test(is_admin)
@@ -1987,34 +2550,28 @@ def upload_profile_pic(request):
 def serve_profile_pic(request, path):
     """View to securely serve profile pictures from private directory"""
     try:
-        import traceback
-        # The path parameter should now just be the filename
-        filename = path
+        # Validate the path to prevent directory traversal
+        if '..' in path or path.startswith('/'):
+            return HttpResponseNotFound("Not found")
         
-        # Construct the full file path
-        file_path = os.path.join(PROFILE_PICS_DIR, filename)
-        
-        # Check if file exists
-        if not os.path.exists(file_path):
-            # Provide a default image or 404
-            default_pic_path = os.path.join(settings.STATIC_ROOT, 'images', 'default_profile.png')
-            if os.path.exists(default_pic_path):
-                with open(default_pic_path, 'rb') as image_file:
-                    return HttpResponse(image_file.read(), content_type='image/png')
-            return HttpResponseNotFound("Profile picture not found")
-        
-        # Determine content type based on file extension
-        content_type = 'image/jpeg'  # Default
-        if filename.lower().endswith('.png'):
-            content_type = 'image/png'
-        elif filename.lower().endswith('.gif'):
-            content_type = 'image/gif'
-        
-        # Serve the file
-        with open(file_path, 'rb') as image_file:
-            return HttpResponse(image_file.read(), content_type=content_type)
+        full_path = os.path.join(PROFILE_PICS_DIR, path)
+        if os.path.exists(full_path) and os.path.isfile(full_path):
+            with open(full_path, 'rb') as f:
+                return HttpResponse(f.read(), content_type='image/jpeg')  # Adjust content type if needed
+        else:
+            return HttpResponseNotFound("Image not found")
     except Exception as e:
-        import traceback
-        print(f"Error serving image: {str(e)}")
-        print(traceback.format_exc())
-        return HttpResponseNotFound("Error serving profile picture")
+        return HttpResponseNotFound(f"Error: {str(e)}")
+
+@login_required
+def serve_profile_pic_default(request):
+    """Serve a default profile picture when none is specified"""
+    # You can either redirect to a static default image or serve a placeholder
+    default_image_path = os.path.join(settings.STATIC_ROOT, 'images', 'default_profile.png')
+    
+    if os.path.exists(default_image_path):
+        with open(default_image_path, 'rb') as f:
+            return HttpResponse(f.read(), content_type='image/png')
+    else:
+        # If default image doesn't exist, return a 404 or an empty response
+        return HttpResponse(status=204)  # 204 No Content

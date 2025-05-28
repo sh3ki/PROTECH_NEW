@@ -54,6 +54,7 @@ urlpatterns = [
     path('admin/students/', admin_views.admin_students, name='admin_students'),
     path('admin/students/search/', admin_views.search_students, name='admin_search_students'),
     path('admin/students/create/', admin_views.create_student, name='admin_create_student'),
+    path('admin/students/<int:student_id>/', admin_views.get_student, name='admin_get_student'),
     path('admin/students/<int:student_id>/update/', admin_views.update_student, name='admin_update_student'),
     path('admin/students/<int:student_id>/delete/', admin_views.delete_student, name='admin_delete_student'),
     path('admin/students/<int:student_id>/reset-password/', admin_views.reset_student_password, name='admin_reset_student_password'),
@@ -64,16 +65,20 @@ urlpatterns = [
     path('admin/guardians/<int:guardian_id>/update/', admin_views.update_guardian, name='admin_update_guardian'),
     path('admin/guardians/<int:guardian_id>/delete/', admin_views.delete_guardian, name='admin_delete_guardian'),
     path('admin/guardians/<int:guardian_id>/children/', admin_views.get_guardian_children, name='admin_get_guardian_children'),
-    
+    path('admin/guardians/<int:guardian_id>/details/', admin_views.get_guardian_details, name='admin_get_guardian_details'),
+    path('admin/guardians/sections-by-grade/', admin_views.admin_get_sections_by_grade, name='admin_get_sections_by_grade'),
+    path('admin/guardians/students-by-section/', admin_views.admin_get_students_by_section, name='admin_get_students_by_section'),
 
   
     # admin other routes
+    path('profile-pics/', admin_views.serve_profile_pic_default, name='serve_profile_pic_default'),
     path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
     path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
-    path('admin/attendance/', admin_views.admin_attendance, name='admin_attendance'),
     path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
     path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
+    path('admin/attendance-records/', admin_views.admin_attendance_records, name='admin_attendance'),
+    path('admin/attendance-records/search/', admin_views.search_attendance_records, name='admin_search_attendance'),
 
 
 # ==========================

@@ -102,6 +102,7 @@ class Guardian(models.Model):
     last_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20)
     email = models.EmailField(blank=True, null=True)
+    relationship = models.CharField(max_length=50)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='guardians')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
