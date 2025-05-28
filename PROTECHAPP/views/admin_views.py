@@ -1422,81 +1422,87 @@ def admin_students(request):
 @require_http_methods(["GET"])
 def search_students(request):
     """AJAX search/filter for students"""
-    search_query = request.GET.get('search', '')
-    grade_filter = request.GET.get('grade', '')
-    section_filter = request.GET.get('section', '')
-    status_filter = request.GET.get('status', '')
-    page_number = request.GET.get('page', 1)
-    items_per_page = request.GET.get('items_per_page', 10)
-
-    students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
-
-    if search_query:
-        students = students.filter(
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(lrn__icontains=search_query) |
-            Q(email__icontains=search_query)
-        )
-    if grade_filter:
-        students = students.filter(grade_id=grade_filter)
-    if section_filter:
-        students = students.filter(section_id=section_filter)
-    if status_filter:
-        students = students.filter(status=status_filter)
-
-    total_count = students.count()
     try:
-        page_number = int(page_number)
-        items_per_page = int(items_per_page)
-    except (ValueError, TypeError):
-        page_number = 1
-        items_per_page = 10
+        search_query = request.GET.get('search', '')
+        grade_filter = request.GET.get('grade', '')
+        section_filter = request.GET.get('section', '')
+        status_filter = request.GET.get('status', '')
+        page_number = request.GET.get('page', 1)
+        items_per_page = request.GET.get('items_per_page', 10)
 
-    paginator = Paginator(students, items_per_page)
-    page_obj = paginator.get_page(page_number)
+        students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
 
-    student_data = []
-    for student in page_obj:
-        # Add the student data with properly formatted profile_pic
-        profile_pic = None
-        if student.profile_pic:
-            # Just return the filename, the template will construct the URL
-            profile_pic = student.profile_pic
+        if search_query:
+            students = students.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(lrn__icontains=search_query)
+            )
+        if grade_filter:
+            students = students.filter(grade_id=grade_filter)
+        if section_filter:
+            students = students.filter(section_id=section_filter)
+        if status_filter:
+            students = students.filter(status=status_filter)
 
-        student_data.append({
-            'id': student.id,
-            'lrn': student.lrn,
-            'first_name': student.first_name,
-            'last_name': student.last_name,
-            'full_name': f"{student.first_name} {student.last_name}",
-            'grade': student.grade.name if student.grade else '',
-            'grade_id': student.grade.id if student.grade else None,
-            'section': student.section.name if student.section else '',
-            'section_id': student.section.id if student.section else None,
-            'status': student.status,
-            'profile_pic': profile_pic,
-            'created_at': student.created_at.strftime('%Y-%m-%d'),
-            'created_at_display': student.created_at.strftime('%b %d, %Y'),
+        total_count = students.count()
+        try:
+            page_number = int(page_number)
+            items_per_page = int(items_per_page)
+        except (ValueError, TypeError):
+            page_number = 1
+            items_per_page = 10
+
+        paginator = Paginator(students, items_per_page)
+        page_obj = paginator.get_page(page_number)
+
+        student_data = []
+        for student in page_obj:
+            # Complete the missing profile_pic handling code
+            profile_pic = None
+            if student.profile_pic:
+                profile_pic = student.profile_pic
+
+            student_data.append({
+                'id': student.id,
+                'lrn': student.lrn,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'full_name': f"{student.first_name} {student.last_name}",
+                'grade': student.grade.name if student.grade else '',
+                'grade_id': student.grade.id if student.grade else None,
+                'section': student.section.name if student.section else '',
+                'section_id': student.section.id if student.section else None,
+                'status': student.status,
+                'profile_pic': profile_pic,
+                'created_at': student.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': student.created_at.strftime('%b %d, %Y'),
+            })
+
+        pagination = {
+            'current_page': page_obj.number,
+            'num_pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+            'start_index': page_obj.start_index(),
+            'end_index': page_obj.end_index(),
+            'total_count': total_count,
+        }
+
+        return JsonResponse({
+            'status': 'success',
+            'students': student_data,
+            'pagination': pagination,
+            'total_count': total_count,
         })
-
-    pagination = {
-        'current_page': page_obj.number,
-        'num_pages': paginator.num_pages,
-        'has_next': page_obj.has_next(),
-        'has_previous': page_obj.has_previous(),
-        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
-        'start_index': page_obj.start_index(),
-        'end_index': page_obj.end_index(),
-        'total_count': total_count,
-    }
-
-    return JsonResponse({
-        'status': 'success',
-        'students': student_data,
-        'pagination': pagination,
-        'total_count': total_count,
-    })
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
 
 @login_required
 @user_passes_test(is_admin)
