@@ -19,7 +19,8 @@ class StudentStatus(models.TextChoices):
     INACTIVE = 'INACTIVE', 'Inactive'
 
 class AttendanceStatus(models.TextChoices):
-    PRESENT = 'PRESENT', 'Present'
+    ONTIME = 'ON TIME', 'On Time'
+    LATE = 'LATE', 'Late'
     ABSENT = 'ABSENT', 'Absent'
     EXCUSED = 'EXCUSED', 'Excused'
 

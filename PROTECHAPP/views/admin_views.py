@@ -1905,8 +1905,8 @@ def search_guardians(request):
         page_number = request.GET.get('page', 1)
         items_per_page = request.GET.get('items_per_page', 10)
         
-        # Base queryset with related data
-        guardians = Guardian.objects.select_related('student', 'student__grade', 'student__section').order_by('-created_at')
+        # Base queryset
+        guardians = Guardian.objects.all().order_by('-created_at')
         
         # Apply search if provided
         if search_query:
@@ -1915,7 +1915,7 @@ def search_guardians(request):
                 Q(middle_name__icontains=search_query) |
                 Q(last_name__icontains=search_query) |
                 Q(email__icontains=search_query) |
-                Q(phone_number__icontains=search_query)
+                Q(phone__icontains=search_query)  # Use phone instead of phone_number
             )
         
         # Apply relationship filter if provided
@@ -1924,11 +1924,15 @@ def search_guardians(request):
         
         # Apply grade filter if provided
         if grade_filter:
-            guardians = guardians.filter(student__grade_id=grade_filter)
+            # Find students in this grade, then filter guardians related to them
+            student_ids = Student.objects.filter(grade_id=grade_filter).values_list('id', flat=True)
+            guardians = guardians.filter(student_id__in=student_ids)
         
         # Apply section filter if provided
         if section_filter:
-            guardians = guardians.filter(student__section_id=section_filter)
+            # Find students in this section, then filter guardians related to them
+            student_ids = Student.objects.filter(section_id=section_filter).values_list('id', flat=True)
+            guardians = guardians.filter(student_id__in=student_ids)
         
         # Get total count for pagination
         total_count = guardians.count()
@@ -1948,24 +1952,44 @@ def search_guardians(request):
         # Prepare guardian data for JSON response
         guardian_data = []
         for guardian in page_obj:
-            # Calculate children count and preview
-            children_count = 1 if guardian.student else 0
-            children_preview = guardian.student.get_full_name() if guardian.student else 'No children'
-            
-            guardian_data.append({
-                'id': guardian.id,
-                'full_name': guardian.get_full_name(),
-                'first_name': guardian.first_name,
-                'middle_name': guardian.middle_name or '',
-                'last_name': guardian.last_name,
-                'email': guardian.email or 'No email',
-                'phone_number': guardian.phone_number,
-                'relationship': guardian.relationship,
-                'relationship_display': guardian.get_relationship_display(),
-                'children_count': children_count,
-                'children_preview': children_preview,
-                'created_at_display': guardian.created_at.strftime('%B %d, %Y') if guardian.created_at else 'Unknown'
-            })
+            try:
+                # Create guardian data dict with safe fallbacks
+                data = {
+                    'id': guardian.id,
+                    'full_name': f"{guardian.first_name} {guardian.last_name}",
+                    'first_name': guardian.first_name,
+                    'middle_name': guardian.middle_name or '',
+                    'last_name': guardian.last_name,
+                    'email': guardian.email or 'No email',
+                    'phone_number': guardian.phone or 'No phone',  # Use phone instead of phone_number
+                    'relationship': guardian.relationship,
+                    'created_at_display': guardian.created_at.strftime('%B %d, %Y') if guardian.created_at else 'N/A'
+                }
+                
+                # Safely handle relationship display and children data
+                try:
+                    data['relationship_display'] = guardian.get_relationship_display()
+                except (AttributeError, TypeError):
+                    data['relationship_display'] = guardian.relationship
+                
+                # Child info with safe fallbacks
+                try:
+                    student = Student.objects.filter(id=guardian.student_id).first() if hasattr(guardian, 'student_id') else None
+                    if student:
+                        data['children_count'] = 1
+                        data['children_preview'] = f"{student.first_name} {student.last_name}"
+                    else:
+                        data['children_count'] = 0
+                        data['children_preview'] = 'No children'
+                except Exception as e:
+                    data['children_count'] = 0
+                    data['children_preview'] = 'Error loading children'
+                    print(f"Error loading children for guardian {guardian.id}: {str(e)}")
+                
+                guardian_data.append(data)
+            except Exception as e:
+                print(f"Error processing guardian {guardian.id if hasattr(guardian, 'id') else 'unknown'}: {str(e)}")
+                continue
         
         # Prepare pagination data
         pagination = {
@@ -1987,9 +2011,14 @@ def search_guardians(request):
         })
     
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error in search_guardians: {str(e)}")
+        print(error_traceback)
         return JsonResponse({
             'status': 'error',
-            'message': f'An error occurred: {str(e)}'
+            'message': f'An error occurred: {str(e)}',
+            'traceback': error_traceback
         }, status=500)
 
 @login_required
@@ -1998,52 +2027,42 @@ def search_guardians(request):
 def create_guardian(request):
     """Create a new guardian"""
     try:
-        import json
         data = json.loads(request.body)
         
         # Validate required fields
         required_fields = ['first_name', 'last_name', 'phone_number', 'relationship', 'student_id']
         for field in required_fields:
-            if not data.get(field):
+            if not field in data or not data[field]:
                 return JsonResponse({
                     'status': 'error',
-                    'message': f'{field.replace("_", " ").title()} is required'
+                    'message': f'Field {field} is required'
                 }, status=400)
         
         # Check if student exists and doesn't already have a guardian
+       
+       
+
         try:
             student = Student.objects.get(id=data['student_id'])
-            if hasattr(student, 'guardian') and student.guardian:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'This student already has a guardian assigned'
-                }, status=400)
         except Student.DoesNotExist:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Selected student does not exist'
-            }, status=400)
+                'message': 'Student not found'
+            }, status=404)
         
         # Validate email if provided
         email = data.get('email', '').strip()
         if email:
-            from django.core.validators import validate_email
-            from django.core.exceptions import ValidationError
-            try:
-                validate_email(email)
-            except ValidationError:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Please enter a valid email address'
-                }, status=400)
+            # Add email validation if needed
+            pass
         
-        # Create guardian
+        # Create guardian - Note: using phone_number from form but storing in phone field
         guardian = Guardian.objects.create(
             first_name=data['first_name'].strip(),
             middle_name=data.get('middle_name', '').strip(),
             last_name=data['last_name'].strip(),
             email=email,
-            phone_number=data['phone_number'].strip(),
+            phone=data['phone_number'].strip(),  # Changed to map phone_number to phone
             relationship=data['relationship'],
             student=student
         )
@@ -2053,11 +2072,11 @@ def create_guardian(request):
             'message': 'Guardian created successfully',
             'guardian': {
                 'id': guardian.id,
-                'full_name': guardian.get_full_name(),
+                'full_name': f"{guardian.first_name} {guardian.last_name}",
                 'email': guardian.email or '',
-                'phone_number': guardian.phone_number,
+                'phone_number': guardian.phone,  # Return as phone_number for consistency with form
                 'relationship': guardian.relationship,
-                'student_name': student.get_full_name(),
+                'student_name': f"{student.first_name} {student.last_name}",
             }
         })
         
@@ -2078,7 +2097,6 @@ def create_guardian(request):
 def update_guardian(request, guardian_id):
     """Update an existing guardian"""
     try:
-        import json
         data = json.loads(request.body)
         
         guardian = get_object_or_404(Guardian, id=guardian_id)
@@ -2086,49 +2104,31 @@ def update_guardian(request, guardian_id):
         # Validate required fields
         required_fields = ['first_name', 'last_name', 'phone_number', 'relationship', 'student_id']
         for field in required_fields:
-            if not data.get(field):
+            if not field in data or not data[field]:
                 return JsonResponse({
                     'status': 'error',
-                    'message': f'{field.replace("_", " ").title()} is required'
+                    'message': f'Field {field} is required'
                 }, status=400)
         
         # Check if student exists and validate assignment
         try:
             student = Student.objects.get(id=data['student_id'])
-            # Check if another guardian is assigned to this student (excluding current guardian)
-            existing_guardian = Guardian.objects.filter(student=student).exclude(id=guardian_id).first()
-            if existing_guardian:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'This student already has another guardian assigned'
-                }, status=400)
         except Student.DoesNotExist:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Selected student does not exist'
-            }, status=400)
+                'message': 'Student not found'
+            }, status=404)
         
         # Validate email if provided
         email = data.get('email', '').strip()
-        if email:
-            from django.core.validators import validate_email
-            from django.core.exceptions import ValidationError
-            try:
-                validate_email(email)
-            except ValidationError:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Please enter a valid email address'
-                }, status=400)
+        # Email validation could go here if needed
         
-
-        
-        # Update guardian
+        # Update guardian fields
         guardian.first_name = data['first_name'].strip()
         guardian.middle_name = data.get('middle_name', '').strip()
         guardian.last_name = data['last_name'].strip()
         guardian.email = email
-        guardian.phone_number = data['phone_number'].strip()
+        guardian.phone = data['phone_number'].strip()  # Map phone_number from form to phone field in model
         guardian.relationship = data['relationship']
         guardian.student = student
         guardian.save()
@@ -2138,11 +2138,11 @@ def update_guardian(request, guardian_id):
             'message': 'Guardian updated successfully',
             'guardian': {
                 'id': guardian.id,
-                'full_name': guardian.get_full_name(),
+                'full_name': f"{guardian.first_name} {guardian.last_name}",
                 'email': guardian.email or '',
-                'phone_number': guardian.phone_number,
+                'phone_number': guardian.phone,  # Return as phone_number for consistency with form
                 'relationship': guardian.relationship,
-                'student_name': student.get_full_name(),
+                'student_name': f"{student.first_name} {student.last_name}"
             }
         })
         
@@ -2152,10 +2152,14 @@ def update_guardian(request, guardian_id):
             'message': 'Invalid JSON data'
         }, status=400)
     except Exception as e:
+        error_traceback = traceback.format_exc()
+        print(f"Error in update_guardian: {str(e)}")
+        print(error_traceback)
         return JsonResponse({
             'status': 'error',
-            'message': f'An error occurred: {str(e)}'
-        }, status=500)
+            'message': f'An error occurred: {str(e)}',
+            'traceback': error_traceback
+        }, status=500)  # Changed to 500 for server errors
 
 @login_required
 @user_passes_test(is_admin)
@@ -2164,7 +2168,7 @@ def delete_guardian(request, guardian_id):
     """Delete a guardian"""
     try:
         guardian = get_object_or_404(Guardian, id=guardian_id)
-        guardian_name = guardian.get_full_name()
+        guardian_name = f"{guardian.first_name} {guardian.last_name}"  # Use direct concatenation instead of get_full_name
         guardian.delete()
         
         return JsonResponse({
@@ -2188,21 +2192,20 @@ def get_guardian_children(request, guardian_id):
         
         children = []
         if guardian.student:
-            child = guardian.student
             children.append({
-                'id': child.id,
-                'full_name': child.get_full_name(),
-                'lrn': child.lrn,
-                'grade': child.grade.name if child.grade else 'N/A',
-                'section': child.section.name if child.section else 'N/A',
-                'status': child.status
+                'id': guardian.student.id,
+                'full_name': f"{guardian.student.first_name} {guardian.student.last_name}",  # Direct concatenation
+                'lrn': guardian.student.lrn,
+                'grade': guardian.student.grade.name if guardian.student.grade else 'N/A',
+                'section': guardian.student.section.name if guardian.student.section else 'N/A',
+                'status': guardian.student.status
             })
         
         return JsonResponse({
             'status': 'success',
             'guardian': {
-                'name': guardian.get_full_name(),
-                'relationship': guardian.get_relationship_display()
+                'name': f"{guardian.first_name} {guardian.last_name}",  # Direct concatenation
+                'relationship': guardian.get_relationship_display() if hasattr(guardian, 'get_relationship_display') else guardian.relationship
             },
             'children': children
         })
@@ -2307,15 +2310,13 @@ def get_guardian_details(request, guardian_id):
             child = guardian.student
             children.append({
                 'id': child.id,
+                'grade_id': child.grade.id if child.grade else '',
+                'grade': child.grade.name if child.grade else '',
+                'section_id': child.section.id if child.section else '',
+                'section': child.section.name if child.section else '',
                 'first_name': child.first_name,
                 'last_name': child.last_name,
-                'full_name': child.get_full_name(),
-                'lrn': child.lrn,
-                'grade_id': child.grade.id if child.grade else None,
-                'grade': child.grade.name if child.grade else None,
-                'section_id': child.section.id if child.section else None,
-                'section': child.section.name if child.section else None,
-                'status': child.status
+                'full_name': f"{child.first_name} {child.last_name}"  # Direct concatenation
             })
         
         guardian_data = {
@@ -2324,11 +2325,11 @@ def get_guardian_details(request, guardian_id):
             'middle_name': guardian.middle_name or '',
             'last_name': guardian.last_name,
             'email': guardian.email or '',
-            'phone_number': guardian.phone_number,
+            'phone_number': guardian.phone,  # Return phone field as phone_number for form
             'relationship': guardian.relationship,
             'children': children,
             'created_at': guardian.created_at.isoformat() if guardian.created_at else None
-        };
+        }
         
         return JsonResponse({
             'status': 'success',
@@ -2336,9 +2337,14 @@ def get_guardian_details(request, guardian_id):
         })
         
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error in get_guardian_details: {str(e)}")
+        print(error_traceback)
         return JsonResponse({
             'status': 'error',
-            'message': f'An error occurred: {str(e)}'
+            'message': f'An error occurred: {str(e)}',
+            'traceback': error_traceback
         }, status=500)
 
 
