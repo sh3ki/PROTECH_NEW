@@ -1346,9 +1346,235 @@ def get_section_students(request, section_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+
 # ==========================
-#  OTHER ADMIN VIEWS
+#  STUDENTS MANAGEMENT VIEWS
 # ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_students(request):
+    """View for student management"""
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
+    status_filter = request.GET.get('status', '')
+    page_number = request.GET.get('page', 1)
+
+    # Base queryset
+    students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
+
+    # Apply search
+    if search_query:
+        students = students.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(lrn__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    # Apply grade filter
+    if grade_filter:
+        students = students.filter(grade_id=grade_filter)
+
+    # Apply section filter
+    if section_filter:
+        students = students.filter(section_id=section_filter)
+
+    # Apply status filter
+    if status_filter:
+        students = students.filter(status=status_filter)
+
+    # Dashboard stats
+    total_students = Student.objects.count()
+    active_students = Student.objects.filter(status='ACTIVE').count()
+    inactive_students = Student.objects.filter(status='INACTIVE').count()
+    face_enrolled_count = Student.objects.exclude(face_path__isnull=True).exclude(face_path__exact='').count()
+
+    # For filter dropdowns
+    grades = Grade.objects.all().order_by('name')
+    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
+
+    # Pagination
+    paginator = Paginator(students, 10)
+    page_obj = paginator.get_page(page_number)
+    page_range = get_pagination_range(paginator, page_obj.number, 5)
+
+    context = {
+        'students': page_obj,
+        'grades': grades,
+        'sections': sections,
+        'search_query': search_query,
+        'grade_filter': grade_filter,
+        'section_filter': section_filter,
+        'status_filter': status_filter,
+        'total_students': total_students,
+        'active_students': active_students,
+        'inactive_students': inactive_students,
+        'face_enrolled_count': face_enrolled_count,
+        'page_range': page_range,
+    }
+    return render(request, 'admin/students.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def search_students(request):
+    """AJAX search/filter for students"""
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
+    status_filter = request.GET.get('status', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+
+    students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
+
+    if search_query:
+        students = students.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(lrn__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    if grade_filter:
+        students = students.filter(grade_id=grade_filter)
+    if section_filter:
+        students = students.filter(section_id=section_filter)
+    if status_filter:
+        students = students.filter(status=status_filter)
+
+    total_count = students.count()
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+
+    paginator = Paginator(students, items_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    student_data = []
+    for student in page_obj:
+        student_data.append({
+            'id': student.id,
+            'lrn': student.lrn,
+            'first_name': student.first_name,
+            'last_name': student.last_name,
+            'full_name': f"{student.first_name} {student.last_name}",
+            'grade': student.grade.name if student.grade else '',
+            'grade_id': student.grade.id if student.grade else None,
+            'section': student.section.name if student.section else '',
+            'section_id': student.section.id if student.section else None,
+            'status': student.status,
+            'profile_pic': student.profile_pic,
+            'created_at': student.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': student.created_at.strftime('%b %d, %Y'),
+        })
+
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+
+    return JsonResponse({
+        'status': 'success',
+        'students': student_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_student(request):
+    """Create a new student"""
+    try:
+        data = json.loads(request.body)
+        lrn = data.get('lrn', '').strip()
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        grade_id = data.get('grade_id')
+        section_id = data.get('section_id')
+        status = data.get('status', 'ACTIVE')
+
+        if not lrn or not first_name or not last_name or not grade_id or not section_id:
+            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+        if Student.objects.filter(lrn=lrn).exists():
+            return JsonResponse({'status': 'error', 'message': 'LRN already exists.'}, status=400)
+        grade = Grade.objects.get(id=grade_id)
+        section = Section.objects.get(id=section_id)
+        student = Student.objects.create(
+            lrn=lrn,
+            first_name=first_name,
+            last_name=last_name,
+            grade=grade,
+            section=section,
+            status=status
+        )
+        return JsonResponse({'status': 'success', 'message': 'Student created successfully.', 'student_id': student.id})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PATCH"])
+def update_student(request, student_id):
+    """Update an existing student"""
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        data = json.loads(request.body)
+        lrn = data.get('lrn', '').strip()
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        grade_id = data.get('grade_id')
+        section_id = data.get('section_id')
+        status = data.get('status', student.status)
+
+        if not lrn or not first_name or not last_name or not grade_id or not section_id:
+            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+        if Student.objects.filter(lrn=lrn).exclude(id=student_id).exists():
+            return JsonResponse({'status': 'error', 'message': 'LRN already exists.'}, status=400)
+        grade = Grade.objects.get(id=grade_id)
+        section = Section.objects.get(id=section_id)
+        student.lrn = lrn
+        student.first_name = first_name
+        student.last_name = last_name
+        student.grade = grade
+        student.section = section
+        student.status = status
+        student.save()
+        return JsonResponse({'status': 'success', 'message': 'Student updated successfully.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_student(request, student_id):
+    """Delete a student"""
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        student.delete()
+        return JsonResponse({'status': 'success', 'message': 'Student deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def reset_student_password(request, student_id):
+    """Reset a student's password (if applicable)"""
+    # If students have user accounts, implement password reset logic here.
+    return JsonResponse({'status': 'error', 'message': 'Not implemented.'}, status=400)
 
 @login_required
 @user_passes_test(is_admin)
@@ -1361,16 +1587,6 @@ def admin_dashboard(request):
         'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
     }
     return render(request, 'admin/dashboard.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_students(request):
-    """View for student management"""
-    students = Student.objects.all()
-    context = {
-        'students': students
-    }
-    return render(request, 'admin/students.html', context)
 
 @login_required
 @user_passes_test(is_admin)
