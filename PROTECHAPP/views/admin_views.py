@@ -1576,6 +1576,313 @@ def reset_student_password(request, student_id):
     # If students have user accounts, implement password reset logic here.
     return JsonResponse({'status': 'error', 'message': 'Not implemented.'}, status=400)
 
+
+# ==========================
+#  GUARDIAN MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_guardians(request):
+    """View for guardian management"""
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    relationship_filter = request.GET.get('relationship', '')
+    status_filter = request.GET.get('status', '')
+    page_number = request.GET.get('page', 1)
+
+    # Base queryset
+    guardians = Guardian.objects.all().order_by('-created_at')
+
+    # Apply search
+    if search_query:
+        guardians = guardians.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone__icontains=search_query)
+        )
+
+    # Apply relationship filter - Guardian model might use 'relationship' field
+    if relationship_filter:
+        guardians = guardians.filter(relationship=relationship_filter)
+
+    # Remove status filter since Guardian model doesn't have is_active field
+    # The Guardian model appears to not have a status field based on the available fields
+
+    # Dashboard stats - update to use correct fields
+    total_guardians = Guardian.objects.count()
+    # Remove active/inactive counts since there's no is_active field
+    guardians_with_children = Guardian.objects.filter(student__isnull=False).distinct().count()
+
+    # Pagination
+    paginator = Paginator(guardians, 10)
+    page_obj = paginator.get_page(page_number)
+    page_range = get_pagination_range(paginator, page_obj.number, 5)
+
+    # Update relationship choices based on Guardian model
+    relationship_choices = [
+        ('FATHER', 'Father'),
+        ('MOTHER', 'Mother'),
+        ('GRANDFATHER', 'Grandfather'),
+        ('GRANDMOTHER', 'Grandmother'),
+        ('UNCLE', 'Uncle'),
+        ('AUNT', 'Aunt'),
+        ('SIBLING', 'Sibling'),
+        ('GUARDIAN', 'Guardian'),
+        ('OTHER', 'Other')
+    ]
+
+    context = {
+        'guardians': page_obj,
+        'search_query': search_query,
+        'relationship_filter': relationship_filter,
+        'status_filter': status_filter,
+        'total_guardians': total_guardians,
+        'guardians_with_children': guardians_with_children,
+        'page_range': page_range,
+        'relationship_choices': relationship_choices,
+    }
+    return render(request, 'admin/guardians.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def search_guardians(request):
+    """AJAX search/filter for guardians"""
+    search_query = request.GET.get('search', '')
+    relationship_filter = request.GET.get('relationship', '')
+    status_filter = request.GET.get('status', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+
+    guardians = Guardian.objects.all().order_by('-created_at')
+
+    if search_query:
+        guardians = guardians.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone__icontains=search_query)
+        )
+    
+    if relationship_filter:
+        guardians = guardians.filter(relationship=relationship_filter)
+    
+    # Remove status filter since Guardian model doesn't have is_active field
+
+    total_count = guardians.count()
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+
+    paginator = Paginator(guardians, items_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    guardian_data = []
+    for guardian in page_obj:
+        # Use correct field name 'student' instead of 'students'
+        children_count = guardian.student_set.count() if hasattr(guardian, 'student_set') else 0
+        children_names = []
+        
+        # Get children names - adjust based on actual relationship
+        if hasattr(guardian, 'student_set'):
+            children = guardian.student_set.all()[:3]
+            children_names = [f"{student.first_name} {student.last_name}" for student in children]
+        
+        guardian_data.append({
+            'id': guardian.id,
+            'first_name': guardian.first_name,
+            'last_name': guardian.last_name,
+            'full_name': f"{guardian.first_name} {guardian.last_name}",
+            'email': guardian.email or 'N/A',
+            'phone_number': guardian.phone or 'N/A',  # Use 'phone' instead of 'phone_number'
+            'relationship': getattr(guardian, 'relationship', 'N/A'),
+            'relationship_display': getattr(guardian, 'get_relationship_display', lambda: getattr(guardian, 'relationship', 'N/A'))(),
+            # Remove is_active and status since they don't exist
+            'children_count': children_count,
+            'children_names': children_names,
+            'children_preview': ', '.join(children_names) + ('...' if children_count > 3 else ''),
+            'created_at': guardian.created_at.strftime('%Y-%m-%d'),
+            'created_at_display': guardian.created_at.strftime('%b %d, %Y'),
+        })
+
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+
+    return JsonResponse({
+        'status': 'success',
+        'guardians': guardian_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_guardian(request):
+    """Create a new guardian"""
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name']
+        for field in required_fields:
+            if not data.get(field, '').strip():
+                return JsonResponse({'status': 'error', 'message': f'{field.replace("_", " ").title()} is required'}, status=400)
+        
+        # Check if email already exists (if provided)
+        email = data.get('email', '').strip()
+        if email and Guardian.objects.filter(email=email).exists():
+            return JsonResponse({'status': 'error', 'message': 'Email already exists'}, status=400)
+        
+        # Create guardian with available fields
+        guardian_data = {
+            'first_name': data['first_name'].strip(),
+            'last_name': data['last_name'].strip(),
+            'middle_name': data.get('middle_name', '').strip(),
+            'email': email if email else None,
+            'phone': data.get('phone_number', '').strip() if data.get('phone_number', '').strip() else None,
+        }
+        
+        # Add relationship if the field exists
+        if 'relationship' in data and hasattr(Guardian, 'relationship'):
+            guardian_data['relationship'] = data['relationship']
+        
+        guardian = Guardian.objects.create(**guardian_data)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Guardian {guardian.first_name} {guardian.last_name} created successfully',
+            'guardian_id': guardian.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PATCH"])
+def update_guardian(request, guardian_id):
+    """Update an existing guardian"""
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name']
+        for field in required_fields:
+            if not data.get(field, '').strip():
+                return JsonResponse({'status': 'error', 'message': f'{field.replace("_", " ").title()} is required'}, status=400)
+        
+        # Check if email already exists (if provided and different)
+        email = data.get('email', '').strip()
+        if email and email != guardian.email:
+            if Guardian.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'error', 'message': 'Email already exists'}, status=400)
+        
+        # Update fields
+        guardian.first_name = data['first_name'].strip()
+        guardian.last_name = data['last_name'].strip()
+        guardian.middle_name = data.get('middle_name', '').strip()
+        guardian.email = email if email else None
+        guardian.phone = data.get('phone_number', '').strip() if data.get('phone_number', '').strip() else None
+        
+        # Update relationship if the field exists
+        if 'relationship' in data and hasattr(guardian, 'relationship'):
+            guardian.relationship = data['relationship']
+        
+        guardian.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Guardian {guardian.first_name} {guardian.last_name} updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_guardian(request, guardian_id):
+    """Delete a guardian"""
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        
+        # Check if guardian has children - adjust based on actual relationship
+        children_count = 0
+        if hasattr(guardian, 'student_set'):
+            children_count = guardian.student_set.count()
+        
+        if children_count > 0:
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Cannot delete guardian with {children_count} associated student(s). Please remove associations first.'
+            }, status=400)
+        
+        guardian_name = f"{guardian.first_name} {guardian.last_name}"
+        guardian.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Guardian {guardian_name} deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_guardian_children(request, guardian_id):
+    """Get children for a specific guardian"""
+    try:
+        guardian = get_object_or_404(Guardian, id=guardian_id)
+        
+        # Get children - adjust based on actual relationship
+        children = []
+        if hasattr(guardian, 'student_set'):
+            children = guardian.student_set.select_related('grade', 'section').order_by('first_name', 'last_name')
+        
+        children_data = []
+        for child in children:
+            children_data.append({
+                'id': child.id,
+                'lrn': getattr(child, 'lrn', 'N/A'),
+                'first_name': child.first_name,
+                'last_name': child.last_name,
+                'full_name': f"{child.first_name} {child.last_name}",
+                'grade': child.grade.name if child.grade else 'N/A',
+                'section': child.section.name if child.section else 'N/A',
+                'status': getattr(child, 'status', 'ACTIVE')
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'guardian': {
+                'id': guardian.id,
+                'name': f"{guardian.first_name} {guardian.last_name}",
+                'relationship': getattr(guardian, 'get_relationship_display', lambda: getattr(guardian, 'relationship', 'Guardian'))()
+            },
+            'children': children_data,
+            'total_children': len(children_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
@@ -1587,16 +1894,6 @@ def admin_dashboard(request):
         'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
     }
     return render(request, 'admin/dashboard.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_guardians(request):
-    """View for guardian management"""
-    guardians = Guardian.objects.all()
-    context = {
-        'guardians': guardians
-    }
-    return render(request, 'admin/guardians.html', context)
 
 @login_required
 @user_passes_test(is_admin)

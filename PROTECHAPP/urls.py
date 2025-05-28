@@ -49,16 +49,27 @@ urlpatterns = [
     path('admin/sections/<int:section_id>/update/', admin_views.update_section, name='admin_update_section'),
     path('admin/sections/<int:section_id>/delete/', admin_views.delete_section, name='admin_delete_section'),
     path('admin/sections/<int:section_id>/students/', admin_views.get_section_students, name='admin_get_section_students'),
-  
-    # admin other routes
-    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
-    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+
+    # admin/students routes
     path('admin/students/', admin_views.admin_students, name='admin_students'),
     path('admin/students/search/', admin_views.search_students, name='admin_search_students'),
     path('admin/students/create/', admin_views.create_student, name='admin_create_student'),
     path('admin/students/<int:student_id>/update/', admin_views.update_student, name='admin_update_student'),
     path('admin/students/<int:student_id>/delete/', admin_views.delete_student, name='admin_delete_student'),
     path('admin/students/<int:student_id>/reset-password/', admin_views.reset_student_password, name='admin_reset_student_password'),
+
+    # admin/guardians routes
+    path('admin/guardians/search/', admin_views.search_guardians, name='admin_search_guardians'),
+    path('admin/guardians/create/', admin_views.create_guardian, name='admin_create_guardian'),
+    path('admin/guardians/<int:guardian_id>/update/', admin_views.update_guardian, name='admin_update_guardian'),
+    path('admin/guardians/<int:guardian_id>/delete/', admin_views.delete_guardian, name='admin_delete_guardian'),
+    path('admin/guardians/<int:guardian_id>/children/', admin_views.get_guardian_children, name='admin_get_guardian_children'),
+    
+
+  
+    # admin other routes
+    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
+    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
     path('admin/attendance/', admin_views.admin_attendance, name='admin_attendance'),
     path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
