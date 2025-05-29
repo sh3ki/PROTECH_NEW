@@ -468,7 +468,7 @@
                                 <!-- Overlay with camera icon -->
                                 <div class="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 hover:opacity-100 hover:bg-black/20 transition-all duration-300 rounded-full" id="user-image-overlay">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 002-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                 </div>
@@ -613,7 +613,6 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                            </svg>
                         </div>
                         <select id="role" name="role" required 
                             class="appearance-none w-full pl-10 pr-10 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300">
@@ -903,6 +902,170 @@
     </div>
 </div>
 
+<!-- Import Users Modal -->
+<div id="import-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-green-600 to-green-700 dark:from-green-700 dark:to-green-800 px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="import-modal-title" class="text-xl font-semibold text-white">Import Users</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file to import multiple users</p>
+                    </div>
+                </div>
+                <button id="close-import-modal-x" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 max-h-[calc(95vh-140px)] overflow-y-auto custom-scrollbar">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">File Format Instructions</h4>
+                
+                <!-- CSV Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required CSV/Excel Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">username</td>
+                                    <td class="p-2">Unique username (required)</td>
+                                    <td class="p-2">john.doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">email</td>
+                                    <td class="p-2">Email address (required)</td>
+                                    <td class="p-2">john.doe@school.edu</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">first_name</td>
+                                    <td class="p-2">First name (required)</td>
+                                    <td class="p-2">John</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">last_name</td>
+                                    <td class="p-2">Last name (required)</td>
+                                    <td class="p-2">Doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">middle_name</td>
+                                    <td class="p-2">Middle name (optional)</td>
+                                    <td class="p-2">Smith</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">role</td>
+                                    <td class="p-2">User role (required)</td>
+                                    <td class="p-2">TEACHER, ADMIN, PRINCIPAL, REGISTRAR</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">password</td>
+                                    <td class="p-2">Initial password (required)</td>
+                                    <td class="p-2">temp123456</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">is_active</td>
+                                    <td class="p-2">Active status (optional)</td>
+                                    <td class="p-2">TRUE, FALSE</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sample CSV Content -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-2">Sample CSV Content:</h5>
+                    <pre class="text-sm text-blue-800 dark:text-blue-200 bg-white dark:bg-gray-800 p-3 rounded border overflow-x-auto">username,email,first_name,last_name,middle_name,role,password,is_active
+john.doe,john.doe@school.edu,John,Doe,Smith,TEACHER,temp123456,TRUE
+jane.smith,jane.smith@school.edu,Jane,Smith,,TEACHER,temp123456,TRUE
+admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• The first row must contain column headers exactly as shown above</li>
+                        <li>• Username and email must be unique across all users</li>
+                        <li>• Valid roles are: ADMIN, TEACHER, PRINCIPAL, REGISTRAR</li>
+                        <li>• Password should be at least 8 characters long</li>
+                        <li>• is_active column accepts TRUE/FALSE (defaults to TRUE if not specified)</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="border-t dark:border-gray-700 pt-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload File</h4>
+                
+                <form id="import-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select CSV or Excel File
+                        </label>
+                        <div class="relative">
+                            <input type="file" id="import-file" name="import_file" accept=".csv,.xlsx,.xls" 
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-300">
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Maximum file size: 10MB. Supported formats: CSV, Excel (.xlsx, .xls)
+                        </p>
+                    </div>
+
+                    <!-- Progress Bar (hidden initially) -->
+                    <div id="import-progress" class="hidden mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing users...</span>
+                            <span id="import-progress-text" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                            <div id="import-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results (hidden initially) -->
+                    <div id="import-results" class="hidden mt-4 p-4 rounded-lg">
+                        <h5 class="font-medium mb-2">Import Results:</h5>
+                        <div id="import-results-content"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-end space-x-3">
+                <button id="close-import-modal" class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirm-import" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-upload mr-2"></i>
+                    Import Users
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Animation styles */
     @keyframes fadeIn {
@@ -1032,6 +1195,20 @@
         const closeModalBtn = document.getElementById('close-modal');
         const modalTitle = document.getElementById('modal-title');
         const closeModalXBtn = document.getElementById('close-modal-x');
+        
+        // Import modal elements
+        const importModal = document.getElementById('import-modal');
+        const importUsersBtn = document.getElementById('import-users-btn');
+        const closeImportModalBtn = document.getElementById('close-import-modal');
+        const closeImportModalXBtn = document.getElementById('close-import-modal-x');
+        const importForm = document.getElementById('import-form');
+        const importFile = document.getElementById('import-file');
+        const confirmImportBtn = document.getElementById('confirm-import');
+        const importProgress = document.getElementById('import-progress');
+        const importProgressBar = document.getElementById('import-progress-bar');
+        const importProgressText = document.getElementById('import-progress-text');
+        const importResults = document.getElementById('import-results');
+        const importResultsContent = document.getElementById('import-results-content');
         
         // Table and search elements
         const userSearch = document.getElementById('user-search');

@@ -1,18 +1,619 @@
 {% extends 'components/base_component.html' %}
+{% load static %}
+{% get_media_prefix as MEDIA_URL %}
 
-{% block title %}PROTECH - Excused Absences{% endblock %}
-{% block page_title %}Excused Absences{% endblock %}
+{% block title %}PROTECH - Excused Absences Management{% endblock %}
+{% block page_title %}Excused Absences Management{% endblock %}
 
 {% block sidebar %}
     {% include 'components/sidebar/admin_sidebar.html' with active='excused' %}
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-    <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Excused Absences</h2>
-    <p class="text-accent dark:text-gray-400 mt-4">Excused Absences content will appear here.</p>
+{% csrf_token %}
+
+<!-- Toast Container -->
+<div id="excused-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_excused }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ active_excused }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Upcoming Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white" id="upcoming-excused-count">{{ upcoming_excused }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-red-500 dark:border-red-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Expired Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ expired_excused }}</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="excused-search" placeholder="Search by name, LRN, or section..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div id="excused-search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="excused-search-results-count" class="hidden absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span></span>
+                </div>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <!-- Grade filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="excused-grade-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Grades</option>
+                        {% for grade in grades %}
+                            <option value="{{ grade.id }}" {% if grade_filter == grade.id|stringformat:"s" %}selected{% endif %}>{{ grade.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Section filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="excused-section-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">Select grade first</option>
+                        {% for section in sections %}
+                            <option value="{{ section.id }}" data-grade="{{ section.grade.id }}" {% if section_filter == section.id|stringformat:"s" %}selected{% endif %}>{{ section.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Status filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="excused-status-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="UPCOMING">Upcoming</option>
+                        <option value="EXPIRED">Expired</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Date filter -->
+                <div class="relative w-full sm:w-auto">
+                    <input type="date" id="excused-date-filter" class="pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full" value="{{ date_filter|default:'' }}">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Action buttons -->
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <button id="import-excused-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                <span class="hidden sm:inline">Import</span>
+            </button>
+            <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span class="hidden sm:inline">Export</span>
+            </button>
+            <button id="print-excused-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
+            <button id="add-excused-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="hidden sm:inline">Add Excused</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Excused table container with loading state -->
+<div id="excused-table-container" class="relative">
+    <div id="excused-table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-12 w-12 text-primary dark:text-tertiary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading excused absences...</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+        <div class="overflow-x-auto">
+            <table id="excused-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LRN</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date Absent</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Effective Date</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">End Date</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Excuse Letter</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="excused-table-body">
+                    <!-- Table content will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="excused-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+            <!-- Pagination will be dynamically updated -->
+        </div>
+    </div>
+    <div id="excused-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No excused absences found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+</div>
+
+<!-- Excuse Letter Modal -->
+<div id="excuse-letter-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" id="excuse-letter-backdrop" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full mx-auto shadow-xl transform transition-all p-6 flex flex-col items-center">
+            <div class="absolute top-4 right-4">
+                <button id="close-excuse-letter-modal" class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Excuse Letter</h3>
+            <img id="excuse-letter-img" src="" alt="Excuse Letter" class="max-w-full max-h-[60vh] rounded shadow border border-gray-200 dark:border-gray-700 mb-2">
+            <div id="excuse-letter-filename" class="text-gray-500 dark:text-gray-400 text-xs mt-2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Define static path for default image ONCE, outside DOMContentLoaded
+const DEFAULT_EXCUSE_LETTER_IMG = "{% static 'images/default-excuse-letter.png' %}";
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch and render excused absences on page load
+    loadExcusedAbsences();
+
+    // Add event listeners for filters/search (implement as needed)
+    // ...existing code for filters...
+
+    function getProfilePicUrl(filename) {
+        if (!filename) {
+            return "{% url 'serve_profile_pic_default' %}";
+        }
+        return `/profile-pics/${filename}/`;
+    }
+
+    function getExcuseLetterUrl(filename) {
+        if (!filename || filename === 'default-excuse-letter.png') {
+            // Always use static for the default image
+            return DEFAULT_EXCUSE_LETTER_IMG;
+        }
+        // Serve from private_excuse_letters via Django view (plural)
+        return `/private-excuse-letters/${encodeURIComponent(filename)}/`;
+    }
+
+    function showExcuseLetterModal(url, filename) {
+        const modal = document.getElementById('excuse-letter-modal');
+        const img = document.getElementById('excuse-letter-img');
+        const fname = document.getElementById('excuse-letter-filename');
+        img.src = url;
+        img.onerror = function() {
+            // Always fallback to static default if image fails to load
+            img.src = "{% static 'images/default-excuse-letter.png' %}";
+        };
+        fname.textContent = filename && filename !== 'No Excuse Letter' ? filename : 'No Excuse Letter';
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeExcuseLetterModal() {
+        document.getElementById('excuse-letter-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    document.getElementById('close-excuse-letter-modal').addEventListener('click', closeExcuseLetterModal);
+    document.getElementById('excuse-letter-backdrop').addEventListener('click', closeExcuseLetterModal);
+
+    function showToast(message, type = 'success', duration = 4000) {
+        // ...copy the toast logic from attendance.html...
+        // ...existing code...
+    }
+
+    // Fetch and render excused absences
+    function loadExcusedAbsences(page = 1) {
+        // Show loading state
+        const tableLoading = document.getElementById('excused-table-loading');
+        const tableNoResults = document.getElementById('excused-no-results');
+        tableLoading.classList.remove('hidden');
+        tableNoResults.classList.add('hidden');
+
+        // Get filter values
+        const searchQuery = document.getElementById('excused-search').value;
+        const gradeFilter = document.getElementById('excused-grade-filter').value;
+        const sectionFilter = document.getElementById('excused-section-filter').value;
+        const statusFilter = document.getElementById('excused-status-filter').value;
+        const dateFilter = document.getElementById('excused-date-filter').value;
+
+        // Build API URL with query parameters
+        let apiUrl = `/admin/excused/search/?page=${page}`;
+        if (searchQuery) apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
+        if (gradeFilter) apiUrl += `&grade=${gradeFilter}`;
+        if (sectionFilter) apiUrl += `&section=${sectionFilter}`;
+        if (statusFilter) apiUrl += `&status=${statusFilter}`;
+        if (dateFilter) apiUrl += `&date=${dateFilter}`;
+
+        fetch(apiUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderExcusedTable(data.records);
+                updateExcusedPagination(data.pagination);
+                // Show no results message if needed
+                if (data.records.length === 0) {
+                    tableNoResults.classList.remove('hidden');
+                } else {
+                    tableNoResults.classList.add('hidden');
+                }
+                // Update search results count
+                const searchResultsCount = document.getElementById('excused-search-results-count');
+                searchResultsCount.querySelector('span').textContent = `${data.total_count} records`;
+                if (searchQuery) {
+                    searchResultsCount.classList.remove('hidden');
+                } else {
+                    searchResultsCount.classList.add('hidden');
+                }
+            } else {
+                showToast('Failed to load excused absences', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('An error occurred while loading excused absences', 'error');
+        })
+        .finally(() => {
+            tableLoading.classList.add('hidden');
+        });
+    }
+
+    function renderExcusedTable(records) {
+        const tbody = document.getElementById('excused-table-body');
+        tbody.innerHTML = '';
+        if (!records || records.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-gray-500 dark:text-gray-400">No excused absences found.</td></tr>`;
+            return;
+        }
+        records.forEach(record => {
+            let statusBadge = '';
+            switch (record.status) {
+                case 'ACTIVE':
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</span>';
+                    break;
+                case 'UPCOMING':
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Upcoming</span>';
+                    break;
+                case 'EXPIRED':
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Expired</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Unknown</span>';
+            }
+            // Use static path for thumbnail if no excuse_letter, otherwise use media path
+            let thumbnailUrl, modalUrl;
+            if (record.excuse_letter) {
+                thumbnailUrl = getExcuseLetterUrl(record.excuse_letter);
+                modalUrl = thumbnailUrl;
+            } else {
+                thumbnailUrl = DEFAULT_EXCUSE_LETTER_IMG;
+                modalUrl = DEFAULT_EXCUSE_LETTER_IMG;
+            }
+            const isDefault = !record.excuse_letter;
+            const excuseLetterCell = `
+                <button class="view-excuse-letter-btn text-blue-600 underline hover:text-blue-800" 
+                        data-url="${modalUrl}" 
+                        data-filename="${record.excuse_letter ? record.excuse_letter : 'No Excuse Letter'}"
+                        data-default="${isDefault}">
+                    <img src="${thumbnailUrl}" alt="Excuse Letter" class="inline-block h-12 w-12 items-center object-cover rounded border border-gray-200 dark:border-gray-700 mr-2" style="background:#fff;">
+                </button>
+            `;
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.lrn}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            ${record.profile_pic ?
+                                `<img class="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                                    src="${getProfilePicUrl(record.profile_pic)}"
+                                    alt="Student Profile">`
+                                :
+                                `<div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>`
+                            }
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.full_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.grade}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.section}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.date_absent}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.effective_date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">${record.end_date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-blue-600 dark:text-blue-400">${excuseLetterCell}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button class="edit-excused-btn text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-id="${record.id}" title="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button class="delete-excused-btn text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300" data-id="${record.id}" data-name="${record.full_name}" data-date="${record.date_absent}" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Add event listeners for "View" buttons
+        document.querySelectorAll('.view-excuse-letter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = btn.getAttribute('data-url');
+                const filename = btn.getAttribute('data-filename');
+                showExcuseLetterModal(url, filename);
+            });
+        });
+    }
+
+    function updateExcusedPagination(pagination) {
+        const paginationContainer = document.getElementById('excused-pagination-container');
+        if (pagination.total_count === 0) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+        let paginationHTML = `
+            <div class="flex-1 flex justify-between items-center">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing <span class="font-medium">${pagination.start_index}</span> to 
+                    <span class="font-medium">${pagination.end_index}</span> of 
+                    <span class="font-medium">${pagination.total_count}</span> records
+                </div>
+                <div class="flex items-center space-x-2">
+        `;
+        // Previous button
+        if (pagination.has_previous) {
+            paginationHTML += `
+                <button data-page="${pagination.current_page - 1}" class="excused-pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    Previous
+                </button>
+            `;
+        } else {
+            paginationHTML += `
+                <button disabled class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                    Previous
+                </button>
+            `;
+        }
+        // Page numbers
+        paginationHTML += '<div class="hidden md:flex">';
+        pagination.page_range.forEach(page => {
+            if (page === pagination.current_page) {
+                paginationHTML += `
+                    <button disabled aria-current="page" class="z-10 bg-primary dark:bg-tertiary border-primary dark:border-tertiary text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                        ${page}
+                    </button>
+                `;
+            } else {
+                paginationHTML += `
+                    <button data-page="${page}" class="excused-pagination-btn bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 relative inline-flex items-center px-4 py-2 border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600">
+                        ${page}
+                    </button>
+                `;
+            }
+        });
+        paginationHTML += '</div>';
+        // Next button
+        if (pagination.has_next) {
+            paginationHTML += `
+                <button data-page="${pagination.current_page + 1}" class="excused-pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    Next
+                </button>
+            `;
+        } else {
+            paginationHTML += `
+                <button disabled class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                    Next
+                </button>
+            `;
+        }
+        paginationHTML += `
+                </div>
+            </div>
+        `;
+        paginationContainer.innerHTML = paginationHTML;
+        // Add event listeners to pagination buttons
+        document.querySelectorAll('.excused-pagination-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = parseInt(btn.getAttribute('data-page'));
+                loadExcusedAbsences(page);
+            });
+        });
+    }
+
+    // Filter and search event listeners
+    document.getElementById('excused-search').addEventListener('input', debounce(filterExcused, 500));
+    document.getElementById('excused-grade-filter').addEventListener('change', filterExcused);
+    document.getElementById('excused-section-filter').addEventListener('change', filterExcused);
+    document.getElementById('excused-status-filter').addEventListener('change', filterExcused);
+    document.getElementById('excused-date-filter').addEventListener('change', filterExcused);
+
+    // Initial load
+    loadExcusedAbsences(1);
+});
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+function filterExcused() {
+    // Show loading spinner in search box
+    const searchSpinner = document.getElementById('excused-search-spinner');
+    searchSpinner.classList.remove('hidden');
+    loadExcusedAbsences(1);
+    setTimeout(() => {
+        searchSpinner.classList.add('hidden');
+    }, 500);
+}
+
+// CRUD: Upload Excuse Letter
+function uploadExcuseLetter(recordId, file, onSuccess, onError) {
+    const formData = new FormData();
+    formData.append('excuse_letter', file);
+    formData.append('id', recordId);
+    fetch(`/admin/excused/upload_excuse_letter/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            onSuccess(data.filename);
+        } else {
+            onError(data.message || 'Upload failed');
+        }
+    })
+    .catch(() => onError('Upload failed'));
+}
+
+// CRUD: Delete Excuse Letter
+function deleteExcuseLetter(recordId, onSuccess, onError) {
+    fetch(`/admin/excused/delete_excuse_letter/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: recordId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            onSuccess();
+        } else {
+            onError(data.message || 'Delete failed');
+        }
+    })
+    .catch(() => onError('Delete failed'));
+}
+</script>
 {% endblock %}

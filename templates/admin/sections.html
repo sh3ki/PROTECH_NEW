@@ -429,7 +429,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Elements
+    // --- DOM Elements ---
     const sectionSearch = document.getElementById('section-search');
     const gradeFilter = document.getElementById('grade-filter');
     const advisorFilter = document.getElementById('advisor-filter');
@@ -449,6 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sectionPaginationContainer = document.getElementById('section-pagination-container');
     const sectionsTable = document.getElementById('sections-table');
     
+    // --- State ---
     let currentSectionId = null;
     let currentPage = 1;
     let searchTimeout = null;
@@ -456,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // CSRF token
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    // Toast notification function - Updated to match users.html and teachers.html style
+    // --- Utility Functions ---
     function showToast(message, type = 'success', duration = 5000) {
         // Create toast element
         const toast = document.createElement('div');
@@ -542,15 +543,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     }
     
-    // Debounce function
     function debounce(func, wait) {
+        clearTimeout(searchTimeout);
         return function(...args) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => func.apply(this, args), wait);
         };
     }
     
-    // Show/hide loading
     function showLoading() {
         if (sectionTableLoading) sectionTableLoading.classList.remove('hidden');
         if (sectionSearchSpinner) sectionSearchSpinner.classList.remove('hidden');
@@ -560,13 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideLoading() {
         if (sectionTableLoading) sectionTableLoading.classList.add('hidden');
         if (sectionSearchSpinner) sectionSearchSpinner.classList.add('hidden');
-        
         if (sectionSearchResultsCount && sectionSearch && sectionSearch.value.trim()) {
             sectionSearchResultsCount.classList.remove('hidden');
         }
     }
     
-    // Natural sort function for grades
     function sortGradesNaturally(grades) {
         return [...grades].sort((a, b) => {
             // Extract numbers from grade names for proper numeric sorting
@@ -592,7 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize grade dropdown with sorted grades
     function initializeGradeFilter() {
         const grades = [
             {% for grade in grades %}
@@ -618,8 +615,8 @@ document.addEventListener('DOMContentLoaded', function() {
             gradeFilter.appendChild(option);
         });
     }
-    
-    // Fetch sections
+
+    // --- AJAX/Data Functions ---
     function fetchSections(page = 1) {
         const searchQuery = sectionSearch ? sectionSearch.value.trim() : '';
         const gradeFilterValue = gradeFilter ? gradeFilter.value : '';
@@ -676,7 +673,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update sections table
     function updateSectionsTable(sections) {
         if (!sectionsTable) return;
         
@@ -760,7 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
     
-    // Update pagination (same as grades but with section prefix)
     function updateSectionPagination(pagination) {
         if (!sectionPaginationContainer) return;
         
@@ -825,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Attach event listeners
+    // --- Event Handlers ---
     function attachSectionTableEventListeners() {
         document.querySelectorAll('.edit-section').forEach(button => {
             button.addEventListener('click', function() {
@@ -953,23 +948,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listeners
     if (sectionSearch) {
-        sectionSearch.addEventListener('input', debounce(() => {
-            fetchSections(1);
-        }, 300));
+        sectionSearch.addEventListener('input', debounce(() => fetchSections(1), 300));
     }
-    
     if (gradeFilter) {
-        gradeFilter.addEventListener('change', () => {
-            fetchSections(1);
-        });
+        gradeFilter.addEventListener('change', () => fetchSections(1));
     }
-    
     if (advisorFilter) {
-        advisorFilter.addEventListener('change', () => {
-            fetchSections(1);
-        });
+        advisorFilter.addEventListener('change', () => fetchSections(1));
     }
-    
     if (addSectionBtn) {
         addSectionBtn.addEventListener('click', function() {
             currentSectionId = null;
@@ -979,20 +965,16 @@ document.addEventListener('DOMContentLoaded', function() {
             sectionModal.classList.remove('hidden');
         });
     }
-    
-    // Modal close events
     document.getElementById('close-section-modal').addEventListener('click', function() {
         sectionModal.classList.add('hidden');
     });
-    
     document.getElementById('close-section-modal-x').addEventListener('click', function() {
         sectionModal.classList.add('hidden');
     });
-    
     document.getElementById('cancel-delete-section').addEventListener('click', function() {
         deleteSectionModal.classList.add('hidden');
     });
-    
+
     // Form submission
     if (sectionForm) {
         sectionForm.addEventListener('submit', function(e) {
@@ -1059,47 +1041,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Close modals on outside click
     window.addEventListener('click', function(event) {
-        if (event.target === sectionModal) {
-            sectionModal.classList.add('hidden');
-        }
-        if (event.target === deleteSectionModal) {
-            deleteSectionModal.classList.add('hidden');
-        }
+        if (event.target === sectionModal) sectionModal.classList.add('hidden');
+        if (event.target === deleteSectionModal) deleteSectionModal.classList.add('hidden');
         if (event.target === document.getElementById('view-section-modal')) {
             document.getElementById('view-section-modal').classList.add('hidden');
         }
     });
     
-    // Initialize
-    initializeGradeFilter();
-    fetchSections();
-    
-    // Set initial values from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    if (sectionSearch && urlParams.has('search')) {
-        sectionSearch.value = urlParams.get('search');
-    }
-    if (gradeFilter && urlParams.has('grade')) {
-        gradeFilter.value = urlParams.get('grade');
-    }
-    if (advisorFilter && urlParams.has('advisor')) {
-        advisorFilter.value = urlParams.get('advisor');
-    }
-    if (urlParams.has('page')) {
-        currentPage = parseInt(urlParams.get('page'));
-        if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
-    }
-    
-    // Add event listeners for the View Section Modal
+    // View Section Modal
     document.getElementById('close-view-section-modal').addEventListener('click', function() {
         document.getElementById('view-section-modal').classList.add('hidden');
     });
-    
     document.getElementById('close-view-section-modal-x').addEventListener('click', function() {
         document.getElementById('view-section-modal').classList.add('hidden');
     });
-    
-    // Handle print class list
+
+    // Print Class List
     document.getElementById('print-class-list').addEventListener('click', function() {
         const sectionTitle = document.getElementById('view-section-title').textContent;
         const advisor = document.getElementById('view-section-advisor').textContent;
@@ -1177,6 +1134,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize grade filter and fetch sections on page load
     initializeGradeFilter();
     fetchSections();
+    
+    // Set initial values from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (sectionSearch && urlParams.has('search')) sectionSearch.value = urlParams.get('search');
+    if (gradeFilter && urlParams.has('grade')) gradeFilter.value = urlParams.get('grade');
+    if (advisorFilter && urlParams.has('advisor')) advisorFilter.value = urlParams.get('advisor');
+    if (urlParams.has('page')) {
+        currentPage = parseInt(urlParams.get('page'));
+        if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
+    }
 });
 </script>
 {% endblock %}

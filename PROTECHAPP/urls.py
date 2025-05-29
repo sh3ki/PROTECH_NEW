@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/users/<int:user_id>/reset-password/', admin_views.reset_user_password, name='admin_reset_user_password'),
     path('admin/users/upload-profile-pic/', admin_views.upload_profile_pic, name='admin_upload_profile_pic'),
     path('admin/users/search/', admin_views.search_users, name='admin_search_users'),
+    # path('admin/users/import/', admin_views.import_users, name='import_users'),
 
     #admin/teachers routes  
     path('admin/teachers/', admin_views.admin_teachers, name='admin_teachers'),
@@ -69,15 +70,6 @@ urlpatterns = [
     path('admin/guardians/sections-by-grade/', admin_views.admin_get_sections_by_grade, name='admin_get_sections_by_grade'),
     path('admin/guardians/students-by-section/', admin_views.admin_get_students_by_section, name='admin_get_students_by_section'),
 
-  
-    # admin other routes
-    path('profile-pics/', admin_views.serve_profile_pic_default, name='serve_profile_pic_default'),
-    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
-    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
-    path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
-    path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
-    path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
-
     # admin/attendance routes
     path('admin/attendance-records/', admin_views.admin_attendance_records, name='admin_attendance'),
     path('admin/attendance-records/search/', admin_views.search_attendance_records, name='admin_search_attendance'),
@@ -86,6 +78,24 @@ urlpatterns = [
     path('admin/attendance-records/<int:attendance_id>/update/', admin_views.update_attendance_record, name='admin_update_attendance'),
     path('admin/attendance-records/<int:attendance_id>/delete/', admin_views.delete_attendance_record, name='admin_delete_attendance'),
     path('admin/attendance-records/students/', admin_views.get_students_for_attendance, name='admin_get_students_for_attendance'),
+
+    # admin/excused routes
+    path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
+    path('admin/excused/search/', admin_views.search_excused_absences, name='admin_search_excused'),
+    path('admin/excused/create/', admin_views.create_excused_absence, name='admin_create_excused'),
+    path('admin/excused/<int:excused_id>/', admin_views.get_excused_absence, name='admin_get_excused'),
+    path('admin/excused/<int:excused_id>/update/', admin_views.update_excused_absence, name='admin_update_excused'),
+    path('admin/excused/<int:excused_id>/delete/', admin_views.delete_excused_absence, name='admin_delete_excused'),
+    path('private-excuse-letters/<str:filename>/', views.serve_private_excuse_letter, name='serve_private_excuse_letter'),
+    path('admin/excused/upload_excuse_letter/', admin_views.upload_excuse_letter, name='admin_upload_excuse_letter'),
+    path('admin/excused/delete_excuse_letter/', admin_views.delete_excuse_letter, name='admin_delete_excuse_letter'),
+
+    # admin other routes
+    path('profile-pics/', admin_views.serve_profile_pic_default, name='serve_profile_pic_default'),
+    path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
+    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+    path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
+    path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
 
 
 # ==========================

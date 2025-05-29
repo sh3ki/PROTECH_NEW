@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
+from django.http import FileResponse, Http404, JsonResponse, HttpResponse, HttpResponseNotFound
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, UserRole, UserStatus, ExcusedAbsence, AdvisoryAssignment
@@ -12,6 +12,7 @@ import json
 import os
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
+from django.views.decorators.csrf import csrf_exempt
 
 def is_admin(user):
     """Check if the logged-in user is an admin"""
@@ -452,6 +453,154 @@ def search_users(request):
         'pagination': pagination,
         'total_count': total_count,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def import_users(request):
+    """API endpoint to import users from CSV/Excel file"""
+    try:
+        if 'file' not in request.FILES:
+            return JsonResponse({'status': 'error', 'message': 'No file uploaded'}, status=400)
+        
+        uploaded_file = request.FILES['file']
+        
+        # Validate file type
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        if file_extension not in ['csv', 'xlsx', 'xls']:
+            return JsonResponse({'status': 'error', 'message': 'Invalid file type. Only CSV and Excel files are allowed.'}, status=400)
+        
+        # Validate file size (5MB max)
+        if uploaded_file.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large. Maximum file size is 5MB.'}, status=400)
+        
+        # Read file content
+        import pandas as pd
+        import io
+        
+        try:
+            # Read the file based on its extension
+            if file_extension == 'csv':
+                df = pd.read_csv(io.BytesIO(uploaded_file.read()))
+            else:  # xlsx or xls
+                df = pd.read_excel(io.BytesIO(uploaded_file.read()))
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Error reading file: {str(e)}'}, status=400)
+        
+        # Validate required columns
+        required_columns = ['username', 'email', 'first_name', 'last_name', 'password', 'role']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Missing required columns: {", ".join(missing_columns)}'
+            }, status=400)
+        
+        # Process data
+        created_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Clean and validate data
+                username = str(row['username']).strip() if pd.notna(row['username']) else ''
+                email = str(row['email']).strip() if pd.notna(row['email']) else ''
+                first_name = str(row['first_name']).strip() if pd.notna(row['first_name']) else ''
+                last_name = str(row['last_name']).strip() if pd.notna(row['last_name']) else ''
+                password = str(row['password']).strip() if pd.notna(row['password']) else ''
+                role = str(row['role']).strip().upper() if pd.notna(row['role']) else ''
+                middle_name = str(row['middle_name']).strip() if 'middle_name' in row and pd.notna(row['middle_name']) else ''
+                
+                # Handle is_active column
+                is_active = True
+                if 'is_active' in row and pd.notna(row['is_active']):
+                    is_active_value = str(row['is_active']).strip().upper()
+                    is_active = is_active_value in ['TRUE', '1', 'YES', 'ACTIVE']
+                
+                # Validate required fields
+                if not all([username, email, first_name, last_name, password, role]):
+                    errors.append(f'Row {index + 2}: Missing required field(s)')
+                    skipped_count += 1
+                    continue
+                
+                # Validate password length
+                if len(password) < 8:
+                    errors.append(f'Row {index + 2}: Password must be at least 8 characters')
+                    skipped_count += 1
+                    continue
+                
+                # Validate role
+                valid_roles = [choice[0] for choice in UserRole.choices]
+                if role not in valid_roles:
+                    # Default to TEACHER for invalid roles
+                    role = UserRole.TEACHER
+                
+                # Check if username already exists
+                if CustomUser.objects.filter(username=username).exists():
+                    errors.append(f'Row {index + 2}: Username "{username}" already exists')
+                    skipped_count += 1
+                    continue
+                
+                # Check if email already exists
+                if CustomUser.objects.filter(email=email).exists():
+                    errors.append(f'Row {index + 2}: Email "{email}" already exists')
+                    skipped_count += 1
+                    continue
+                
+                # Create user
+                user = CustomUser(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    middle_name=middle_name,
+                    role=role,
+                    is_active=is_active
+                )
+                
+                # Set password
+                user.password = make_password(password)
+                user.save()
+                
+                created_count += 1
+                
+            except Exception as e:
+                errors.append(f'Row {index + 2}: {str(e)}')
+                skipped_count += 1
+                continue
+        
+        # Prepare response message
+        message = f'Import completed! {created_count} users created successfully.'
+        if skipped_count > 0:
+            message += f' {skipped_count} users were skipped due to errors.'
+        
+        response_data = {
+            'status': 'success',
+            'message': message,
+            'created_count': created_count,
+            'skipped_count': skipped_count,
+            'total_processed': created_count + skipped_count
+        }
+        
+        # Include errors if any (limit to first 10 errors)
+        if errors:
+            response_data['errors'] = errors[:10]
+            if len(errors) > 10:
+                response_data['additional_errors'] = len(errors) - 10
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        import traceback
+        print("Error in import_users:", str(e))
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An unexpected error occurred: {str(e)}'
+        }, status=500)
 
 
 # ==========================
@@ -2019,6 +2168,7 @@ def search_guardians(request):
                     else:
                         data['children_count'] = 0
                         data['children_preview'] = 'No children'
+
                 except Exception as e:
                     data['children_count'] = 0
                     data['children_preview'] = 'Error loading children'
@@ -2770,9 +2920,283 @@ def get_students_for_attendance(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f'An error occurred: {str(e)}'
         }, status=500)
     
+
+# ==========================
+#  EXCUSED MANAGEMENT VIEWS
+# ==========================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_excused(request):
+    """View for excused absences management"""
+    from datetime import date
+    total_excused = ExcusedAbsence.objects.count()
+    today = date.today()
+    active_excused = ExcusedAbsence.objects.filter(effective_date__lte=today, end_date__gte=today).count()
+    expired_excused = ExcusedAbsence.objects.filter(end_date__lt=today).count()
+    upcoming_excused = ExcusedAbsence.objects.filter(effective_date__gt=today).count()  # <-- Add this line
+
+    grades = Grade.objects.all().order_by('name')
+    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
+
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
+    status_filter = request.GET.get('status', '')
+    date_filter = request.GET.get('date', '')
+
+    context = {
+        'grades': grades,
+        'sections': sections,
+        'grade_filter': grade_filter,
+        'section_filter': section_filter,
+        'status_filter': status_filter,
+        'date_filter': date_filter,
+        'total_excused': total_excused,
+        'active_excused': active_excused,
+        'expired_excused': expired_excused,
+        'upcoming_excused': upcoming_excused,  # <-- Add this line
+    }
+    return render(request, 'admin/excused.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def search_excused_absences(request):
+    """AJAX search/filter for excused absences"""
+    search_query = request.GET.get('search', '')
+    grade_filter = request.GET.get('grade', '')
+    section_filter = request.GET.get('section', '')
+    status_filter = request.GET.get('status', '')
+    date_filter = request.GET.get('date', '')
+    page_number = request.GET.get('page', 1)
+    items_per_page = request.GET.get('items_per_page', 10)
+
+    excused = ExcusedAbsence.objects.select_related('student', 'student__grade', 'student__section').all().order_by('-date_absent', '-student__last_name')
+
+    if search_query:
+        excused = excused.filter(
+            Q(student__first_name__icontains=search_query) |
+            Q(student__last_name__icontains=search_query) |
+            Q(student__lrn__icontains=search_query) |
+            Q(student__section__name__icontains=search_query)
+        )
+    if grade_filter:
+        excused = excused.filter(student__grade_id=grade_filter)
+    if section_filter:
+        excused = excused.filter(student__section_id=section_filter)
+    if status_filter:
+        from datetime import date
+        today = date.today()
+        if status_filter == 'ACTIVE':
+            excused = excused.filter(effective_date__lte=today, end_date__gte=today)
+        elif status_filter == 'EXPIRED':
+            excused = excused.filter(end_date__lt=today)
+        elif status_filter == 'UPCOMING':
+            excused = excused.filter(effective_date__gt=today)
+    if date_filter:
+        excused = excused.filter(date_absent=date_filter)
+
+    total_count = excused.count()
+    try:
+        page_number = int(page_number)
+        items_per_page = int(items_per_page)
+    except (ValueError, TypeError):
+        page_number = 1
+        items_per_page = 10
+
+    paginator = Paginator(excused, items_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    excused_data = []
+    for record in page_obj:
+        # Determine status
+        from datetime import date
+        today = date.today()
+        if record.effective_date > today:
+            status = 'UPCOMING'
+        elif record.end_date < today:
+            status = 'EXPIRED'
+        else:
+            status = 'ACTIVE'
+        excused_data.append({
+            'id': record.id,
+            'lrn': record.student.lrn,
+            'full_name': f"{record.student.first_name} {record.student.last_name}",
+            'grade': record.student.grade.name if record.student.grade else '',
+            'section': record.student.section.name if record.student.section else '',
+            'date_absent': record.date_absent.strftime('%Y-%m-%d'),
+            'effective_date': record.effective_date.strftime('%Y-%m-%d'),
+            'end_date': record.end_date.strftime('%Y-%m-%d'),
+            'excuse_letter': record.excuse_letter,
+            'status': status,
+            'profile_pic': record.student.profile_pic or None,
+        })
+
+    pagination = {
+        'current_page': page_obj.number,
+        'num_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+        'start_index': page_obj.start_index(),
+        'end_index': page_obj.end_index(),
+        'total_count': total_count,
+    }
+
+    return JsonResponse({
+        'status': 'success',
+        'records': excused_data,
+        'pagination': pagination,
+        'total_count': total_count,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_excused_absence(request):
+    """API endpoint to create a new excused absence"""
+    try:
+        # Accept multipart/form-data for file upload
+        student_id = request.POST.get('student_id')
+        date_absent = request.POST.get('date_absent')
+        effective_date = request.POST.get('effective_date')
+        end_date = request.POST.get('end_date')
+        excuse_letter_file = request.FILES.get('excuse_letter')
+
+        # Validate required fields
+        if not student_id or not date_absent or not effective_date or not end_date or not excuse_letter_file:
+            return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+
+        # Validate student
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+
+        # Validate file type and size
+        if excuse_letter_file.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large. Max 5MB.'}, status=400)
+        if not excuse_letter_file.content_type.startswith('image/'):
+            return JsonResponse({'status': 'error', 'message': 'Only image files allowed.'}, status=400)
+
+        # Save file in private_excuse_letters
+        import uuid
+        filename = f"{uuid.uuid4()}_{excuse_letter_file.name}"
+        fs = FileSystemStorage(location=PRIVATE_EXCUSE_LETTERS_DIR)
+        filename = fs.save(filename, excuse_letter_file)
+
+        # Create record
+        record = ExcusedAbsence.objects.create(
+            student=student,
+            date_absent=date_absent,
+            excuse_letter=filename,
+            effective_date=effective_date,
+            end_date=end_date
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Excused absence for {student.first_name} {student.last_name} created successfully',
+            'record_id': record.id
+        })
+    except Exception as e:
+        import traceback
+        print("Error in create_excused_absence:", str(e))
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def get_excused_absence(request, excused_id):
+    """API endpoint to get details of a specific excused absence"""
+    try:
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        
+        data = {
+            'id': record.id,
+            'student_id': record.student.id,
+            'student_name': f"{record.student.first_name} {record.student.last_name}",
+            'lrn': record.student.lrn,
+            'date_absent': record.date_absent.strftime('%Y-%m-%d'),
+            'effective_date': record.effective_date.strftime('%Y-%m-%d'),
+            'end_date': record.end_date.strftime('%Y-%m-%d'),
+            'excuse_letter': record.excuse_letter,
+            'section': record.student.section.name if record.student.section else '',
+            'section_id': record.student.section.id if record.student.section else None,
+            'grade': record.student.grade.name if record.student.grade else '',
+            'grade_id': record.student.grade.id if record.student.grade else None,
+        }
+        return JsonResponse({'status': 'success', 'record': data})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST", "PATCH"])
+def update_excused_absence(request, excused_id):
+    """API endpoint to update an excused absence"""
+    try:
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Accept multipart/form-data for file upload
+        student_id = request.POST.get('student_id', record.student.id)
+        date_absent = request.POST.get('date_absent', record.date_absent)
+        effective_date = request.POST.get('effective_date', record.effective_date)
+        end_date = request.POST.get('end_date', record.end_date)
+        excuse_letter_file = request.FILES.get('excuse_letter', None)
+
+        # Validate student
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+        
+        record.student = student
+        record.date_absent = date_absent
+        record.effective_date = effective_date
+        record.end_date = end_date
+
+        # Handle new file upload
+        if excuse_letter_file:
+            if excuse_letter_file.size > 5 * 1024 * 1024:
+                return JsonResponse({'status': 'error', 'message': 'File too large. Max 5MB.'}, status=400)
+            if not excuse_letter_file.content_type.startswith('image/'):
+                return JsonResponse({'status': 'error', 'message': 'Only image files allowed.'}, status=400)
+            # Delete old file
+            if record.excuse_letter:
+                old_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            # Save new file
+            import uuid
+            filename = f"{uuid.uuid4()}_{excuse_letter_file.name}"
+            fs = FileSystemStorage(location=PRIVATE_EXCUSE_LETTERS_DIR)
+            filename = fs.save(filename, excuse_letter_file)
+            record.excuse_letter = filename
+        record.save()
+        return JsonResponse({'status': 'success', 'message': 'Excused absence updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_excused_absence(request, excused_id):
+    """API endpoint to delete an excused absence"""
+    try:
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Delete file
+        if record.excuse_letter:
+            file_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        record.delete()
+        return JsonResponse({'status': 'success', 'message': 'Excused absence deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 # ==========================
@@ -2791,36 +3215,20 @@ def admin_dashboard(request):
     }
     return render(request, 'admin/dashboard.html', context)
 
-
-
-
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_excused(request):
-    """View for ecused absences management"""
-    excused_absences = ExcusedAbsence.objects.all()
-    context = {
-        'excused_absences': excused_absences
-    }
-    return render(request, 'admin/excused.html', context)
-
 @login_required
 @user_passes_test(is_admin)
 def admin_settings(request):
     """View for system settings"""
     return render(request, 'admin/settings.html')
 
-@login_required
-@user_passes_test(is_admin)
-def admin_settings(request):
-    """View for system settings"""
-    return render(request, 'admin/settings.html')
 
 # Create profile pics directory if it doesn't exist
 PROFILE_PICS_DIR = os.path.join(settings.BASE_DIR, 'private_profile_pics')
 os.makedirs(PROFILE_PICS_DIR, exist_ok=True)
+
+# Create private_excuse_letters directory if it doesn't exist
+PRIVATE_EXCUSE_LETTERS_DIR = os.path.join(settings.BASE_DIR, 'private_excuse_letters')
+os.makedirs(PRIVATE_EXCUSE_LETTERS_DIR, exist_ok=True)
 
 @login_required
 @user_passes_test(is_admin)
@@ -2908,3 +3316,161 @@ def serve_profile_pic_default(request):
     else:
         # If default image doesn't exist, return a 404 or an empty response
         return HttpResponse(status=204)  # 204 No Content
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def upload_excuse_letter(request):
+    """API endpoint to upload/replace an excuse letter for an excused absence"""
+    try:
+        excused_id = request.POST.get('id')
+        file = request.FILES.get('excuse_letter')
+        if not excused_id or not file:
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Validate file
+        if file.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large. Max 5MB.'}, status=400)
+        if not file.content_type.startswith('image/'):
+            return JsonResponse({'status': 'error', 'message': 'Only image files allowed.'}, status=400)
+        # Delete old file if exists
+        if record.excuse_letter:
+            old_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        # Save new file
+        import uuid
+        filename = f"{uuid.uuid4()}_{file.name}"
+        fs = FileSystemStorage(location=PRIVATE_EXCUSE_LETTERS_DIR)
+        filename = fs.save(filename, file)
+        record.excuse_letter = filename
+        record.save()
+        return JsonResponse({'status': 'success', 'filename': filename})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def delete_excuse_letter(request):
+    """API endpoint to delete an excuse letter file for an excused absence"""
+    try:
+        data = json.loads(request.body)
+        excused_id = data.get('id')
+        if not excused_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        if record.excuse_letter:
+            file_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            record.excuse_letter = ''
+            record.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST", "PATCH"])
+def update_excused_absence(request, excused_id):
+    """API endpoint to update an excused absence"""
+    try:
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Accept multipart/form-data for file upload
+        student_id = request.POST.get('student_id', record.student.id)
+        date_absent = request.POST.get('date_absent', record.date_absent)
+        effective_date = request.POST.get('effective_date', record.effective_date)
+        end_date = request.POST.get('end_date', record.end_date)
+        excuse_letter_file = request.FILES.get('excuse_letter', None)
+
+        # Validate student
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+        
+        record.student = student
+        record.date_absent = date_absent
+        record.effective_date = effective_date
+        record.end_date = end_date
+
+        # Handle new file upload
+        if excuse_letter_file:
+            if excuse_letter_file.size > 5 * 1024 * 1024:
+                return JsonResponse({'status': 'error', 'message': 'File too large. Max 5MB.'}, status=400)
+            if not excuse_letter_file.content_type.startswith('image/'):
+                return JsonResponse({'status': 'error', 'message': 'Only image files allowed.'}, status=400)
+            # Delete old file
+            if record.excuse_letter:
+                old_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            # Save new file
+            import uuid
+            filename = f"{uuid.uuid4()}_{excuse_letter_file.name}"
+            fs = FileSystemStorage(location=PRIVATE_EXCUSE_LETTERS_DIR)
+            filename = fs.save(filename, excuse_letter_file)
+            record.excuse_letter = filename
+        record.save()
+        return JsonResponse({'status': 'success', 'message': 'Excused absence updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_excused_absence(request, excused_id):
+    """API endpoint to delete an excused absence"""
+    try:
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Delete file
+        if record.excuse_letter:
+            file_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        record.delete()
+        return JsonResponse({'status': 'success', 'message': 'Excused absence deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def upload_excuse_letter(request):
+    """API endpoint to upload an excuse letter"""
+    try:
+        excused_id = request.POST.get('id')
+        file = request.FILES.get('excuse_letter')
+        if not excused_id or not file:
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        record = get_object_or_404(ExcusedAbsence, id=excused_id)
+        # Validate file
+        if file.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large. Max 5MB.'}, status=400)
+        if not file.content_type.startswith('image/'):
+            return JsonResponse({'status': 'error', 'message': 'Only image files allowed.'}, status=400)
+        # Delete old file if exists
+        if record.excuse_letter:
+            old_path = os.path.join(PRIVATE_EXCUSE_LETTERS_DIR, record.excuse_letter)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        # Save new file
+        import uuid
+        filename = f"{uuid.uuid4()}_{file.name}"
+        fs = FileSystemStorage(location=PRIVATE_EXCUSE_LETTERS_DIR)
+        filename = fs.save(filename, file)
+        record.excuse_letter = filename
+        record.save()
+        return JsonResponse({'status': 'success', 'filename': filename})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+# Serve files from private_excuse_letters directory
+def serve_private_excuse_letter(request, filename):
+    # Optionally add authentication/authorization checks here
+    path = os.path.join(settings.BASE_DIR, 'private_excuse_letters', filename)
+    if not os.path.isfile(path):
+        raise Http404("Excuse letter not found")
+    return FileResponse(open(path, 'rb'), content_type='application/octet-stream')
