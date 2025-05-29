@@ -77,8 +77,15 @@ urlpatterns = [
     path('admin/guardians/', admin_views.admin_guardians, name='admin_guardians'),
     path('admin/excused/', admin_views.admin_excused, name='admin_excused'),
     path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
+
+    # admin/attendance routes
     path('admin/attendance-records/', admin_views.admin_attendance_records, name='admin_attendance'),
     path('admin/attendance-records/search/', admin_views.search_attendance_records, name='admin_search_attendance'),
+    path('admin/attendance-records/create/', admin_views.create_attendance_record, name='admin_create_attendance'),
+    path('admin/attendance-records/<int:attendance_id>/', admin_views.get_attendance_record, name='admin_get_attendance'),
+    path('admin/attendance-records/<int:attendance_id>/update/', admin_views.update_attendance_record, name='admin_update_attendance'),
+    path('admin/attendance-records/<int:attendance_id>/delete/', admin_views.delete_attendance_record, name='admin_delete_attendance'),
+    path('admin/attendance-records/students/', admin_views.get_students_for_attendance, name='admin_get_students_for_attendance'),
 
 
 # ==========================

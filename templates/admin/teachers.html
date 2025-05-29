@@ -807,42 +807,49 @@
     </div>
 </div>
 
-<style>
-    /* ...copy the relevant CSS from users.html for consistency... */
-</style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Elements
-    const teacherSearch = document.getElementById('teacher-search');
-    const advisoryFilter = document.getElementById('advisory-filter');
-    const statusFilter = document.getElementById('status-filter');
-    const sectionFilter = document.getElementById('section-filter');
-    const teacherTableContainer = document.getElementById('teacher-table-container');
-    const teacherTableLoading = document.getElementById('teacher-table-loading');
-    const teachersTable = document.getElementById('teachers-table');
-    const teacherNoResults = document.getElementById('teacher-no-results');
-    const teacherPaginationContainer = document.getElementById('teacher-pagination-container');
-    const teacherToastContainer = document.getElementById('teacher-toast-container');
-    const teacherSearchSpinner = document.getElementById('teacher-search-spinner');
-    const teacherSearchResultsCount = document.getElementById('teacher-search-results-count');
-    
+    // --- Element Selectors ---
+    const $ = id => document.getElementById(id);
+    const teacherSearch = $('teacher-search');
+    const advisoryFilter = $('advisory-filter');
+    const statusFilter = $('status-filter');
+    const sectionFilter = $('section-filter');
+    const teacherTableContainer = $('teacher-table-container');
+    const teacherTableLoading = $('teacher-table-loading');
+    const teachersTable = $('teachers-table');
+    const teacherNoResults = $('teacher-no-results');
+    const teacherPaginationContainer = $('teacher-pagination-container');
+    const teacherToastContainer = $('teacher-toast-container');
+    const teacherSearchSpinner = $('teacher-search-spinner');
+    const teacherSearchResultsCount = $('teacher-search-results-count');
     // Section Assignment Modal Elements
-    const assignSectionModal = document.getElementById('assign-section-modal');
-    const assignTeacherName = document.getElementById('assign-teacher-name');
-    const assignTeacherId = document.getElementById('assign-teacher-id');
-    const assignGrade = document.getElementById('assign-grade');
-    const assignSection = document.getElementById('assign-section');
-    const assignSectionForm = document.getElementById('assign-section-form');
-    const confirmAssignSection = document.getElementById('confirm-assign-section');
-    const cancelAssignSection = document.getElementById('cancel-assign-section');
-    
-    let currentPage = 1;
-    let searchTimeout = null;
-
+    const assignSectionModal = $('assign-section-modal');
+    const assignTeacherName = $('assign-teacher-name');
+    const assignTeacherId = $('assign-teacher-id');
+    const assignGrade = $('assign-grade');
+    const assignSection = $('assign-section');
+    const confirmAssignSection = $('confirm-assign-section');
+    const cancelAssignSection = $('cancel-assign-section');
+    // Add Teacher Modal Elements
+    const addTeacherBtn = $('add-teacher-btn');
+    const addTeacherModal = $('add-teacher-modal');
+    const addTeacherForm = $('add-teacher-form');
+    const closeAddTeacherModalBtn = $('close-add-teacher-modal');
+    const closeAddTeacherModalXBtn = $('close-add-teacher-modal-x');
+    const addTeacherGrade = $('add-teacher-grade');
+    const addTeacherSection = $('add-teacher-section');
+    const addTeacherProfilePicInput = $('add-teacher-profile_pic');
+    const addTeacherProfilePicPreview = $('add-teacher-profile-pic-preview');
+    const addTeacherDefaultProfileIcon = $('add-teacher-default-profile-icon');
+    const addTeacherUploadTrigger = $('add-teacher-upload-trigger');
+    const addTeacherUploadTriggerBtn = $('add-teacher-upload-trigger-btn');
     // CSRF token
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    // State
+    let currentPage = 1, searchTimeout = null, currentTeacherId = null, currentTeacherIsActive = null, currentTeacherName = "";
 
-    // Toast notification
+    // --- Toast Notification (Reusable) ---
     function showToast(message, type = 'success', duration = 5000) {
         // Create toast element
         const toast = document.createElement('div');
@@ -918,7 +925,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, duration);
         }
     }
-
     function removeToast(toast) {
         // Slide back up when removing (for top position)
         toast.classList.add('opacity-0', 'translate-y-[-1rem]');
@@ -928,15 +934,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     }
 
-    // Debounce
-    function debounce(func, wait) {
-        return function(...args) {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => func.apply(this, args), wait);
-        };
+    // --- Modal Show/Hide Helpers ---
+    function showModal(modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            const modalContent = modal.querySelector('.bg-white, .dark\\:bg-gray-800');
+            if (modalContent) {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }
+        }, 10);
+    }
+    function hideModal(modal) {
+        modal.classList.add('opacity-0');
+        const modalContent = modal.querySelector('.bg-white, .dark\\:bg-gray-800');
+        if (modalContent) {
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+        }
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
     }
 
-    // Show/hide loading
+    // --- Loading Overlay ---
     function showLoading() {
         if (teacherTableLoading) teacherTableLoading.classList.remove('hidden');
         if (teacherSearchSpinner) teacherSearchSpinner.classList.remove('hidden');
@@ -950,7 +974,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Fetch teachers
+    // --- Debounce ---
+    function debounce(func, wait) {
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // --- Fetch Teachers (AJAX) ---
     function fetchTeachers(page = 1) {
         const searchQuery = teacherSearch ? teacherSearch.value.trim() : '';
         const advisoryValue = advisoryFilter ? advisoryFilter.value : '';
@@ -1016,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Update teachers table
+    // --- Update Table & Pagination (Reusable) ---
     function updateTeachersTable(teachers) {
         if (!teachersTable) return;
         const tableBody = teachersTable.querySelector('tbody');
@@ -1171,8 +1203,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.classList.add('animate-fadeIn');
         setTimeout(() => { tableBody.classList.remove('animate-fadeIn'); }, 500);
     }
-
-    // Update pagination
     function updateTeacherPagination(pagination) {
         if (!teacherPaginationContainer) return;
         const {current_page, num_pages, has_next, has_previous, page_range, start_index, end_index, total_count} = pagination;
@@ -1233,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Attach event listeners to table actions (assign/remove advisory)
+    // --- Attach Event Listeners to Table Actions (assign/remove advisory) ---
     function attachTeacherTableEventListeners() {
         // Attach assign-advisory button event listeners
         document.querySelectorAll('.assign-advisory').forEach(button => {
@@ -1269,97 +1299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add Teacher Modal Elements
-    const addTeacherBtn = document.getElementById('add-teacher-btn');
-    const addTeacherModal = document.getElementById('add-teacher-modal');
-    const addTeacherForm = document.getElementById('add-teacher-form');
-    const closeAddTeacherModalBtn = document.getElementById('close-add-teacher-modal');
-    const closeAddTeacherModalXBtn = document.getElementById('close-add-teacher-modal-x');
-    const addTeacherGrade = document.getElementById('add-teacher-grade');
-    const addTeacherSection = document.getElementById('add-teacher-section');
-    const addTeacherProfilePicInput = document.getElementById('add-teacher-profile_pic');
-    const addTeacherProfilePicPreview = document.getElementById('add-teacher-profile-pic-preview');
-    const addTeacherDefaultProfileIcon = document.getElementById('add-teacher-default-profile-icon');
-    const addTeacherUploadTrigger = document.getElementById('add-teacher-upload-trigger');
-
-    // Modal show/hide helpers (match users.html animation)
-    function showAddTeacherModal() {
-        addTeacherModal.classList.remove('hidden');
-        addTeacherModal.classList.add('flex');
-        setTimeout(() => {
-            addTeacherModal.classList.remove('opacity-0');
-            const modalContent = addTeacherModal.querySelector('.bg-white, .dark\\:bg-gray-800');
-            if (modalContent) {
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }
-        }, 10);
-    }
-    function hideAddTeacherModal() {
-        addTeacherModal.classList.add('opacity-0');
-        const modalContent = addTeacherModal.querySelector('.bg-white, .dark\\:bg-gray-800');
-        if (modalContent) {
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-        }
-        setTimeout(() => {
-            addTeacherModal.classList.add('hidden');
-            addTeacherModal.classList.remove('flex');
-        }, 300);
-    }
-
-    // Show Add Teacher Modal
-    if (addTeacherBtn) {
-        addTeacherBtn.addEventListener('click', function() {
-            addTeacherForm.reset();
-            resetAddTeacherProfilePicPreview();
-            addTeacherSection.innerHTML = '<option value="">Select Grade First</option>';
-            showAddTeacherModal();
-        });
-    }
-    if (closeAddTeacherModalBtn) {
-        closeAddTeacherModalBtn.addEventListener('click', function() {
-            hideAddTeacherModal();
-            resetAddTeacherProfilePicPreview();
-        });
-    }
-    if (closeAddTeacherModalXBtn) {
-        closeAddTeacherModalXBtn.addEventListener('click', function() {
-            hideAddTeacherModal();
-            resetAddTeacherProfilePicPreview();
-        });
-    }
-    // Profile Pic Preview
-    if (addTeacherUploadTrigger) {
-        addTeacherUploadTrigger.addEventListener('click', function() {
-            if (addTeacherProfilePicInput) addTeacherProfilePicInput.click();
-        });
-    }
-    
-    // Add missing event handler for the upload trigger button
-    const addTeacherUploadTriggerBtn = document.getElementById('add-teacher-upload-trigger-btn');
-    if (addTeacherUploadTriggerBtn) {
-        addTeacherUploadTriggerBtn.addEventListener('click', function() {
-            if (addTeacherProfilePicInput) addTeacherProfilePicInput.click();
-        });
-    }
-    
-    if (addTeacherProfilePicInput) {
-        addTeacherProfilePicInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (addTeacherProfilePicPreview) {
-                        addTeacherProfilePicPreview.src = e.target.result;
-                        addTeacherProfilePicPreview.classList.remove('opacity-0');
-                        if (addTeacherDefaultProfileIcon) addTeacherDefaultProfileIcon.classList.add('opacity-0');
-                    }
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-    }
+    // --- Profile Pic Preview Logic (Reusable) ---
     function resetAddTeacherProfilePicPreview() {
         if (addTeacherProfilePicPreview) {
             addTeacherProfilePicPreview.src = "#";
@@ -1367,140 +1307,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (addTeacherDefaultProfileIcon) addTeacherDefaultProfileIcon.classList.remove('opacity-0');
     }
-
-    // Grade change event to load sections for assignment modal
-    if (assignGrade) {
-        assignGrade.addEventListener('change', function() {
-            const gradeId = this.value;
+    function handleProfilePicUpload(teacherId, successMessage) {
+        if (addTeacherProfilePicInput && addTeacherProfilePicInput.files.length > 0) {
+            const fileFormData = new FormData();
+            fileFormData.append('profile_pic', addTeacherProfilePicInput.files[0]);
+            fileFormData.append('user_id', teacherId);
             
-            // Reset section dropdown
-            assignSection.innerHTML = '<option value="">Loading sections...</option>';
-            
-            if (!gradeId) {
-                assignSection.innerHTML = '<option value="">Select Grade First</option>';
-                return;
-            }
-            
-            // Create sections data from Django template
-            const allSections = [];
-            {% for section in sections %}
-                allSections.push({
-                    id: "{{ section.id }}",
-                    name: "{{ section.name }}",
-                    gradeId: "{{ section.grade.id }}"
-                });
-            {% endfor %}
-            
-            // Filter sections for the selected grade
-            const filteredSections = allSections.filter(function(section) {
-                return section.gradeId === gradeId;
-            });
-            
-            if (filteredSections.length === 0) {
-                assignSection.innerHTML = '<option value="">No sections available</option>';
-            } else {
-                assignSection.innerHTML = '<option value="">Select Section</option>';
-                filteredSections.forEach(function(section) {
-                    assignSection.innerHTML += `<option value="${section.id}">${section.name}</option>`;
-                });
-            }
-        });
-    }
-
-    // Confirm section assignment
-    if (confirmAssignSection) {
-        confirmAssignSection.addEventListener('click', function() {
-            const teacherId = assignTeacherId.value;
-            const sectionId = assignSection.value;
-            
-            if (!teacherId || !sectionId) {
-                showToast('Please select a section', 'error');
-                return;
-            }
-            
-            // Make API request to assign teacher to section
-            fetch('/admin/teachers/assign-section/', {
+            fetch('/admin/users/upload-profile-pic/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    teacher_id: teacherId,
-                    section_id: sectionId
-                })
+                headers: {'X-CSRFToken': csrfToken},
+                body: fileFormData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showToast(data.message, 'success');
-                    assignSectionModal.classList.add('hidden');
-                    
-                    // Refresh table to show updated data
-                    fetchTeachers(currentPage);
+            .then(resp => resp.json())
+            .then(fileResult => {
+                if (fileResult.status === 'success') {
+                    showToast(successMessage + ' Profile picture uploaded.', 'success');
                 } else {
-                    showToast(data.message, 'error');
+                    showToast(successMessage + ' Profile picture upload failed.', 'warning');
                 }
+                addTeacherModal.classList.add('hidden');
+                fetchTeachers(1);
             })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('An error occurred while assigning section', 'error');
+            .catch(() => {
+                showToast(successMessage + ' Profile picture upload failed.', 'warning');
+                addTeacherModal.classList.add('hidden');
+                fetchTeachers(1);
             });
-        });
-    }
-
-    // Cancel section assignment
-    if (cancelAssignSection) {
-        cancelAssignSection.addEventListener('click', function() {
-            assignSectionModal.classList.add('hidden');
-        });
-    }
-
-    // Function to remove teacher from section
-    function removeTeacherSection(teacherId) {
-        fetch('/admin/teachers/remove-section/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                teacher_id: teacherId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showToast(data.message, 'success');
-                
-                // Refresh table to show updated data
-                fetchTeachers(currentPage);
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('An error occurred while removing teacher from section', 'error');
-        });
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === assignSectionModal) {
-            assignSectionModal.classList.add('hidden');
+        } else {
+            showToast(successMessage, 'success');
+            addTeacherModal.classList.add('hidden');
+            fetchTeachers(1);
         }
-    });
-
-    // Dynamic Section Dropdown
-    if (addTeacherGrade && addTeacherSection) {
-        addTeacherGrade.addEventListener('change', function() {
-            const gradeId = this.value;
-            addTeacherSection.innerHTML = '<option value="">Loading...</option>';
-            fetchSectionsForGrade(gradeId);
-        });
     }
-    
+
+    // --- Section Dropdown Logic (Reusable) ---
     function fetchSectionsForGrade(gradeId) {
         if (!gradeId) {
             addTeacherSection.innerHTML = '<option value="">Select Grade First</option>';
@@ -1534,7 +1374,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add Teacher Form Submission
+    // --- Add Teacher Modal Logic ---
+    function openAddTeacherModal() {
+        addTeacherForm.reset();
+        resetAddTeacherProfilePicPreview();
+        addTeacherSection.innerHTML = '<option value="">Select Grade First</option>';
+        showModal(addTeacherModal);
+    }
+    function closeAddTeacherModal() {
+        hideModal(addTeacherModal);
+        resetAddTeacherProfilePicPreview();
+    }
+
+    // --- Event Listeners (DRY) ---
+    if (addTeacherBtn) addTeacherBtn.addEventListener('click', openAddTeacherModal);
+    if (closeAddTeacherModalBtn) closeAddTeacherModalBtn.addEventListener('click', closeAddTeacherModal);
+    if (closeAddTeacherModalXBtn) closeAddTeacherModalXBtn.addEventListener('click', closeAddTeacherModal);
+    if (addTeacherUploadTrigger) addTeacherUploadTrigger.addEventListener('click', () => addTeacherProfilePicInput && addTeacherProfilePicInput.click());
+    if (addTeacherUploadTriggerBtn) addTeacherUploadTriggerBtn.addEventListener('click', () => addTeacherProfilePicInput && addTeacherProfilePicInput.click());
+    if (addTeacherProfilePicInput) {
+        addTeacherProfilePicInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (addTeacherProfilePicPreview) {
+                        addTeacherProfilePicPreview.src = e.target.result;
+                        addTeacherProfilePicPreview.classList.remove('opacity-0');
+                        if (addTeacherDefaultProfileIcon) addTeacherDefaultProfileIcon.classList.add('opacity-0');
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    if (addTeacherGrade && addTeacherSection) {
+        addTeacherGrade.addEventListener('change', function() {
+            addTeacherSection.innerHTML = '<option value="">Loading...</option>';
+            fetchSectionsForGrade(this.value);
+        });
+    }
     if (addTeacherForm) {
         addTeacherForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1634,97 +1513,131 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function handleProfilePicUpload(teacherId, successMessage) {
-        if (addTeacherProfilePicInput && addTeacherProfilePicInput.files.length > 0) {
-            const fileFormData = new FormData();
-            fileFormData.append('profile_pic', addTeacherProfilePicInput.files[0]);
-            fileFormData.append('user_id', teacherId);
+    // --- Section Assignment Modal Logic ---
+    if (assignGrade) {
+        assignGrade.addEventListener('change', function() {
+            const gradeId = this.value;
             
-            fetch('/admin/users/upload-profile-pic/', {
-                method: 'POST',
-                headers: {'X-CSRFToken': csrfToken},
-                body: fileFormData
-            })
-            .then(resp => resp.json())
-            .then(fileResult => {
-                if (fileResult.status === 'success') {
-                    showToast(successMessage + ' Profile picture uploaded.', 'success');
-                } else {
-                    showToast(successMessage + ' Profile picture upload failed.', 'warning');
-                }
-                addTeacherModal.classList.add('hidden');
-                fetchTeachers(1);
-            })
-            .catch(() => {
-                showToast(successMessage + ' Profile picture upload failed.', 'warning');
-                addTeacherModal.classList.add('hidden');
-                fetchTeachers(1);
+            // Reset section dropdown
+            assignSection.innerHTML = '<option value="">Loading sections...</option>';
+            
+            if (!gradeId) {
+                assignSection.innerHTML = '<option value="">Select Grade First</option>';
+                return;
+            }
+            
+            // Create sections data from Django template
+            const allSections = [];
+            {% for section in sections %}
+                allSections.push({
+                    id: "{{ section.id }}",
+                    name: "{{ section.name }}",
+                    gradeId: "{{ section.grade.id }}"
+                });
+            {% endfor %}
+            
+            // Filter sections for the selected grade
+            const filteredSections = allSections.filter(function(section) {
+                return section.gradeId === gradeId;
             });
-        } else {
-            showToast(successMessage, 'success');
-            addTeacherModal.classList.add('hidden');
-            fetchTeachers(1);
+            
+            if (filteredSections.length === 0) {
+                assignSection.innerHTML = '<option value="">No sections available</option>';
+            } else {
+                assignSection.innerHTML = '<option value="">Select Section</option>';
+                filteredSections.forEach(function(section) {
+                    assignSection.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+                });
+            }
+        });
+    }
+    if (confirmAssignSection) {
+        confirmAssignSection.addEventListener('click', function() {
+            const teacherId = assignTeacherId.value;
+            const sectionId = assignSection.value;
+            
+            if (!teacherId || !sectionId) {
+                showToast('Please select a section', 'error');
+                return;
+            }
+            
+            // Make API request to assign teacher to section
+            fetch('/admin/teachers/assign-section/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    teacher_id: teacherId,
+                    section_id: sectionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    assignSectionModal.classList.add('hidden');
+                    
+                    // Refresh table to show updated data
+                    fetchTeachers(currentPage);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while assigning section', 'error');
+            });
+        });
+    }
+    if (cancelAssignSection) {
+        cancelAssignSection.addEventListener('click', function() {
+            assignSectionModal.classList.add('hidden');
+        });
+    }
+    window.addEventListener('click', function(event) {
+        if (event.target === assignSectionModal) {
+            assignSectionModal.classList.add('hidden');
         }
-    }
+    });
 
-    // Initial load
-    fetchTeachers();
-
-    // Set initial values from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    if (teacherSearch && urlParams.has('search')) teacherSearch.value = urlParams.get('search');
-    if (advisoryFilter && urlParams.has('advisory')) advisoryFilter.value = urlParams.get('advisory');
-    if (statusFilter && urlParams.has('status')) statusFilter.value = urlParams.get('status');
-    if (sectionFilter && urlParams.has('section')) sectionFilter.value = urlParams.get('section');
-    if (urlParams.has('page')) {
-        currentPage = parseInt(urlParams.get('page'));
-        if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
-    }
-    
-    // Attach search event listeners
-    if (teacherSearch) {
-        teacherSearch.addEventListener('input', debounce(function() {
-            fetchTeachers(1);
-        }, 500));
-    }
-    
-    // --- BEGIN: Make search behave like teachers.html ---
-    if (typeof fetchTeachers === "function" && teacherSearch) {
-        let teachersSearchTimeout = null;
-        teacherSearch.addEventListener('input', function() {
-            clearTimeout(teachersSearchTimeout);
-            teachersSearchTimeout = setTimeout(function() {
-                fetchTeachers(1);
-            }, 300);
-        });
-    }
-    // --- END: Make search behave like teachers.html ---
-    
-    // Attach filter event listeners
-    if (advisoryFilter) {
-        advisoryFilter.addEventListener('change', function() {
-            fetchTeachers(1);
-        });
-    }
-    
-    if (statusFilter) {
-        statusFilter.addEventListener('change', function() {
-            fetchTeachers(1);
-        });
-    }
-    
-    if (sectionFilter) {
-        sectionFilter.addEventListener('change', function() {
-            fetchTeachers(1);
+    // --- Remove Teacher from Section (Reusable) ---
+    function removeTeacherSection(teacherId) {
+        fetch('/admin/teachers/remove-section/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                teacher_id: teacherId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Refresh table to show updated data
+                fetchTeachers(currentPage);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while removing teacher from section', 'error');
         });
     }
 
-    // --- Teacher Actions State ---
-    let currentTeacherId = null;
-    let currentTeacherIsActive = null;
-    let currentTeacherName = "";
+    // --- Search, Filter, Pagination Events (DRY) ---
+    if (teacherSearch) teacherSearch.addEventListener('input', debounce(() => fetchTeachers(1), 300));
+    if (advisoryFilter) advisoryFilter.addEventListener('change', () => fetchTeachers(1));
+    if (statusFilter) statusFilter.addEventListener('change', () => fetchTeachers(1));
+    if (sectionFilter) sectionFilter.addEventListener('change', () => fetchTeachers(1));
 
-    // --- Action Button Handlers ---
+    // --- Teacher Actions State & Modals (DRY) ---
     // Delete Teacher
     document.addEventListener('click', function(e) {
         if (e.target.closest('.delete-teacher')) {
@@ -1878,6 +1791,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('status-change-teacher-modal').classList.add('hidden');
         });
     });
+
+    // --- Initial Load & URL Params ---
+    fetchTeachers();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (teacherSearch && urlParams.has('search')) teacherSearch.value = urlParams.get('search');
+    if (advisoryFilter && urlParams.has('advisory')) advisoryFilter.value = urlParams.get('advisory');
+    if (statusFilter && urlParams.has('status')) statusFilter.value = urlParams.get('status');
+    if (sectionFilter && urlParams.has('section')) sectionFilter.value = urlParams.get('section');
+    if (urlParams.has('page')) {
+        currentPage = parseInt(urlParams.get('page'));
+        if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
+    }
 });
 </script>
 {% endblock %}

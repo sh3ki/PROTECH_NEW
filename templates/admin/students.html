@@ -593,12 +593,13 @@ let currentPage = 1;
 let isLoading = false;
 let searchTimeout = null;
 
-// Use the default URL for the base, and append the filename when available
+// Update the getProfilePicUrl function to correctly handle URLs
 function getProfilePicUrl(filename) {
     if (!filename) {
         return "{% url 'serve_profile_pic_default' %}";
     }
-    return `/profile-pics/${filename}/`;
+    // Use the media URL pattern with the filename for proper path resolution
+    return "{% url 'serve_profile_pic' 'placeholder' %}".replace('placeholder', filename);
 }
 
 // DOM Elements
@@ -1368,9 +1369,6 @@ function handleStudentSubmit(e) {
         `{% url 'admin_update_student' 0 %}`.replace('0', currentStudentData.id) : 
         `{% url 'admin_create_student' %}`;
     
-    // Both create and update should use POST method when sending form data with files
-    const method = 'POST';
-    
     // Show loading state
     const saveBtn = document.getElementById('save-student-btn');
     const saveText = document.getElementById('student-save-text');
@@ -1380,8 +1378,15 @@ function handleStudentSubmit(e) {
     saveText.classList.add('hidden');
     saveSpinner.classList.remove('hidden');
     
+    // Check if there's a file input and if it has a file
+    const fileInput = document.getElementById('student-profile-pic');
+    // If we're editing and there's no new file, don't send the empty file input to avoid overriding existing profile
+    if (isEdit && fileInput.files.length === 0) {
+        formData.delete('profile_pic');
+    }
+    
     fetch(url, {
-        method: method,
+        method: 'POST', // Always use POST for form data with files
         headers: {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
@@ -1394,12 +1399,12 @@ function handleStudentSubmit(e) {
             closeStudentModal();
             loadStudents(currentPage);
         } else {
-            showToast(data.message, 'error');
+            showToast(data.message || 'An error occurred while saving the student.', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showToast('An error occurred', 'error');
+        showToast('An error occurred while processing your request.', 'error');
     })
     .finally(() => {
         saveBtn.disabled = false;

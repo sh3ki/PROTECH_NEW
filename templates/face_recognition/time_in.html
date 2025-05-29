@@ -1,57 +1,777 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Attendance Monitoring System - Time In</title>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTECH - Face Recognition Time In</title>
+    <!-- TailwindCSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden bg-white text-black">
-    <!-- Top Bar -->
-    <div class="flex items-center justify-between px-6 py-4" style="background-color: #023c82;">
-      <div class="flex items-center gap-3">
-        <img src="{% static 'public/images/protechlogo.svg' %}" alt="Logo" class="h-8" />
-        <span class="inline-block font-extrabold italic tracking-tight leading-tight text-[20px] ml-1 text-white" style="font-family: 'Arial Black', Arial, sans-serif;">
-          THE TECH<br>TO PROTECT
-        </span>
-      </div>
-      <h1 class="text-lg md:text-2xl font-bold text-center text-white drop-shadow">
-       ATTENDANCE MONITORING - TIME IN  
-      </h1>
-      <div class="flex gap-2">
-        <button class="bg-white/90 hover:bg-white text-blue-900 font-semibold text-sm px-4 py-1 rounded-lg shadow border border-white/40 transition-transform hover:scale-105">Attendance</button>
-        <button class="bg-white/90 hover:bg-white text-blue-900 font-semibold text-sm px-4 py-1 rounded-lg shadow border border-white/40 transition-transform hover:scale-105">Back</button>
-      </div>
-    </div>
-
-    <!-- Main Panel -->
-    <div class="flex p-4 gap-4 min-h-[80vh] flex-1 bg-white">
-      <!-- Webcam Feed -->
-      <div class="flex-1 bg-gray-200 rounded-3xl border border-gray-200 h-[500px] shadow-2xl shadow-black/30"></div>
-
-      <!-- Right Panel -->
-      <div class="w-[320px] flex flex-col gap-4">
-        <div class="flex-1 bg-gray-200 rounded-2xl border border-gray-200 shadow-2xl shadow-black/30"></div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="flex justify-between items-center text-sm px-6 py-3 mt-auto" style="background-color: #023c82;">
-      <span id="timestamp" class="text-white"></span>
-      <div class="flex items-center gap-2">
-        <input type="checkbox" checked class="form-checkbox accent-blue-600" id="face-recognition" />
-        <label for="face-recognition" class="text-white">Face Recognition</label>
-      </div>
-    </div>
     <script>
-      // Real-time date and time for the footer
-      function updateTimestamp() {
-        const now = new Date();
-        document.getElementById('timestamp').textContent = now.toLocaleString();
-      }
-      updateTimestamp();
-      setInterval(updateTimestamp, 1000);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#023c82',      /* Dark blue */
+                        secondary: '#4c9cfc',    /* Medium blue */
+                        tertiary: '#7cb4fc',     /* Light blue */
+                        accent: '#7c848c',       /* Medium gray */
+                        light: '#c4cfdb',        /* Light gray/blue */
+                        dark: '#3c444c',         /* Dark gray */
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-in': 'slideIn 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
     </script>
-  </body>
+    <style type="text/tailwindcss">
+        @layer components {
+            .school-btn {
+                @apply text-white bg-primary hover:bg-secondary py-3 px-8 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg text-center;
+            }
+            .back-btn {
+                @apply flex items-center justify-center gap-2 px-6 py-2 bg-secondary text-white hover:bg-tertiary rounded-full transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-medium;
+            }
+            .toggle-checkbox:checked {
+                @apply right-0 border-secondary;
+                background-color: #4c9cfc;
+            }
+            .toggle-checkbox:checked + .toggle-label {
+                @apply bg-tertiary;
+            }
+            /* New component styles */
+            .webcam-container {
+                @apply bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black rounded-xl shadow-xl border border-gray-700 dark:border-gray-800 flex flex-col overflow-hidden;
+            }
+            .info-card {
+                @apply bg-gray-100 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-all duration-300 hover:shadow-md;
+            }
+            .dropdown {
+                @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary;
+            }
+            .status-badge {
+                @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+            }
+        }
+        
+        /* Dark mode styles */
+        html.dark {
+            @apply bg-dark text-light;
+        }
+
+        /* Webcam placeholder animation */
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 0.75;
+            }
+            100% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
+        }
+
+        /* Scrollbar styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            @apply bg-gray-100 dark:bg-gray-800 rounded-full;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            @apply bg-gray-400 dark:bg-gray-600 rounded-full hover:bg-secondary dark:hover:bg-secondary transition-colors duration-200;
+        }
+    </style>
+</head>
+<body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
+    <!-- Background image with overlay -->
+    <div class="fixed inset-0 z-[-1] bg-white/40 dark:bg-gray-800/30">
+        <img src="{% static 'public/images/schoold.svg' %}" alt="Background"
+             class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none opacity-40 dark:opacity-20" />
+    </div>
+
+    <!-- Header -->
+    <header class="bg-primary/95 backdrop-blur-sm shadow-lg mb-4">
+        <div class="py-3 flex justify-between items-center px-6">
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'landing_page' %}" class="flex items-center gap-2 font-bold text-white text-2xl">
+                    <img src="{% static 'public/images/protechlogo.svg' %}" alt="PROTECH Logo" class="h-10 w-10 hover:scale-105 transition-transform" />
+                    <span class="inline-block font-extrabold italic tracking-tight leading-tight text-xs ml-1" style="font-family: 'Arial Black', Arial, sans-serif;">
+                      THE TECH<br>TO PROTECT
+                    </span>
+                </a>
+            </div>
+            <div class="transform hover:scale-[1.01] transition-transform">
+                <span class="inline-block font-bold tracking-tight leading-tight text-2xl text-white ml-1" style="font-family: 'Arial Black', Arial, sans-serif;">
+                    <span class="text-tertiary">PROTECH</span>: TIME IN
+                </span>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Dark mode toggle -->
+                <div class="flex items-center ml-3">
+                    <div class="relative inline-block w-12 mr-2 align-middle select-none">
+                        <input type="checkbox" id="toggle-dark" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="toggle-dark" class="toggle-label block overflow-hidden h-6 rounded-full bg-accent cursor-pointer"></label>
+                    </div>
+                    <span class="text-white hidden md:inline-block">
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main content with full width -->
+    <main class="flex-grow animate-fade-in px-6 pb-6">
+        <!-- Main container with side-by-side layout -->
+        <div class="flex gap-6 h-[calc(100vh-150px)]">
+            <!-- Webcam feed container: 2/3 width -->
+            <div class="w-2/3 webcam-container">
+                <!-- Status indicator bar -->
+                <div class="bg-gradient-to-r from-primary to-secondary px-4 py-2 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div id="camera-status" class="flex items-center">
+                            <span class="relative flex h-3 w-3 mr-2">
+                                <span id="status-indicator" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            <span id="status-text" class="text-white font-medium">Inactive</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Camera selection dropdown with improved design -->
+                    <div class="flex items-center space-x-3">
+                        <label for="camera-select" class="text-white font-medium">Camera:</label>
+                        <select id="camera-select" class="dropdown py-1 px-3 text-sm">
+                            <option value="">Select a camera</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Webcam placeholder/feed container -->
+                <div class="flex-1 flex items-center justify-center relative bg-black/40">
+                    <!-- Camera placeholder (shown when no camera) -->
+                    <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-white">
+                        <div class="w-24 h-24 rounded-full bg-gray-700/50 pulse-ring flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <p class="text-xl font-medium text-center">No Camera Selected</p>
+                        <p class="text-sm text-gray-400 mt-1 mb-4">Please select a camera from the dropdown above</p>
+                    </div>
+                    
+                    <!-- Actual video element -->
+                    <video id="webcam-feed" autoplay playsinline muted class="hidden w-full h-full object-cover"></video>
+                    
+                    <!-- Facial recognition frame indicator (appears when detection is active) -->
+                    <div id="detection-frame" class="hidden absolute border-4 border-secondary rounded-lg transition-all duration-300"></div>
+                </div>
+            </div>
+            
+            <!-- Student info container: 1/3 width -->
+            <div class="w-1/3 flex flex-col rounded-xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                <!-- Header section with count and stats -->
+                <div class="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-bold text-primary dark:text-tertiary">Recognized Students</h2>
+                        <div class="bg-primary/10 dark:bg-tertiary/20 rounded-full px-3 py-1 text-sm font-medium text-primary dark:text-tertiary">
+                            <span id="student-count">0</span> Present
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>Today: <span id="today-date">{% now "F j, Y" %}</span></span>
+                    </div>
+                </div>
+                
+                <!-- Scrollable content area with improved styling -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900/60">
+                    <div id="student-list" class="p-4 space-y-3">
+                        <!-- This will be populated dynamically, but here's sample styling -->
+                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-800 dark:text-white">John Smith</h3>
+                                        <span class="ml-2 status-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            On Time
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0001</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:30 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-800 dark:text-white">Sarah Johnson</h3>
+                                        <span class="ml-2 status-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            On Time
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0002</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:35 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-800 dark:text-white">Miguel Santos</h3>
+                                        <span class="ml-2 status-badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                            Late
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0003</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:45 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Camera test modal with improved design -->
+    <div id="camera-test-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Modal backdrop with blur effect -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300"></div>
+        
+        <!-- Modal content - centered with improved design -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 w-11/12 max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300">
+            <!-- Modal header with gradient -->
+            <div class="bg-gradient-to-r from-primary to-secondary px-5 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Camera Test
+                </h3>
+                <button id="close-modal" class="text-white hover:bg-white/20 rounded-full p-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal body with improved design -->
+            <div class="p-6 flex flex-col items-center">
+                <p class="mb-4 text-gray-700 dark:text-gray-300 text-center">
+                    Testing your camera feed. Please make sure the camera is working fine before confirming.
+                </p>
+                
+                <!-- Camera preview with better styling -->
+                <div class="bg-black rounded-lg overflow-hidden w-full h-120 mb-4 shadow-inner border border-gray-700">
+                    <video id="test-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                </div>
+                
+                <!-- Modal footer with improved buttons -->
+                <div class="flex justify-center gap-6 mt-6">
+                    <button id="cancel-camera" class="px-8 py-2.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-100 rounded-lg font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                    <button id="confirm-camera" class="px-8 py-2.5 bg-gradient-to-r from-secondary to-tertiary text-white font-medium rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg hover:from-secondary/90 hover:to-tertiary/90 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        Confirm Camera
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer with improved design -->
+    <footer class="bg-primary/95 backdrop-blur-sm text-white py-3 border-t border-primary">
+        <div class="text-center">
+            <p>&copy; {% now "Y" %} PROTECH. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Dark mode toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const html = document.documentElement;
+            const toggleCheckbox = document.getElementById('toggle-dark');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            
+            // Check for user preference or default to dark
+            const isDarkMode = localStorage.getItem('darkMode') !== 'false';
+            
+            // Apply initial state
+            if (isDarkMode) {
+                html.classList.add('dark');
+                toggleCheckbox.checked = true;
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                html.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+            
+            // Toggle dark mode
+            toggleCheckbox.addEventListener('change', () => {
+                if (toggleCheckbox.checked) {
+                    html.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('darkMode', 'false');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Camera selection and testing script with improved functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cameraSelect = document.getElementById('camera-select');
+            const modal = document.getElementById('camera-test-modal');
+            const closeModal = document.getElementById('close-modal');
+            const cancelCamera = document.getElementById('cancel-camera');
+            const confirmCamera = document.getElementById('confirm-camera');
+            const testVideo = document.getElementById('test-video');
+            const webcamFeed = document.getElementById('webcam-feed');
+            const cameraPlaceholder = document.getElementById('camera-placeholder');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            let currentStream = null;
+            let activeCameraId = null;
+            let mainStream = null; // Track main webcam stream separately
+            
+            // Detect if we're on a mobile device (tablet or phone)
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Helper function to safely stop any active stream
+            function stopMediaStream(stream) {
+                if (stream) {
+                    stream.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                    return null;
+                }
+                return null;
+            }
+            
+            // Update camera status
+            function updateCameraStatus(active) {
+                if (active) {
+                    statusIndicator.classList.remove('bg-red-400');
+                    statusIndicator.classList.add('bg-green-400');
+                    statusDot.classList.remove('bg-red-500');
+                    statusDot.classList.add('bg-green-500');
+                    statusText.textContent = 'Active';
+                } else {
+                    statusIndicator.classList.remove('bg-green-400');
+                    statusIndicator.classList.add('bg-red-400');
+                    statusDot.classList.remove('bg-green-500');
+                    statusDot.classList.add('bg-red-500');
+                    statusText.textContent = 'Inactive';
+                }
+            }
+            
+            // Get available camera devices with improved error handling
+            async function getAvailableCameras() {
+                try {
+                    // Clear previous options
+                    cameraSelect.innerHTML = '';
+                    
+                    // Add a default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select a camera';
+                    cameraSelect.appendChild(defaultOption);
+                    
+                    // Request permission first
+                    await navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            // Stop this initial stream right away
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            // Now list the devices
+                            return navigator.mediaDevices.enumerateDevices();
+                        })
+                        .then(devices => {
+                            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                            
+                            // Add camera options
+                            videoDevices.forEach((device, index) => {
+                                const option = document.createElement('option');
+                                option.value = device.deviceId;
+                                
+                                // Try to identify front/back cameras on mobile devices
+                                let label = device.label || `Camera ${index + 1}`;
+                                
+                                if (isMobileDevice) {
+                                    // Many devices identify camera positions in their labels
+                                    if (device.label) {
+                                        if (/front/i.test(device.label)) {
+                                            label = `Front Camera (${label})`;
+                                        } else if (/back/i.test(device.label)) {
+                                            label = `Back Camera (${label})`;
+                                        }
+                                    }
+                                    
+                                    // If no identification in label, make a best guess
+                                    if (videoDevices.length === 2) {
+                                        // Many mobile devices have exactly 2 cameras
+                                        if (index === 0) {
+                                            label = label.includes('Front') ? label : `Front Camera`;
+                                        } else {
+                                            label = label.includes('Back') ? label : `Back Camera`;
+                                        }
+                                    }
+                                }
+                                
+                                option.textContent = label;
+                                cameraSelect.appendChild(option);
+                            });
+                            
+                            if (videoDevices.length === 0) {
+                                const option = document.createElement('option');
+                                option.textContent = 'No cameras found';
+                                option.disabled = true;
+                                cameraSelect.appendChild(option);
+                            } else if (videoDevices.length === 1) {
+                                // If only one camera, select it automatically
+                                cameraSelect.value = videoDevices[0].deviceId;
+                                startCameraTest(videoDevices[0].deviceId);
+                            }
+                        });
+                } catch (error) {
+                    console.error('Error accessing media devices:', error);
+                    const errorOption = document.createElement('option');
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorOption.textContent = 'Camera permission denied';
+                    } else if (error.name === 'NotFoundError') {
+                        errorOption.textContent = 'No cameras available';
+                    } else {
+                        errorOption.textContent = 'Error accessing cameras';
+                    }
+                    
+                    errorOption.disabled = true;
+                    cameraSelect.innerHTML = '';
+                    cameraSelect.appendChild(errorOption);
+                    
+                    // Show appropriate error message
+                    let errorMsg = 'Unable to access cameras.';
+                    if (isMobileDevice) {
+                        errorMsg += ' Please ensure you have granted camera permissions in your browser settings and try again.';
+                    } else {
+                        errorMsg += ' Please ensure your camera is connected and you have granted permission.';
+                    }
+                    alert(errorMsg);
+                }
+            }
+            
+            // Function to create appropriate constraints based on device and camera
+            function createVideoConstraints(deviceId) {
+                // Create optimal constraints for the current device
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                    }
+                };
+                
+                // Add device-specific settings
+                if (isMobileDevice) {
+                    // Mobile devices often work better with these constraints
+                    constraints.video.width = { ideal: 720 };
+                    constraints.video.height = { ideal: 1280 };
+                    
+                    // Some mobile browsers work better with these settings
+                    constraints.video.facingMode = { ideal: "user" };
+                } else {
+                    // Desktop settings
+                    constraints.video.width = { ideal: 1280 };
+                    constraints.video.height = { ideal: 720 };
+                }
+                
+                return constraints;
+            }
+            
+            // Start camera for testing with improved error handling and mobile support
+            async function startCameraTest(deviceId) {
+                try {
+                    // Stop any existing test stream
+                    currentStream = stopMediaStream(currentStream);
+                    
+                    // Create appropriate constraints
+                    const constraints = createVideoConstraints(deviceId);
+                    
+                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    testVideo.srcObject = currentStream;
+                    
+                    // Show the modal
+                    modal.classList.remove('hidden');
+                    
+                    // Handle orientation change for mobile devices
+                    if (isMobileDevice) {
+                        window.addEventListener('orientationchange', () => {
+                            // Short timeout to let the orientation change complete
+                            setTimeout(() => {
+                                // Refresh the video if orientation changes
+                                if (testVideo.srcObject) {
+                                    const track = testVideo.srcObject.getVideoTracks()[0];
+                                    if (track) {
+                                        track.applyConstraints({
+                                            width: { ideal: window.innerWidth },
+                                            height: { ideal: window.innerHeight }
+                                        }).catch(err => console.error('Failed to update constraints:', err));
+                                    }
+                                }
+                            }, 300);
+                        }, { once: false });
+                    }
+                } catch (error) {
+                    console.error('Error starting camera test:', error);
+                    
+                    // Handle specific error types with better messages
+                    let errorMsg = 'Failed to access the camera.';
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMsg += ' Please check camera permissions and try again.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMsg += ' The camera may be in use by another application.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMsg += ' The selected camera cannot satisfy required constraints.';
+                    } else {
+                        errorMsg += ' Please try selecting a different camera.';
+                    }
+                    
+                    alert(errorMsg);
+                    cameraSelect.value = '';
+                }
+            }
+            
+            // Start the main webcam feed with improved error handling
+            async function startWebcamFeed(deviceId) {
+                try {
+                    // First, ensure any previous main streams are properly closed
+                    if (mainStream) {
+                        mainStream = stopMediaStream(mainStream);
+                    }
+                    
+                    // Make sure the video element is ready for a new stream
+                    if (webcamFeed.srcObject) {
+                        webcamFeed.srcObject = null;
+                    }
+                    
+                    // Create appropriate constraints
+                    const constraints = createVideoConstraints(deviceId);
+                    
+                    // Remove the timeout - it's causing issues
+                    console.log("Starting webcam feed with device ID:", deviceId);
+                    console.log("Using constraints:", JSON.stringify(constraints));
+                    
+                    mainStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    console.log("Stream obtained successfully");
+                    
+                    // Set up the video feed
+                    webcamFeed.srcObject = mainStream;
+                    webcamFeed.classList.remove('hidden');
+                    cameraPlaceholder.classList.add('hidden');
+                    
+                    // Update UI state
+                    activeCameraId = deviceId;
+                    updateCameraStatus(true);
+                    
+                    // Add a play event handler to make sure video actually starts
+                    webcamFeed.onplay = () => {
+                        console.log('Main webcam feed playing successfully');
+                        // Update student count (this would be dynamic in a real app)
+                        document.getElementById('student-count').textContent = '3';
+                    };
+                    
+                    // Add error handling for the video element itself
+                    webcamFeed.onerror = (event) => {
+                        console.error('Video element error:', event);
+                        updateCameraStatus(false);
+                        resetCameraUI();
+                    };
+                    
+                } catch (error) {
+                    console.error('Error starting webcam feed:', error);
+                    
+                    // Handle specific error cases
+                    let errorMsg = 'Failed to start the webcam feed.';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMsg += ' Camera permission was denied.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMsg += ' The camera is already in use or not readable.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMsg += ' The selected camera cannot be configured as required.';
+                    } else {
+                        errorMsg += ' Please try again or select a different camera.';
+                    }
+                    
+                    alert(errorMsg);
+                    updateCameraStatus(false);
+                    resetCameraUI();
+                }
+            }
+            
+            // Reset the camera UI when there's an error
+            function resetCameraUI() {
+                webcamFeed.classList.add('hidden');
+                cameraPlaceholder.classList.remove('hidden');
+                activeCameraId = null;
+            }
+            
+            // Handle camera selection change
+            cameraSelect.addEventListener('change', () => {
+                const deviceId = cameraSelect.value;
+                if (deviceId) {
+                    startCameraTest(deviceId);
+                } else {
+                    // If "Select a camera" is chosen, stop any streams and show placeholder
+                    currentStream = stopMediaStream(currentStream);
+                    mainStream = stopMediaStream(mainStream);
+                    
+                    resetCameraUI();
+                    updateCameraStatus(false);
+                }
+            });
+            
+            // Close modal and stop test stream
+            function closeTestModal() {
+                currentStream = stopMediaStream(currentStream);
+                modal.classList.add('hidden');
+                
+                // If no camera was previously confirmed, reset UI
+                if (!activeCameraId) {
+                    cameraSelect.value = '';
+                    updateCameraStatus(false);
+                }
+            }
+            
+            closeModal.addEventListener('click', closeTestModal);
+            cancelCamera.addEventListener('click', closeTestModal);
+            
+            // Confirm camera button - with improved timing management
+            confirmCamera.addEventListener('click', () => {
+                const deviceId = cameraSelect.value;
+                
+                // Get the test stream's track to potentially reuse
+                const testTrack = currentStream ? currentStream.getVideoTracks()[0] : null;
+                const cloneTrack = testTrack ? testTrack.clone() : null;
+                
+                // Stop the test stream
+                currentStream = stopMediaStream(currentStream);
+                
+                // Close the modal
+                modal.classList.add('hidden');
+                
+                // Add a small delay before starting the main feed to allow resources to be released
+                setTimeout(() => {
+                    // If we have a cloned track, try to use it directly
+                    if (cloneTrack) {
+                        try {
+                            const newStream = new MediaStream([cloneTrack]);
+                            webcamFeed.srcObject = newStream;
+                            webcamFeed.classList.remove('hidden');
+                            cameraPlaceholder.classList.add('hidden');
+                            mainStream = newStream;
+                            activeCameraId = deviceId;
+                            updateCameraStatus(true);
+                            
+                            // Update student count (this would be dynamic in a real app)
+                            document.getElementById('student-count').textContent = '3';
+                            
+                            console.log("Successfully reused camera track");
+                            return;
+                        } catch (e) {
+                            console.warn("Failed to reuse track, falling back to new stream:", e);
+                        }
+                    }
+                    
+                    // Start the main webcam feed with the selected camera
+                    startWebcamFeed(deviceId);
+                }, 500); // 500ms delay to allow camera resources to be properly released
+            });
+            
+            // Initialize - get available cameras
+            getAvailableCameras();
+            
+            // Also check for orientation changes in the main feed
+            if (isMobileDevice) {
+                window.addEventListener('orientationchange', () => {
+                    // Apply orientation handling to main camera feed after a short delay
+                    if (mainStream) {
+                        setTimeout(() => {
+                            const track = mainStream.getVideoTracks()[0];
+                            if (track) {
+                                track.applyConstraints({
+                                    width: { ideal: window.innerWidth },
+                                    height: { ideal: window.innerHeight }
+                            }).catch(err => console.error('Failed to update constraints:', err));
+                            }
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Clean up on page unload to ensure camera resources are released
+            window.addEventListener('beforeunload', () => {
+                stopMediaStream(currentStream);
+                stopMediaStream(mainStream);
+            });
+        });
+    </script>
+</body>
 </html>

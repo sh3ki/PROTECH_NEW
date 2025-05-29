@@ -803,7 +803,7 @@ def admin_grades(request):
     # Annotate with section and student counts
     grades = grades.annotate(
         sections_count=Count('sections'),
-        students_count=Count('sections__students')
+        students_count=Count('sections__students', distinct=True)
     )
     
     # Get stats for dashboard
@@ -846,10 +846,10 @@ def search_grades(request):
     if search_query:
         grades = grades.filter(name__icontains=search_query)
     
-    # Annotate with counts
+    # Annotate with counts (fix: use distinct for sections_count)
     grades = grades.annotate(
-        sections_count=Count('sections'),
-        students_count=Count('sections__students')
+        sections_count=Count('sections', distinct=True),
+        students_count=Count('sections__students', distinct=True)
     )
     
     # Get total count for pagination
@@ -1597,7 +1597,7 @@ def get_student(request, student_id):
             'full_name': f"{student.first_name} {student.last_name}",
             'created_at': student.created_at.strftime('%Y-%m-%d'),
             'profile_pic': student.profile_pic or None
-        }
+        };
         
         return JsonResponse({
             'status': 'success',
@@ -1664,7 +1664,26 @@ def update_student(request, student_id):
                 
                 # Handle profile picture if provided
                 if 'profile_pic' in request.FILES:
-                    student.profile_pic = request.FILES['profile_pic']
+                    profile_pic = request.FILES['profile_pic']
+                    
+                    # Validate file size and type
+                    if profile_pic.size > 2 * 1024 * 1024:  # 2MB limit
+                        return JsonResponse({'status': 'error', 'message': 'File size must be less than 2MB'}, status=400)
+                    
+                    if not profile_pic.content_type.startswith('image/'):
+                        return JsonResponse({'status': 'error', 'message': 'Only image files are allowed'}, status=400)
+                    
+                    # Delete old profile picture if exists
+                    if student.profile_pic:
+                        old_profile_pic_path = os.path.join(PROFILE_PICS_DIR, student.profile_pic)
+                        if os.path.exists(old_profile_pic_path):
+                            os.remove(old_profile_pic_path)
+                    
+                    # Save the new profile picture
+                    filename = f"student_{int(timezone.now().timestamp())}_{profile_pic.name}"
+                    fs = FileSystemStorage(location=PROFILE_PICS_DIR)
+                    filename = fs.save(filename, profile_pic)
+                    student.profile_pic = filename
                 
                 student.save()
                 
@@ -1753,7 +1772,26 @@ def update_student(request, student_id):
         
         # Handle profile picture if provided
         if 'profile_pic' in request.FILES:
-            student.profile_pic = request.FILES['profile_pic']
+            profile_pic = request.FILES['profile_pic']
+            
+            # Validate file size and type
+            if profile_pic.size > 2 * 1024 * 1024:  # 2MB limit
+                return JsonResponse({'status': 'error', 'message': 'File size must be less than 2MB'}, status=400)
+            
+            if not profile_pic.content_type.startswith('image/'):
+                return JsonResponse({'status': 'error', 'message': 'Only image files are allowed'}, status=400)
+            
+            # Delete old profile picture if exists
+            if student.profile_pic:
+                old_profile_pic_path = os.path.join(PROFILE_PICS_DIR, student.profile_pic)
+                if os.path.exists(old_profile_pic_path):
+                    os.remove(old_profile_pic_path)
+        
+            # Save the new profile picture
+            filename = f"student_{int(timezone.now().timestamp())}_{profile_pic.name}"
+            fs = FileSystemStorage(location=PROFILE_PICS_DIR)
+            filename = fs.save(filename, profile_pic)
+            student.profile_pic = filename
         
         student.save()
         
@@ -1984,6 +2022,9 @@ def search_guardians(request):
                 except Exception as e:
                     data['children_count'] = 0
                     data['children_preview'] = 'Error loading children'
+
+
+
                     print(f"Error loading children for guardian {guardian.id}: {str(e)}")
                 
                 guardian_data.append(data)
@@ -2039,7 +2080,6 @@ def create_guardian(request):
                 }, status=400)
         
         # Check if student exists and doesn't already have a guardian
-       
        
 
         try:
@@ -2218,6 +2258,7 @@ def get_guardian_children(request, guardian_id):
 
 @login_required
 @user_passes_test(is_admin)
+@require_GET
 def admin_get_sections_by_grade(request):
     """Get sections for a specific grade"""
     try:
@@ -2252,6 +2293,7 @@ def admin_get_sections_by_grade(request):
 
 @login_required
 @user_passes_test(is_admin)
+@require_GET
 def admin_get_students_by_section(request):
     """Get students for a specific section"""
     try:
@@ -2278,6 +2320,8 @@ def admin_get_students_by_section(request):
                 'lrn': student.lrn,
                 'grade': student.grade.name if student.grade else 'N/A',
                 'section': student.section.name if student.section else 'N/A',
+                'grade_id': student.grade.id if student.grade else None,
+                'section_id': student.section.id if student.section else None,
                 'has_guardian': hasattr(student, 'guardian') and student.guardian is not None
             }
             for student in students
@@ -2361,7 +2405,7 @@ def admin_attendance_records(request):
 
     # Dashboard stats
     total_records = Attendance.objects.count()
-    present_count = Attendance.objects.filter(status='PRESENT').count()
+    present_count = Attendance.objects.filter(status='ON TIME').count() + Attendance.objects.filter(status='LATE').count()
     absent_count = Attendance.objects.filter(status='ABSENT').count()
     excused_count = Attendance.objects.filter(status='EXCUSED').count()
 
@@ -2375,7 +2419,6 @@ def admin_attendance_records(request):
     date_filter = request.GET.get('date', '')
 
     context = {
-
         'grades': grades,
         'sections': sections,
         'grade_filter': grade_filter,
@@ -2443,6 +2486,7 @@ def search_attendance_records(request):
             'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
             'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
             'status': record.status,
+            'profile_pic': record.student.profile_pic or None,
         })
 
     pagination = {
@@ -2463,11 +2507,277 @@ def search_attendance_records(request):
         'total_count': total_count,
     })
 
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_attendance_record(request, attendance_id):
+    """API endpoint to get details of a specific attendance record"""
+    try:
+        record = get_object_or_404(Attendance, id=attendance_id)
+        
+        data = {
+            'id': record.id,
+            'student_id': record.student.id,
+            'student_name': f"{record.student.first_name} {record.student.last_name}",
+            'lrn': record.student.lrn,
+            'date': record.date.strftime('%Y-%m-%d'),
+            'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else None,
+            'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else None,
+            'status': record.status,
+            'notes': record.notes or '',
+            'section': record.student.section.name if record.student.section else '',
+            'section_id': record.student.section.id if record.student.section else None,
+            'grade': record.student.grade.name if record.student.grade else '',
+            'grade_id': record.student.grade.id if record.student.grade else None,
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'record': data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def create_attendance_record(request):
+    """API endpoint to create a new attendance record"""
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['student_id', 'date', 'status']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'{field} is required'
+                }, status=400)
+        
+        # Check if student exists
+        try:
+            student = Student.objects.get(id=data['student_id'])
+        except Student.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student not found'
+            }, status=404)
+        
+        # Check if an attendance record already exists for this student on this date
+        if Attendance.objects.filter(student=student, date=data['date']).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Attendance record already exists for {student.first_name} {student.last_name} on {data["date"]}'
+            }, status=400)
+        
+        # Parse time fields if provided
+        time_in = None
+        if data.get('time_in'):
+            try:
+                from datetime import datetime
+                time_in = datetime.strptime(data['time_in'], '%H:%M:%S').time()
+            except ValueError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid time_in format. Use HH:MM:SS'
+                }, status=400)
+                
+        time_out = None
+        if data.get('time_out'):
+            try:
+                from datetime import datetime
+                time_out = datetime.strptime(data['time_out'], '%H:%M:%S').time()
+            except ValueError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid time_out format. Use HH:MM:SS'
+                }, status=400)
+        
+        # Create attendance record
+        record = Attendance(
+            student=student,
+            date=data['date'],
+            time_in=time_in,
+            time_out=time_out,
+            status=data['status']
+        )
+        record.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Attendance record for {student.first_name} {student.last_name} created successfully',
+            'record_id': record.id
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        import traceback
+        print("Error in create_attendance_record:", str(e))
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["PUT", "PATCH"])
+def update_attendance_record(request, attendance_id):
+    """API endpoint to update an attendance record"""
+    try:
+        record = get_object_or_404(Attendance, id=attendance_id)
+        data = json.loads(request.body)
+        
+        # Update status if provided
+        if 'status' in data:
+            record.status = data['status']
+        
+        # Update date if provided
+        if 'date' in data:
+            # Check if another record exists for this student on the new date (excluding current record)
+            if Attendance.objects.filter(student=record.student, date=data['date']).exclude(id=attendance_id).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Another attendance record exists for {record.student.first_name} {record.student.last_name} on {data["date"]}'
+                }, status=400)
+            record.date = data['date']
+        
+        # Update time_in if provided
+        if 'time_in' in data:
+            if data['time_in']:
+                try:
+                    from datetime import datetime
+                    record.time_in = datetime.strptime(data['time_in'], '%H:%M:%S').time()
+                except ValueError:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Invalid time_in format. Use HH:MM:SS'
+                    }, status=400)
+            else:
+                record.time_in = None
+        
+        # Update time_out if provided
+        if 'time_out' in data:
+            if data['time_out']:
+                try:
+                    from datetime import datetime
+                    record.time_out = datetime.strptime(data['time_out'], '%H:%M:%S').time()
+                except ValueError:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Invalid time_out format. Use HH:MM:SS'
+                    }, status=400)
+            else:
+                record.time_out = None
+        
+        # Update notes if provided
+        if 'notes' in data:
+            record.notes = data.get('notes', '')
+        
+        # Save the updated record
+        record.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Attendance record updated successfully'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["DELETE"])
+def delete_attendance_record(request, attendance_id):
+    """API endpoint to delete an attendance record"""
+    try:
+        record = get_object_or_404(Attendance, id=attendance_id)
+        student_name = f"{record.student.first_name} {record.student.last_name}"
+        record_date = record.date.strftime('%Y-%m-%d')
+        
+        record.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Attendance record for {student_name} on {record_date} deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
+def get_students_for_attendance(request):
+    """API endpoint to get students for attendance form"""
+    try:
+        # Get filters
+        section_id = request.GET.get('section', None)
+        grade_id = request.GET.get('grade', None)
+        
+        # Base queryset - only active students
+        students = Student.objects.filter(status='ACTIVE').select_related('grade', 'section')
+        
+        # Apply filters if provided
+        if section_id:
+            students = students.filter(section_id=section_id)
+        elif grade_id:
+            students = students.filter(grade_id=grade_id)
+        
+        # Order by name
+        students = students.order_by('last_name', 'first_name')
+        
+        # Prepare data for response
+        students_data = []
+        for student in students:
+            students_data.append({
+                'id': student.id,
+                'lrn': student.lrn,
+                'name': f"{student.first_name} {student.last_name}",
+                'grade': student.grade.name if student.grade else '',
+                'section': student.section.name if student.section else '',
+                'grade_id': student.grade.id if student.grade else None,
+                'section_id': student.section.id if student.section else None
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'students': students_data,
+            'total': len(students_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+    
+
 
 # ==========================
-#  OTHER VIEWS
+#  OTHER MANAGEMENT VIEWS
 # ==========================
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -2481,6 +2791,11 @@ def admin_dashboard(request):
     }
     return render(request, 'admin/dashboard.html', context)
 
+
+
+
+
+
 @login_required
 @user_passes_test(is_admin)
 def admin_excused(request):
@@ -2490,6 +2805,12 @@ def admin_excused(request):
         'excused_absences': excused_absences
     }
     return render(request, 'admin/excused.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_settings(request):
+    """View for system settings"""
+    return render(request, 'admin/settings.html')
 
 @login_required
 @user_passes_test(is_admin)
