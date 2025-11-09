@@ -1150,10 +1150,15 @@ def get_grade_sections(request, grade_id):
         
         sections_data = []
         for section in sections:
+            # Get the advisor for this section
+            advisor = CustomUser.objects.filter(section=section, role=UserRole.TEACHER).first()
+            advisor_name = f"{advisor.first_name} {advisor.last_name}" if advisor else "No advisor"
+            
             sections_data.append({
                 'id': section.id,
                 'name': section.name,
                 'students_count': section.students_count,
+                'advisor': advisor_name,
                 'created_at': section.created_at.strftime('%b %d, %Y'),
             })
         
@@ -1206,19 +1211,19 @@ def admin_sections(request):
     # Apply advisor filter if provided
     if advisor_filter:
         if advisor_filter == 'with_advisor':
-            sections = sections.filter(advisory_assignments__isnull=False).distinct()
+            sections = sections.filter(advisors__isnull=False).distinct()
         elif advisor_filter == 'without_advisor':
-            sections = sections.filter(advisory_assignments__isnull=True)
+            sections = sections.filter(advisors__isnull=True)
     
     # Annotate with student counts and teacher info
     sections = sections.annotate(
         students_count=Count('students')
-    ).prefetch_related('advisory_assignments__teacher')
+    ).prefetch_related('advisors')
     
     # Get stats for dashboard
     total_sections = Section.objects.count()
     sections_with_students = Section.objects.filter(students__isnull=False).distinct().count()
-    sections_with_advisors = Section.objects.filter(advisory_assignments__isnull=False).distinct().count()
+    sections_with_advisors = Section.objects.filter(advisors__isnull=False).distinct().count()
     total_students = Student.objects.count()
     
     # Get all grades for filter dropdown
@@ -1277,14 +1282,14 @@ def search_sections(request):
     # Apply advisor filter if provided
     if advisor_filter:
         if advisor_filter == 'with_advisor':
-            sections = sections.filter(advisory_assignments__isnull=False).distinct()
+            sections = sections.filter(advisors__isnull=False).distinct()
         elif advisor_filter == 'without_advisor':
-            sections = sections.filter(advisory_assignments__isnull=True)
+            sections = sections.filter(advisors__isnull=True)
     
     # Annotate with counts and prefetch related data
     sections = sections.annotate(
         students_count=Count('students')
-    ).prefetch_related('advisory_assignments__teacher')
+    ).prefetch_related('advisors')
     
     # Get total count for pagination
     total_count = sections.count()
@@ -1306,12 +1311,12 @@ def search_sections(request):
     for section in page_obj:
         # Get advisor info
         advisor = None
-        advisory_assignment = section.advisory_assignments.first()
-        if advisory_assignment:
+        advisor_user = CustomUser.objects.filter(section=section, role=UserRole.TEACHER).first()
+        if advisor_user:
             advisor = {
-                'id': advisory_assignment.teacher.id,
-                'name': f"{advisory_assignment.teacher.first_name} {advisory_assignment.teacher.last_name}",
-                'username': advisory_assignment.teacher.username
+                'id': advisor_user.id,
+                'name': f"{advisor_user.first_name} {advisor_user.last_name}",
+                'username': advisor_user.username
             }
         
         section_data.append({

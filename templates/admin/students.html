@@ -212,9 +212,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="student-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <!-- Pagination will be dynamically updated -->
-        </div>
+        {% include 'components/pagination.html' with pagination_id='student-pagination-container' items_per_page=10 %}
     </div>
     <div id="student-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
         <div class="flex flex-col items-center">
@@ -586,6 +584,7 @@
 <!-- Toast Container -->
 <div id="student-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+<script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Global variables
 let currentStudentData = null;
@@ -618,10 +617,21 @@ const statusFilter = document.getElementById('status-filter');
 let allGrades = [];
 let allSections = [];
 
+// Global pagination component
+let studentPagination;
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     initializeDropdownData();
+    
+    // Initialize Pagination Component
+    studentPagination = new PaginationComponent({
+        containerId: 'student-pagination-container',
+        fetchFunction: loadStudents,
+        itemsPerPage: 10
+    });
+    
     loadStudents();
 });
 
@@ -1033,7 +1043,7 @@ function handleFilterChange() {
 }
 
 // Load students with AJAX
-function loadStudents(page = 1) {
+function loadStudents(page = 1, itemsPerPage = null) {
     if (isLoading) return;
     
     isLoading = true;
@@ -1041,20 +1051,34 @@ function loadStudents(page = 1) {
     
     const params = new URLSearchParams({
         search: searchInput.value,
-
         grade: gradeFilter.value,
         section: sectionFilter.value,
         status: statusFilter.value,
         page: page,
-        items_per_page: 10
+        items_per_page: itemsPerPage || 10
     });
 
     fetch(`{% url 'admin_search_students' %}?${params}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                renderStudentsTable(data.students);
-                renderPagination(data.pagination);
+                const studentTableContainer = document.getElementById('student-table-container');
+                const studentPaginationContainer = document.getElementById('student-pagination-container');
+                const studentNoResults = document.getElementById('student-no-results');
+                
+                if (data.total_count === 0) {
+                    if (studentTableContainer) studentTableContainer.classList.add('hidden');
+                    if (studentNoResults) studentNoResults.classList.remove('hidden');
+                } else {
+                    if (studentTableContainer) studentTableContainer.classList.remove('hidden');
+                    if (studentNoResults) studentNoResults.classList.add('hidden');
+                    
+                    renderStudentsTable(data.students);
+                    
+                    // Update pagination component
+                    studentPagination.update(data.pagination);
+                }
+                
                 updateResultsCount(data.total_count);
                 currentPage = page;
             } else {
@@ -1158,34 +1182,7 @@ function renderStudentsTable(students) {
     });
 }
 
-// Render pagination
-function renderPagination(pagination) {
-    const container = document.getElementById('student-pagination-container');
-    container.innerHTML = `
-        <div class="flex items-center justify-between">
-            <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                Showing ${pagination.start_index} to ${pagination.end_index} of ${pagination.total_count} students
-            </div>
-            <div class="flex items-center space-x-2">
-                ${pagination.has_previous ? 
-                    `<button onclick="loadStudents(${pagination.current_page - 1})" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Previous</button>` :
-                    `<span class="px-3 py-1 text-sm text-gray-400 cursor-not-allowed">Previous</span>`
-                }
-                ${pagination.page_range.map(page => `
-                    <button onclick="loadStudents(${page})" class="px-3 py-1 text-sm rounded transition-colors ${
-                        page === pagination.current_page ? 
-                            'bg-primary text-white dark:bg-tertiary' : 
-                            'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }">${page}</button>
-                `).join('')}
-                ${pagination.has_next ? 
-                    `<button onclick="loadStudents(${pagination.current_page + 1})" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Next</button>` :
-                    `<span class="px-3 py-1 text-sm text-gray-400 cursor-not-allowed">Next</span>`
-                }
-            </div>
-        </div>
-    `;
-}
+
 
 // Modal functions
 function openStudentModal(studentData = null) {

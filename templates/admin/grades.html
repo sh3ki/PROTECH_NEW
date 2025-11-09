@@ -161,21 +161,7 @@
             </table>
         </div>
 
-        <!-- Enhanced Pagination -->
-        <div id="grade-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Showing <span class="font-medium">0</span> to <span class="font-medium">0</span> of <span class="font-medium">0</span> results
-                    </p>
-                </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <!-- Pagination buttons will be dynamically generated -->
-                    </nav>
-                </div>
-            </div>
-        </div>
+        {% include 'components/pagination.html' with pagination_id='grade-pagination-container' items_per_page=10 %}
     </div>
 
     <!-- No results message -->
@@ -382,6 +368,7 @@
     }
 </style>
 
+<script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
@@ -406,6 +393,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const printGradeSectionsBtn = $('print-grade-sections');
     let currentGradeId = null, currentPage = 1, searchTimeout = null;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Initialize Pagination Component
+    const gradePagination = new PaginationComponent({
+        containerId: 'grade-pagination-container',
+        fetchFunction: fetchGrades,
+        itemsPerPage: 10
+    });
 
     // Toast notification
     function showToast(message, type = 'success', duration = 5000) {
@@ -468,13 +462,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Fetch grades
-    function fetchGrades(page = 1) {
+    function fetchGrades(page = 1, itemsPerPage = null) {
         const searchQuery = gradeSearch ? gradeSearch.value.trim() : '';
         showLoading();
         currentPage = page;
         const params = new URLSearchParams();
         if (searchQuery) params.append('search', searchQuery);
         params.append('page', page);
+        if (itemsPerPage) params.append('items_per_page', itemsPerPage);
         window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
         fetch(`/admin/grades/search/?${params.toString()}`, {
             headers: {
@@ -489,13 +484,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.total_count === 0) {
                 if (gradeNoResults) gradeNoResults.classList.remove('hidden');
                 if (gradesTable) gradesTable.closest('.overflow-x-auto').classList.add('hidden');
-                if (gradePaginationContainer) gradePaginationContainer.classList.add('hidden');
             } else {
                 if (gradeNoResults) gradeNoResults.classList.add('hidden');
                 if (gradesTable) gradesTable.closest('.overflow-x-auto').classList.remove('hidden');
-                if (gradePaginationContainer) gradePaginationContainer.classList.remove('hidden');
                 updateGradesTable(data.grades);
-                updateGradePagination(data.pagination);
+                
+                // Update pagination component
+                gradePagination.update(data.pagination);
             }
             hideLoading();
             attachGradeTableEventListeners();
@@ -503,7 +498,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             hideLoading();
             if (gradesTable) gradesTable.closest('.overflow-x-auto').classList.add('hidden');
-            if (gradePaginationContainer) gradePaginationContainer.classList.add('hidden');
             if (gradeNoResults) {
                 gradeNoResults.innerHTML = `<div class="flex flex-col items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-400 dark:text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,62 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => { tableBody.classList.remove('animate-fadeIn'); }, 500);
     }
 
-    // Update pagination
-    function updateGradePagination(pagination) {
-        if (!gradePaginationContainer) return;
-        const {current_page, num_pages, has_next, has_previous, page_range, start_index, end_index, total_count} = pagination;
-        let paginationHtml = `
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-700 dark:text-gray-300">
-                    Showing <span class="font-medium">${start_index}</span> to <span class="font-medium">${end_index}</span> of <span class="font-medium">${total_count}</span> results
-                </p>
-            </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">`;
-        if (has_previous) {
-            paginationHtml += `
-                <button class="page-link relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" data-page="${current_page - 1}">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>`;
-        }
-        page_range.forEach(num => {
-            if (num === current_page) {
-                paginationHtml += `
-                <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-primary dark:bg-tertiary text-sm font-medium text-white">
-                    ${num}
-                </span>`;
-            } else {
-                paginationHtml += `
-                <button class="page-link relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" data-page="${num}">
-                    ${num}
-                </button>`;
-            }
-        });
-        if (has_next) {
-            paginationHtml += `
-                <button class="page-link relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" data-page="${current_page + 1}">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>`;
-        }
-        paginationHtml += `
-                </nav>
-            </div>
-        </div>`;
-        gradePaginationContainer.innerHTML = paginationHtml;
-        const pageLinks = gradePaginationContainer.querySelectorAll('.page-link');
-        pageLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.dataset.page);
-                fetchGrades(page);
-            });
-        });
-    }
+
     
     // Attach event listeners for table actions
     function attachGradeTableEventListeners() {

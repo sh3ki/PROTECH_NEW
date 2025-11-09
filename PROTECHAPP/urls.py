@@ -119,17 +119,69 @@ urlpatterns = [
 #  REGISTRAR ROUTES
 # ==========================   
     
-    # Registrar routes
+    # Registrar dashboard and main routes
     path('registrar/dashboard/', registrar_views.registrar_dashboard, name='registrar_dashboard'),
-    path('registrar/students/', registrar_views.registrar_students, name='registrar_students'),
     path('registrar/face-enroll/', registrar_views.registrar_face_enroll, name='registrar_face_enroll'),
-    path('registrar/guardians/', registrar_views.registrar_guardians, name='registrar_guardians'),
-    path('registrar/grades-sections/', registrar_views.registrar_grades_sections, name='registrar_grades_sections'),
-    path('registrar/attendance/', registrar_views.registrar_attendance, name='registrar_attendance'),
-    path('registrar/excused/', registrar_views.registrar_excused, name='registrar_excused'),
     path('registrar/announcements/', registrar_views.registrar_announcements, name='registrar_announcements'),
     path('registrar/messages/', registrar_views.registrar_messages, name='registrar_messages'),
-    path('registrar/settings/', registrar_views.registrar_settings, name='registrar_settings'), 
+    path('registrar/settings/', registrar_views.registrar_settings, name='registrar_settings'),
+
+    # registrar/grades routes
+    path('registrar/grades/', registrar_views.registrar_grades, name='registrar_grades'),
+    path('registrar/grades/search/', registrar_views.registrar_search_grades, name='registrar_search_grades'),
+    path('registrar/grades/create/', registrar_views.registrar_create_grade, name='registrar_create_grade'),
+    path('registrar/grades/<int:grade_id>/update/', registrar_views.registrar_update_grade, name='registrar_update_grade'),
+    path('registrar/grades/<int:grade_id>/delete/', registrar_views.registrar_delete_grade, name='registrar_delete_grade'),
+    path('registrar/grades/<int:grade_id>/sections/', registrar_views.registrar_get_grade_sections, name='registrar_get_grade_sections'),
+    
+    # registrar/sections routes
+    path('registrar/sections/', registrar_views.registrar_sections, name='registrar_sections'),
+    path('registrar/sections/search/', registrar_views.registrar_search_sections, name='registrar_search_sections'),
+    path('registrar/sections/create/', registrar_views.registrar_create_section, name='registrar_create_section'),
+    path('registrar/sections/<int:section_id>/update/', registrar_views.registrar_update_section, name='registrar_update_section'),
+    path('registrar/sections/<int:section_id>/delete/', registrar_views.registrar_delete_section, name='registrar_delete_section'),
+    path('registrar/sections/<int:section_id>/students/', registrar_views.registrar_get_section_students, name='registrar_get_section_students'),
+
+    # registrar/students routes
+    path('registrar/students/', registrar_views.registrar_students, name='registrar_students'),
+    path('registrar/students/search/', registrar_views.registrar_search_students, name='registrar_search_students'),
+    path('registrar/students/create/', registrar_views.registrar_create_student, name='registrar_create_student'),
+    path('registrar/students/<int:student_id>/', registrar_views.registrar_get_student, name='registrar_get_student'),
+    path('registrar/students/<int:student_id>/update/', registrar_views.registrar_update_student, name='registrar_update_student'),
+    path('registrar/students/<int:student_id>/delete/', registrar_views.registrar_delete_student, name='registrar_delete_student'),
+    path('registrar/students/<int:student_id>/reset-password/', registrar_views.registrar_reset_student_password, name='registrar_reset_student_password'),
+    
+    # registrar/students import routes
+    path('registrar/students/download-template/', registrar_views.registrar_download_student_template, name='registrar_download_student_template'),
+    path('registrar/students/import/', registrar_views.registrar_import_students, name='registrar_import_students'),
+
+    # registrar/guardians routes
+    path('registrar/guardians/', registrar_views.registrar_guardians, name='registrar_guardians'),
+    path('registrar/guardians/search/', registrar_views.registrar_search_guardians, name='registrar_search_guardians'),
+    path('registrar/guardians/create/', registrar_views.registrar_create_guardian, name='registrar_create_guardian'),
+    path('registrar/guardians/<int:guardian_id>/update/', registrar_views.registrar_update_guardian, name='registrar_update_guardian'),
+    path('registrar/guardians/<int:guardian_id>/delete/', registrar_views.registrar_delete_guardian, name='registrar_delete_guardian'),
+    path('registrar/guardians/<int:guardian_id>/children/', registrar_views.registrar_get_guardian_children, name='registrar_get_guardian_children'),
+    path('registrar/guardians/<int:guardian_id>/details/', registrar_views.registrar_get_guardian_details, name='registrar_get_guardian_details'),
+    path('registrar/guardians/sections-by-grade/', registrar_views.registrar_get_sections_by_grade, name='registrar_get_sections_by_grade'),
+    path('registrar/guardians/students-by-section/', registrar_views.registrar_get_students_by_section, name='registrar_get_students_by_section'),
+
+    # registrar/attendance routes
+    path('registrar/attendance-records/', registrar_views.registrar_attendance_records, name='registrar_attendance'),
+    path('registrar/attendance-records/search/', registrar_views.registrar_search_attendance_records, name='registrar_search_attendance'),
+    path('registrar/attendance-records/create/', registrar_views.registrar_create_attendance_record, name='registrar_create_attendance'),
+    path('registrar/attendance-records/<int:attendance_id>/', registrar_views.registrar_get_attendance_record, name='registrar_get_attendance'),
+    path('registrar/attendance-records/<int:attendance_id>/update/', registrar_views.registrar_update_attendance_record, name='registrar_update_attendance'),
+    path('registrar/attendance-records/<int:attendance_id>/delete/', registrar_views.registrar_delete_attendance_record, name='registrar_delete_attendance'),
+    path('registrar/attendance-records/students/', registrar_views.registrar_get_students_for_attendance, name='registrar_get_students_for_attendance'),
+
+    # registrar/excused routes
+    path('registrar/excused/', registrar_views.registrar_excused, name='registrar_excused'),
+    path('registrar/excused/search/', registrar_views.registrar_search_excused_absences, name='registrar_search_excused'),
+    path('registrar/excused/create/', registrar_views.registrar_create_excused_absence, name='registrar_create_excused'),
+    path('registrar/excused/<int:excused_id>/', registrar_views.registrar_get_excused_absence, name='registrar_get_excused'),
+    path('registrar/excused/<int:excused_id>/update/', registrar_views.registrar_update_excused_absence, name='registrar_update_excused'),
+    path('registrar/excused/<int:excused_id>/delete/', registrar_views.registrar_delete_excused_absence, name='registrar_delete_excused'), 
     
 
 # ==========================

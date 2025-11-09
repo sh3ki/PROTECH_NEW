@@ -349,55 +349,8 @@
             </table>
         </div>
 
-        <!-- Enhanced Pagination - will be dynamically updated -->
-        <div id="pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Showing
-                        <span class="font-medium">{{ users.start_index }}</span>
-                        to
-                        <span class="font-medium">{{ users.end_index }}</span>
-                        of
-                        <span class="font-medium">{{ users.paginator.count }}</span>
-                        results
-                    </p>
-                </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        {% if users.has_previous %}
-                        <a href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        {% endif %}
-                        
-                        {% for num in users.paginator.page_range %}
-                            {% if users.number == num %}
-                            <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
-                                {{ num }}
-                            </span>
-                            {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
-                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                                {{ num }}
-                            </a>
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if users.has_next %}
-                        <a href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        {% endif %}
-                    </nav>
-                </div>
-            </div>
-        </div>
+        <!-- Pagination Component -->
+        {% include 'components/pagination.html' with pagination_id='pagination-container' items_per_page=10 %}
     </div>
 
     <!-- No results message - initially hidden -->
@@ -1184,6 +1137,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
     }
 </style>
 
+<script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log("DOM loaded, initializing user management scripts");
@@ -1221,6 +1175,13 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
         const usersTable = document.getElementById('users-table');
         const noResults = document.getElementById('no-results');
         const paginationContainer = document.getElementById('pagination-container');
+        
+        // Initialize Pagination Component
+        const userPagination = new PaginationComponent({
+            containerId: 'pagination-container',
+            fetchFunction: fetchUsers,
+            itemsPerPage: 10
+        });
         
         // Delete modal elements
         const deleteModal = document.getElementById('delete-modal');
@@ -1418,7 +1379,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
         }
         
         // Function to fetch and update user data based on search and filters
-        function fetchUsers(page = 1) {
+        function fetchUsers(page = 1, itemsPerPage = null) {
             const searchQuery = userSearch ? userSearch.value.trim() : '';
             const roleValue = roleFilter ? roleFilter.value : '';
             const statusValue = activeFilter ? activeFilter.value : '';
@@ -1432,6 +1393,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
             if (roleValue) params.append('role', roleValue);
             if (statusValue) params.append('status', statusValue);
             params.append('page', page);
+            if (itemsPerPage) params.append('items_per_page', itemsPerPage);
             
             // Update URL without refreshing the page
             const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -1474,7 +1436,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
                     updateUsersTable(data.users);
                     
                     // Update pagination
-                    updatePagination(data.pagination);
+                    userPagination.update(data.pagination);
                 }
                 
                 hideLoading();
@@ -1677,83 +1639,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
             }, 500);
         }
         
-        // Function to update pagination controls
-        function updatePagination(pagination) {
-            if (!paginationContainer) return;
-            
-            const {current_page, num_pages, has_next, has_previous, page_range, start_index, end_index, total_count} = pagination;
-            
-            let paginationHtml = `
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Showing
-                        <span class="font-medium">${start_index}</span>
-                        to
-                        <span class="font-medium">${end_index}</span>
-                        of
-                        <span class="font-medium">${total_count}</span>
-                        results
-                    </p>
-                </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">`;
-            
-            // Previous page button
-            if (has_previous) {
-                paginationHtml += `
-                        <a href="javascript:void(0)" data-page="${current_page - 1}" class="page-link relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>`;
-            }
-            
-            // Page numbers
-            page_range.forEach(num => {
-                if (num === current_page) {
-                    paginationHtml += `
-                        <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-gradient-to-r from-primary/10 to-primary/5 dark:from-tertiary/20 dark:to-tertiary/10 text-sm font-bold text-primary dark:text-tertiary">
-                            ${num}
-                        </span>`;
-                } else {
-                    paginationHtml += `
-                        <a href="javascript:void(0)" data-page="${num}" class="page-link relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            ${num}
-                        </a>`;
-                }
-            });
-            
-            // Next page button
-            if (has_next) {
-                paginationHtml += `
-                        <a href="javascript:void(0)" data-page="${current_page + 1}" class="page-link relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>`;
-            }
-            
-            paginationHtml += `
-                    </nav>
-                </div>
-            </div>`;
-            
-            // Update the pagination container
-            paginationContainer.innerHTML = paginationHtml;
-            
-            // Add event listeners to pagination links
-            const pageLinks = paginationContainer.querySelectorAll('.page-link');
-            pageLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = parseInt(this.dataset.page);
-                    fetchUsers(page);
-                });
-            });
-        }
+        // Old updatePagination function removed - now using PaginationComponent
         
         // Function to attach event listeners to table elements
         function attachTableEventListeners() {

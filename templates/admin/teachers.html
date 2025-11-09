@@ -302,9 +302,7 @@
                 </tbody>
             </table>
         </div>
-        <!-- Pagination (reuse users.html logic) -->
-        <div id="teacher-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-        </div>
+        {% include 'components/pagination.html' with pagination_id='teacher-pagination-container' items_per_page=10 %}
     </div>
     <!-- No results message -->
     <div id="teacher-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
@@ -807,6 +805,7 @@
     </div>
 </div>
 
+<script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // --- Element Selectors ---
@@ -819,7 +818,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherTableLoading = $('teacher-table-loading');
     const teachersTable = $('teachers-table');
     const teacherNoResults = $('teacher-no-results');
-    const teacherPaginationContainer = $('teacher-pagination-container');
+    const teacherPaginationContainer = document.getElementById('teacher-pagination-container');
+    
+    // Initialize Teacher Pagination Component
+    const teacherPagination = new PaginationComponent({
+        containerId: 'teacher-pagination-container',
+        fetchFunction: fetchTeachers,
+        itemsPerPage: 10
+    });
     const teacherToastContainer = $('teacher-toast-container');
     const teacherSearchSpinner = $('teacher-search-spinner');
     const teacherSearchResultsCount = $('teacher-search-results-count');
@@ -983,7 +989,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Fetch Teachers (AJAX) ---
-    function fetchTeachers(page = 1) {
+    function fetchTeachers(page = 1, itemsPerPage = null) {
         const searchQuery = teacherSearch ? teacherSearch.value.trim() : '';
         const advisoryValue = advisoryFilter ? advisoryFilter.value : '';
         const statusValue = statusFilter ? statusFilter.value : '';
@@ -996,6 +1002,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (statusValue) params.append('status', statusValue);
         if (sectionValue) params.append('section', sectionValue);
         params.append('page', page);
+        if (itemsPerPage) params.append('items_per_page', itemsPerPage);
 
         // Update URL
         const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -1028,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (teacherPaginationContainer) teacherPaginationContainer.classList.remove('hidden');
                 if (teacherNoResults) teacherNoResults.classList.add('hidden');
                 updateTeachersTable(data.teachers);
-                updateTeacherPagination(data.pagination);
+                teacherPagination.update(data.pagination);
             }
             hideLoading();
             attachTeacherTableEventListeners();

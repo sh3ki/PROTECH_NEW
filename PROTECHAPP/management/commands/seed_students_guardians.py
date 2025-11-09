@@ -38,12 +38,12 @@ class Command(BaseCommand):
                 Guardian.objects.all().delete()
                 Student.objects.all().delete()
                 
-                # For each section, create 15-30 students
+                # For each section, create 20-50 students
                 for section in sections:
-                    self.stdout.write(f"Creating students for Grade {section.grade.name} Section {section.name}...")
+                    self.stdout.write(f"Creating students for {section.grade.name} Section {section.name}...")
                     
-                    # Generate a random number of students for this section (15-30)
-                    num_students = random.randint(15, 30)
+                    # Generate a random number of students for this section (20-50)
+                    num_students = random.randint(20, 50)
                     
                     for _ in range(num_students):
                         # Generate student data

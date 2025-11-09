@@ -203,9 +203,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="guardian-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <!-- Pagination will be dynamically updated -->
-        </div>
+        {% include 'components/pagination.html' with pagination_id='guardian-pagination-container' items_per_page=10 %}
     </div>
     <div id="guardian-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
         <div class="flex flex-col items-center">
@@ -555,6 +553,7 @@
 <!-- Toast Container -->
 <div id="guardian-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+<script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Global variables
 let currentGuardianData = null;
@@ -564,6 +563,9 @@ let searchTimeout = null;
 
 // Store sections data globally for filter dropdowns
 let allSectionsData = [];
+
+// Global pagination component
+let guardianPagination;
 
 // DOM Elements
 const guardianTableContainer = document.getElementById('guardian-table-container');
@@ -582,6 +584,14 @@ const sectionFilter = document.getElementById('section-filter');
 document.addEventListener('DOMContentLoaded', function() {
     initializeFilterDropdowns();
     initializeEventListeners();
+    
+    // Initialize Pagination Component
+    guardianPagination = new PaginationComponent({
+        containerId: 'guardian-pagination-container',
+        fetchFunction: loadGuardians,
+        itemsPerPage: 10
+    });
+    
     loadGuardians();
     initializeCascadingDropdowns();
 });
@@ -747,7 +757,7 @@ function handleFilterChange() {
 }
 
 // Load guardians with AJAX
-function loadGuardians(page = 1) {
+function loadGuardians(page = 1, itemsPerPage = null) {
     if (isLoading) return;
     
     isLoading = true;
@@ -759,15 +769,30 @@ function loadGuardians(page = 1) {
         grade: document.getElementById('grade-filter').value,
         section: document.getElementById('section-filter').value,
         page: page,
-        items_per_page: 10
+        items_per_page: itemsPerPage || 10
     });
 
     fetch(`{% url 'admin_search_guardians' %}?${params}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                renderGuardiansTable(data.guardians);
-                renderPagination(data.pagination);
+                const guardianTableContainer = document.getElementById('guardian-table-container');
+                const guardianPaginationContainer = document.getElementById('guardian-pagination-container');
+                const guardianNoResults = document.getElementById('guardian-no-results');
+                
+                if (data.total_count === 0) {
+                    if (guardianTableContainer) guardianTableContainer.classList.add('hidden');
+                    if (guardianNoResults) guardianNoResults.classList.remove('hidden');
+                } else {
+                    if (guardianTableContainer) guardianTableContainer.classList.remove('hidden');
+                    if (guardianNoResults) guardianNoResults.classList.add('hidden');
+                    
+                    renderGuardiansTable(data.guardians);
+                    
+                    // Update pagination component
+                    guardianPagination.update(data.pagination);
+                }
+                
                 updateResultsCount(data.total_count);
                 currentPage = page;
             } else {
@@ -843,34 +868,7 @@ function renderGuardiansTable(guardians) {
     `).join('');
 }
 
-// Render pagination
-function renderPagination(pagination) {
-    const container = document.getElementById('guardian-pagination-container');
-    container.innerHTML = `
-        <div class="flex items-center justify-between">
-            <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                Showing ${pagination.start_index} to ${pagination.end_index} of ${pagination.total_count} guardians
-            </div>
-            <div class="flex items-center space-x-2">
-                ${pagination.has_previous ? 
-                    `<button onclick="loadGuardians(${pagination.current_page - 1})" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Previous</button>` :
-                    `<span class="px-3 py-1 text-sm text-gray-400 cursor-not-allowed">Previous</span>`
-                }
-                ${pagination.page_range.map(page => `
-                    <button onclick="loadGuardians(${page})" class="px-3 py-1 text-sm rounded transition-colors ${
-                        page === pagination.current_page ? 
-                            'bg-primary text-white dark:bg-tertiary' : 
-                            'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }">${page}</button>
-                `).join('')}
-                ${pagination.has_next ? 
-                    `<button onclick="loadGuardians(${pagination.current_page + 1})" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Next</button>` :
-                    `<span class="px-3 py-1 text-sm text-gray-400 cursor-not-allowed">Next</span>`
-                }
-            </div>
-        </div>
-    `;
-}
+
 
 // Populate the guardian form with data for editing
 function populateGuardianForm(guardian) {

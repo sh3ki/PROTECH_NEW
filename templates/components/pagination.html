@@ -1,0 +1,68 @@
+<!-- Reusable Pagination Component -->
+<div id="{{ pagination_id|default:'pagination-container' }}" class="bg-white dark:bg-gray-800 px-4 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6 space-y-4 sm:space-y-0">
+    <!-- Items per page selector -->
+    <div class="flex items-center space-x-2">
+        <label for="{{ pagination_id|default:'pagination-container' }}-items-per-page" class="text-sm font-medium text-gray-700 dark:text-gray-300">Show:</label>
+        <select id="{{ pagination_id|default:'pagination-container' }}-items-per-page" 
+                class="items-per-page-select px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors">
+            <option value="10" {% if items_per_page == 10 or not items_per_page %}selected{% endif %}>10</option>
+            <option value="20" {% if items_per_page == 20 %}selected{% endif %}>20</option>
+            <option value="30" {% if items_per_page == 30 %}selected{% endif %}>30</option>
+            <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if items_per_page == 100 %}selected{% endif %}>100</option>
+        </select>
+        <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+    </div>
+
+    <!-- Results info and pagination controls -->
+    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+        <!-- Results count -->
+        <div class="pagination-info">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
+                Showing <span class="font-medium start-index">0</span> to <span class="font-medium end-index">0</span> of <span class="font-medium total-count">0</span> results
+            </p>
+        </div>
+
+        <!-- Pagination navigation -->
+        <div class="pagination-nav">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <!-- First page button -->
+                <button class="first-page-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                        title="First page" disabled>
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <!-- Previous page button -->
+                <button class="prev-page-btn relative inline-flex items-center px-2 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                        title="Previous page" disabled>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <!-- Page number buttons will be inserted here -->
+                <div class="page-numbers flex">
+                    <!-- Dynamic page numbers -->
+                </div>
+
+                <!-- Next page button -->
+                <button class="next-page-btn relative inline-flex items-center px-2 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                        title="Next page" disabled>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <!-- Last page button -->
+                <button class="last-page-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                        title="Last page" disabled>
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
