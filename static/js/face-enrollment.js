@@ -6,10 +6,11 @@ let capturedImages = {
     left: null,
     right: null
 };
-let faceEmbeddings = [];
+let faceEmbeddings = [null, null, null];
 let videoStream = null;
 let faceDetectionModel = null;
 let detectionInterval = null;
+let latestFaceDetection = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -234,7 +235,7 @@ function resetCaptureState() {
         left: null,
         right: null
     };
-    faceEmbeddings = [];
+    faceEmbeddings = [null, null, null];
     
     // Reset UI
     updateStepIndicator();
@@ -310,6 +311,14 @@ async function startFaceDetection() {
             
             if (predictions.length > 0) {
                 const face = predictions[0];
+                const topLeft = Array.isArray(face.topLeft) ? face.topLeft : Array.from(face.topLeft || []);
+                const bottomRight = Array.isArray(face.bottomRight) ? face.bottomRight : Array.from(face.bottomRight || []);
+                if (topLeft.length >= 2 && bottomRight.length >= 2) {
+                    latestFaceDetection = {
+                        topLeft: [Math.max(0, topLeft[0]), Math.max(0, topLeft[1])],
+                        bottomRight: [Math.max(0, bottomRight[0]), Math.max(0, bottomRight[1])]
+                    };
+                }
                 
                 // Draw face box
                 const start = face.topLeft;
@@ -337,6 +346,7 @@ async function startFaceDetection() {
                     faceStatus.className = 'text-sm mt-2 text-yellow-400';
                 }
             } else {
+                latestFaceDetection = null;
                 document.getElementById('capture-btn').disabled = true;
                 document.getElementById('face-status').textContent = '⚠ No face detected';
                 document.getElementById('face-status').className = 'text-sm mt-2 text-red-400';
@@ -387,6 +397,11 @@ function getInstructionForStep(step) {
 }
 
 async function captureImage() {
+    if (!latestFaceDetection) {
+        showToast('Face not detected. Please position the student in frame.', 'error');
+        return;
+    }
+
     const video = document.getElementById('camera-video');
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -394,13 +409,41 @@ async function captureImage() {
     
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
+
+    const [x1, y1] = latestFaceDetection.topLeft;
+    const [x2, y2] = latestFaceDetection.bottomRight;
+    const maxWidth = video.videoWidth;
+    const maxHeight = video.videoHeight;
+    const sx = Math.min(Math.max(0, x1), Math.max(0, maxWidth - 1));
+    const sy = Math.min(Math.max(0, y1), Math.max(0, maxHeight - 1));
+    const ex = Math.min(Math.max(0, x2), maxWidth);
+    const ey = Math.min(Math.max(0, y2), maxHeight);
+    const width = Math.max(1, ex - sx);
+    const height = Math.max(1, ey - sy);
+
+    const faceCanvas = document.createElement('canvas');
+    faceCanvas.width = 128;
+    faceCanvas.height = 128;
+    const faceCtx = faceCanvas.getContext('2d');
+    faceCtx.drawImage(
+        video,
+        sx,
+        sy,
+        width,
+        height,
+        0,
+        0,
+        faceCanvas.width,
+        faceCanvas.height
+    );
     
     // Get image data
     const imageData = canvas.toDataURL('image/jpeg', 0.9);
     
-    // Generate face embedding (simulated - in production, use actual model)
-    const embedding = await generateFaceEmbedding(canvas);
-    faceEmbeddings.push(embedding);
+    // Generate deterministic face embedding using face crop
+    const embedding = generateFaceEmbedding(faceCanvas);
+    const embedIndex = Math.max(0, currentStep - 1);
+    faceEmbeddings[embedIndex] = embedding;
     
     // Store captured image
     const stepKey = currentStep === 1 ? 'front' : currentStep === 2 ? 'left' : 'right';
@@ -409,24 +452,65 @@ async function captureImage() {
     // Update preview
     updateCapturePreview();
     
-    // Move to next step
-    if (currentStep < 3) {
-        currentStep++;
-        updateStepIndicator();
-        updateInstructions();
-        showToast(`Step ${currentStep - 1} completed!`, 'success');
-    } else {
+    showToast(`Captured ${stepKey.toUpperCase()} view successfully.`, 'success');
+
+    const nextMissingIndex = faceEmbeddings.findIndex(value => !Array.isArray(value));
+    if (nextMissingIndex === -1) {
         // All steps completed
         stopCamera();
         document.getElementById('submit-enrollment-btn').disabled = false;
+        currentStep = 3;
+        updateStepIndicator();
+        updateInstructions();
         showToast('All faces captured! You can now submit the enrollment.', 'success');
+        return;
     }
+
+    currentStep = nextMissingIndex + 1;
+    updateStepIndicator();
+    updateInstructions();
 }
 
-async function generateFaceEmbedding(canvas) {
-    // This is a placeholder - in production, use actual face embedding model
-    // For now, return a simulated 128-dimensional embedding
-    const embedding = new Array(128).fill(0).map(() => Math.random());
+function generateFaceEmbedding(faceCanvas) {
+    const faceCtx = faceCanvas.getContext('2d');
+    const imageData = faceCtx.getImageData(0, 0, faceCanvas.width, faceCanvas.height);
+    const data = imageData.data;
+    const width = faceCanvas.width;
+    const height = faceCanvas.height;
+
+    const cellsX = 16;
+    const cellsY = 8;
+    const cellWidth = width / cellsX;
+    const cellHeight = height / cellsY;
+    const embedding = new Array(cellsX * cellsY).fill(0);
+
+    for (let cy = 0; cy < cellsY; cy++) {
+        for (let cx = 0; cx < cellsX; cx++) {
+            const startX = Math.floor(cx * cellWidth);
+            const endX = Math.max(startX + 1, Math.floor((cx + 1) * cellWidth));
+            const startY = Math.floor(cy * cellHeight);
+            const endY = Math.max(startY + 1, Math.floor((cy + 1) * cellHeight));
+
+            let sum = 0;
+            let count = 0;
+
+            for (let y = startY; y < endY && y < height; y++) {
+                let offset = (y * width + startX) * 4;
+                for (let x = startX; x < endX && x < width; x++) {
+                    const r = data[offset];
+                    const g = data[offset + 1];
+                    const b = data[offset + 2];
+                    sum += (r + g + b) / 3;
+                    count++;
+                    offset += 4;
+                }
+            }
+
+            const index = cy * cellsX + cx;
+            embedding[index] = count ? (sum / count) / 255 : 0;
+        }
+    }
+
     return embedding;
 }
 
@@ -463,10 +547,8 @@ function retakeImage(position) {
     
     capturedImages[position] = null;
     
-    // Remove from embeddings array
-    if (faceEmbeddings.length >= step) {
-        faceEmbeddings.splice(step - 1, 1);
-    }
+    // Clear embedding slot
+    faceEmbeddings[step - 1] = null;
     
     // Set current step to this position
     currentStep = step;
@@ -530,7 +612,7 @@ async function submitEnrollment() {
         return;
     }
     
-    if (faceEmbeddings.length < 3) {
+    if (!faceEmbeddings.every(Array.isArray)) {
         showToast('Please capture all three face angles', 'error');
         return;
     }
