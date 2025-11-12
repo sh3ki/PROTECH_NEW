@@ -97,14 +97,14 @@ class FaceRecognitionEngine:
         if time.time() - self.last_cache_update > self.cache_ttl:
             self.load_all_embeddings()
     
-    def compare_embeddings_vectorized(self, input_embedding, threshold=0.75):
+    def compare_embeddings_vectorized(self, input_embedding, threshold=0.85):
         """
         Ultra-fast vectorized comparison of input embedding against all cached embeddings
         Uses numpy vectorization for maximum speed
         
         Args:
             input_embedding: 128-d or 512-d face embedding from detected face
-            threshold: Cosine similarity threshold (default 0.75 - increased for accuracy)
+            threshold: Cosine similarity threshold (default 0.85 - HIGH ACCURACY MODE)
         
         Returns:
             tuple: (student_id, confidence) or (None, 0) if no match
