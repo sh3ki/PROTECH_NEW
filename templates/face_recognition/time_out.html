@@ -189,10 +189,10 @@
                     </div>
                     
                     <!-- Actual video element (hidden, used for processing) -->
-                    <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                    <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover" style="position: relative; z-index: 1;"></video>
                     
                     <!-- Canvas overlay for bounding boxes -->
-                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="z-index: 10;"></canvas>
+                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="position: absolute !important; z-index: 9999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;"></canvas>
                     
                     <!-- FPS Counter -->
                     <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg">
