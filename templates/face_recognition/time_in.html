@@ -849,22 +849,29 @@
                     return;
                 }
                 
-                // Set canvas size to match video native resolution
-                this.canvas.width = this.video.videoWidth || 1280;
-                this.canvas.height = this.video.videoHeight || 720;
+                // CRITICAL FIX: Set canvas size to match VIDEO DISPLAY SIZE (not native resolution)
+                const videoRect = this.video.getBoundingClientRect();
+                this.canvas.width = videoRect.width;
+                this.canvas.height = videoRect.height;
                 
-                console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
-                console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                console.log(`📐 Canvas sized to DISPLAY: ${this.canvas.width}x${this.canvas.height}`);
+                console.log(`📐 Video native resolution: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                console.log(`📐 Video display size: ${videoRect.width}x${videoRect.height}`);
+                
+                // Calculate scale factors for coordinate transformation
+                this.scaleX = videoRect.width / this.video.videoWidth;
+                this.scaleY = videoRect.height / this.video.videoHeight;
+                console.log(`📐 Scale factors: X=${this.scaleX.toFixed(3)}, Y=${this.scaleY.toFixed(3)}`);
                 
                 // Draw test rectangles to verify canvas visibility
-                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'; // Semi-transparent yellow
+                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.8)'; // Semi-transparent yellow
                 this.ctx.fillRect(10, 10, 100, 100);
                 
                 this.ctx.strokeStyle = 'red';
                 this.ctx.lineWidth = 5;
                 this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height); // Border around entire canvas
                 
-                console.log('🟨 Test shapes drawn - yellow square top-left, red border around canvas');
+                console.log('🟨 Test shapes drawn - YOU SHOULD SEE YELLOW SQUARE & RED BORDER NOW!');
                 
                 this.isRunning = true;
                 this.recognitionLoop();
@@ -904,9 +911,9 @@
                     
                     console.log(`🔍 Detected ${predictions.length} face(s)`);
                     
-                    // Calculate scale factors for coordinate transformation
-                    const scaleX = this.canvas.width / this.video.videoWidth;
-                    const scaleY = this.canvas.height / this.video.videoHeight;
+                    // Use pre-calculated scale factors (stored in startRecognition)
+                    const scaleX = this.scaleX || 1;
+                    const scaleY = this.scaleY || 1;
                     
                     const faceEmbeddings = [];
                     const faceBoundingBoxes = [];
@@ -919,7 +926,7 @@
                         const faceEmbedding = await this.extractFaceEmbedding(start, size);
                         faceEmbeddings.push(faceEmbedding);
                         
-                        // Scale coordinates to canvas size
+                        // Scale coordinates from video native resolution to canvas display size
                         const scaledBox = {
                             start: [start[0] * scaleX, start[1] * scaleY],
                             end: [end[0] * scaleX, end[1] * scaleY],
