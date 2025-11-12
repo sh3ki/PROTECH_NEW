@@ -60,15 +60,7 @@ def registrar_dashboard(request):
     
     return render(request, 'registrar/dashboard.html', context)
 
-@login_required
-@user_passes_test(is_registrar)
-def registrar_face_enroll(request):
-    """View for face enrollment"""
-    students_without_face = Student.objects.filter(face_path__isnull=True)
-    context = {
-        'students': students_without_face
-    }
-    return render(request, 'registrar/face_enroll.html', context)
+
 
 @login_required
 @user_passes_test(is_registrar)
@@ -3230,23 +3222,27 @@ def registrar_get_grade_sections(request, grade_id):
 
 @login_required
 @user_passes_test(is_registrar)
+@login_required
+@user_passes_test(is_registrar)
 def registrar_face_enroll(request):
     """Face enrollment page for registering student faces"""
     # Get filter options
     grades = Grade.objects.all().order_by('name')
     sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
     
-    # Get stats
-    total_students = Student.objects.filter(status='ACTIVE').count()
-    enrolled_students = Student.objects.filter(status='ACTIVE', face_path__isnull=False).exclude(face_path='').count()
-    not_enrolled_students = total_students - enrolled_students
+    # Dashboard stats (same as registrar_students)
+    total_students = Student.objects.count()
+    active_students = Student.objects.filter(status='ACTIVE').count()
+    inactive_students = Student.objects.filter(status='INACTIVE').count()
+    face_enrolled_count = Student.objects.exclude(face_path__isnull=True).exclude(face_path__exact='').count()
     
     context = {
         'grades': grades,
         'sections': sections,
         'total_students': total_students,
-        'enrolled_students': enrolled_students,
-        'not_enrolled_students': not_enrolled_students,
+        'active_students': active_students,
+        'inactive_students': inactive_students,
+        'face_enrolled_count': face_enrolled_count,
     }
     return render(request, 'registrar/face_enroll.html', context)
 
@@ -3331,6 +3327,56 @@ def registrar_search_students_for_face_enroll(request):
         'pagination': pagination,
         'total_count': total_count,
     })
+
+@login_required
+@user_passes_test(is_registrar)
+@require_http_methods(["GET"])
+def registrar_search_students_for_face_enrollment(request):
+    """Search students for face enrollment by name or LRN"""
+    try:
+        query = request.GET.get('q', '').strip()
+        
+        if not query or len(query) < 2:
+            return JsonResponse({
+                'status': 'success',
+                'students': []
+            })
+        
+        # Search by first name, last name, or LRN
+        students = Student.objects.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(lrn__icontains=query),
+            status='ACTIVE'
+        ).select_related('grade', 'section').order_by('first_name', 'last_name')[:20]
+        
+        students_data = []
+        for student in students:
+            has_face = bool(student.face_path and student.face_path.strip())
+            students_data.append({
+                'id': student.id,
+                'lrn': student.lrn,
+                'first_name': student.first_name,
+                'middle_name': student.middle_name or '',
+                'last_name': student.last_name,
+                'full_name': f"{student.first_name} {student.middle_name or ''} {student.last_name}".replace('  ', ' '),
+                'grade': student.grade.name,
+                'section': student.section.name,
+                'grade_section': f"{student.grade.name} - {student.section.name}",
+                'has_face_enrolled': has_face,
+                'profile_pic': student.profile_pic if student.profile_pic else None
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'students': students_data
+        })
+        
+    except Exception as e:
+        import traceback
+        print("Error in registrar_search_students_for_face_enrollment:", str(e))
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_registrar)
