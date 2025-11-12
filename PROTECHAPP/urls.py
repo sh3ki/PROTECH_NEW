@@ -13,6 +13,8 @@ urlpatterns = [
     # Face Recognition routes
     path('time-in/', face_recognition_views.time_in, name='time_in'),
     path('time-out/', face_recognition_views.time_out, name='time_out'),
+    path('api/recognize-faces/', face_recognition_views.recognize_faces_api, name='recognize_faces_api'),
+    path('api/record-attendance/', face_recognition_views.record_attendance_api, name='record_attendance_api'),
 
 # ==========================
 #  ADMIN ROUTES
