@@ -988,13 +988,24 @@
                 const [x1, y1] = start;
                 const [x2, y2] = end;
                 
+                console.log(`🎨 Drawing box at [${x1.toFixed(0)},${y1.toFixed(0)}] to [${x2.toFixed(0)},${y2.toFixed(0)}]`);
+                console.log(`🎨 Canvas size: ${this.canvas.width}x${this.canvas.height}`);
+                console.log(`🎨 Context exists: ${!!this.ctx}`);
+                
+                if (!this.ctx) {
+                    console.error('❌ No canvas context!');
+                    return;
+                }
+                
                 const color = isMatched ? '#00FF00' : '#FF0000';
                 const bgColor = isMatched ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
                 
                 // Draw thick border
                 this.ctx.strokeStyle = color;
                 this.ctx.lineWidth = 4;
+                console.log(`🎨 Drawing rectangle with color ${color}, lineWidth 4`);
                 this.ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+                console.log(`🎨 Rectangle drawn!`);
                 
                 if (isMatched) {
                     // Draw label background (taller for three lines)
