@@ -188,11 +188,16 @@
                         <p class="text-sm text-gray-400 mt-1 mb-4">Please select a camera from the dropdown above</p>
                     </div>
                     
-                    <!-- Actual video element -->
-                    <video id="webcam-feed" autoplay playsinline muted class="hidden w-full h-full object-cover"></video>
+                    <!-- Actual video element (hidden, used for processing) -->
+                    <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover"></video>
                     
-                    <!-- Facial recognition frame indicator (appears when detection is active) -->
-                    <div id="detection-frame" class="hidden absolute border-4 border-secondary rounded-lg transition-all duration-300"></div>
+                    <!-- Canvas overlay for bounding boxes -->
+                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+                    
+                    <!-- FPS Counter -->
+                    <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg">
+                        <span id="fps-counter" class="text-green-500 font-bold">0 FPS</span>
+                    </div>
                 </div>
             </div>
             
@@ -382,7 +387,7 @@
             const cancelCamera = document.getElementById('cancel-camera');
             const confirmCamera = document.getElementById('confirm-camera');
             const testVideo = document.getElementById('test-video');
-            const webcamFeed = document.getElementById('webcam-feed');
+            const webcamFeed = document.getElementById('webcam'); // Changed from 'webcam-feed' to 'webcam'
             const cameraPlaceholder = document.getElementById('camera-placeholder');
             const statusIndicator = document.getElementById('status-indicator');
             const statusDot = document.getElementById('status-dot');
@@ -606,7 +611,13 @@
                         mainStream = stopMediaStream(mainStream);
                     }
                     
-                    // Make sure the video element is ready for a new stream
+                    // Make sure the video element exists and is ready for a new stream
+                    if (!webcamFeed) {
+                        console.error('Webcam video element not found!');
+                        alert('Error: Video element not found. Please refresh the page.');
+                        return;
+                    }
+                    
                     if (webcamFeed.srcObject) {
                         webcamFeed.srcObject = null;
                     }
@@ -623,8 +634,8 @@
                     
                     // Set up the video feed
                     webcamFeed.srcObject = mainStream;
-                    webcamFeed.classList.remove('hidden');
-                    cameraPlaceholder.classList.add('hidden');
+                    // Video is always visible for canvas overlay
+                    if (cameraPlaceholder) cameraPlaceholder.classList.add('hidden');
                     
                     // Update UI state
                     activeCameraId = deviceId;
@@ -634,7 +645,8 @@
                     webcamFeed.onplay = () => {
                         console.log('Main webcam feed playing successfully');
                         // Update student count (this would be dynamic in a real app)
-                        document.getElementById('student-count').textContent = '3';
+                        const studentCountEl = document.getElementById('student-count');
+                        if (studentCountEl) studentCountEl.textContent = '3';
                     };
                     
                     // Add error handling for the video element itself
@@ -668,9 +680,10 @@
             
             // Reset the camera UI when there's an error
             function resetCameraUI() {
-                webcamFeed.classList.add('hidden');
-                cameraPlaceholder.classList.remove('hidden');
+                // Video stays visible for canvas overlay
+                if (cameraPlaceholder) cameraPlaceholder.classList.remove('hidden');
                 activeCameraId = null;
+                updateCameraStatus(false);
             }
             
             // Handle camera selection change
@@ -720,18 +733,19 @@
                 // Add a small delay before starting the main feed to allow resources to be released
                 setTimeout(() => {
                     // If we have a cloned track, try to use it directly
-                    if (cloneTrack) {
+                    if (cloneTrack && webcamFeed) {
                         try {
                             const newStream = new MediaStream([cloneTrack]);
                             webcamFeed.srcObject = newStream;
-                            webcamFeed.classList.remove('hidden');
-                            cameraPlaceholder.classList.add('hidden');
+                            // Video is always visible for canvas overlay
+                            if (cameraPlaceholder) cameraPlaceholder.classList.add('hidden');
                             mainStream = newStream;
                             activeCameraId = deviceId;
                             updateCameraStatus(true);
                             
                             // Update student count (this would be dynamic in a real app)
-                            document.getElementById('student-count').textContent = '3';
+                            const studentCountEl = document.getElementById('student-count');
+                            if (studentCountEl) studentCountEl.textContent = '3';
                             
                             console.log("Successfully reused camera track");
                             return;
@@ -772,6 +786,338 @@
                 stopMediaStream(mainStream);
             });
         });
+    </script>
+    
+    <!-- TensorFlow.js and BlazeFace for face detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.js"></script>
+    
+    <!-- Ultra-Fast Face Recognition System - Integrated -->
+    <script>
+    (function() {
+        const ATTENDANCE_TYPE = 'time_in';
+        
+        class UltraFastFaceRecognition {
+            constructor(attendanceType) {
+                this.attendanceType = attendanceType;
+                this.video = null;
+                this.canvas = null;
+                this.ctx = null;
+                this.model = null;
+                this.isRunning = false;
+                this.processingFrame = false;
+                this.frameCount = 0;
+                this.fps = 0;
+                this.lastFpsUpdate = Date.now();
+                this.recognitionCooldown = new Map();
+                this.cooldownMs = 5000;
+            }
+
+            async initialize() {
+                console.log('🚀 Initializing Ultra-Fast Face Recognition...');
+                
+                this.video = document.getElementById('webcam');
+                this.canvas = document.getElementById('overlay-canvas');
+                
+                if (!this.canvas) {
+                    console.error('Canvas not found!');
+                    return;
+                }
+                
+                this.ctx = this.canvas.getContext('2d');
+                
+                console.log('📥 Loading BlazeFace model...');
+                this.model = await blazeface.load();
+                console.log('✅ BlazeFace model loaded');
+            }
+
+            startRecognition() {
+                if (!this.model || !this.video) {
+                    console.error('Model or video not ready');
+                    return;
+                }
+                
+                // Set canvas size to match video display size
+                const videoRect = this.video.getBoundingClientRect();
+                this.canvas.width = videoRect.width;
+                this.canvas.height = videoRect.height;
+                
+                console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
+                console.log(`📐 Video display: ${videoRect.width}x${videoRect.height}`);
+                console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                
+                this.isRunning = true;
+                this.recognitionLoop();
+                console.log('✅ Face Recognition STARTED!');
+            }
+
+            stopRecognition() {
+                this.isRunning = false;
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+                console.log('⏹️ Face Recognition Stopped');
+            }
+
+            async recognitionLoop() {
+                if (!this.isRunning) return;
+                
+                if (!this.processingFrame && this.video.readyState === 4) {
+                    this.processingFrame = true;
+                    await this.processFrame();
+                    this.processingFrame = false;
+                }
+                
+                requestAnimationFrame(() => this.recognitionLoop());
+            }
+
+            async processFrame() {
+                try {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    const predictions = await this.model.estimateFaces(this.video, false);
+                    
+                    if (predictions.length === 0) {
+                        this.updateFPS();
+                        return;
+                    }
+                    
+                    console.log(`🔍 Detected ${predictions.length} face(s)`);
+                    
+                    // Calculate scale factors for coordinate transformation
+                    const scaleX = this.canvas.width / this.video.videoWidth;
+                    const scaleY = this.canvas.height / this.video.videoHeight;
+                    
+                    const faceEmbeddings = [];
+                    const faceBoundingBoxes = [];
+                    
+                    for (const prediction of predictions) {
+                        const start = prediction.topLeft;
+                        const end = prediction.bottomRight;
+                        const size = [end[0] - start[0], end[1] - start[1]];
+                        
+                        const faceEmbedding = await this.extractFaceEmbedding(start, size);
+                        faceEmbeddings.push(faceEmbedding);
+                        
+                        // Scale coordinates to canvas size
+                        const scaledBox = {
+                            start: [start[0] * scaleX, start[1] * scaleY],
+                            end: [end[0] * scaleX, end[1] * scaleY],
+                            size: [size[0] * scaleX, size[1] * scaleY]
+                        };
+                        faceBoundingBoxes.push(scaledBox);
+                    }
+                    
+                    const results = await this.recognizeFaces(faceEmbeddings);
+                    console.log('🎯 Recognition results:', results);
+                    
+                    for (let i = 0; i < results.length; i++) {
+                        const result = results[i];
+                        const box = faceBoundingBoxes[i];
+                        
+                        if (result.matched) {
+                            console.log(`✅ Matched student: ${result.lrn} ${result.first_name} ${result.last_name} (Confidence: ${(result.confidence * 100).toFixed(1)}%)`);
+                            this.drawBoundingBox(box, result, true);
+                            this.autoRecordAttendance(result);
+                        } else {
+                            console.log('❌ Unknown face detected');
+                            this.drawBoundingBox(box, result, false);
+                        }
+                    }
+                    
+                    this.updateFPS();
+                    
+                } catch (error) {
+                    console.error('Error in processFrame:', error);
+                }
+            }
+
+            async extractFaceEmbedding(start, size) {
+                const [x, y] = start;
+                const [width, height] = size;
+                
+                const faceCanvas = document.createElement('canvas');
+                faceCanvas.width = 128;
+                faceCanvas.height = 128;
+                const faceCtx = faceCanvas.getContext('2d');
+                
+                faceCtx.drawImage(this.video, x, y, width, height, 0, 0, 128, 128);
+                
+                const imageData = faceCtx.getImageData(0, 0, 128, 128);
+                const data = imageData.data;
+                
+                const embedding = new Array(128);
+                for (let i = 0; i < 128; i++) {
+                    const idx = i * 4 * 128;
+                    embedding[i] = (data[idx] + data[idx + 1] + data[idx + 2]) / (3 * 255);
+                }
+                
+                return embedding;
+            }
+
+            async recognizeFaces(faceEmbeddings) {
+                try {
+                    const response = await fetch('/api/recognize-faces/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ face_embeddings: faceEmbeddings })
+                    });
+                    
+                    const data = await response.json();
+                    return data.success ? data.results : faceEmbeddings.map(() => ({ matched: false }));
+                } catch (error) {
+                    console.error('Error in recognizeFaces:', error);
+                    return faceEmbeddings.map(() => ({ matched: false }));
+                }
+            }
+
+            drawBoundingBox(box, result, isMatched) {
+                const { start, end } = box;
+                const [x1, y1] = start;
+                const [x2, y2] = end;
+                
+                const color = isMatched ? '#00FF00' : '#FF0000';
+                const bgColor = isMatched ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                
+                // Draw thick border
+                this.ctx.strokeStyle = color;
+                this.ctx.lineWidth = 4;
+                this.ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+                
+                if (isMatched) {
+                    // Draw label background (taller for three lines)
+                    const labelHeight = 80;
+                    const boxWidth = x2 - x1;
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(x1, y1 - labelHeight, boxWidth, labelHeight);
+                    
+                    // Draw text in black
+                    this.ctx.fillStyle = '#000000';
+                    this.ctx.font = 'bold 14px Arial';
+                    
+                    // Display LRN on first line
+                    this.ctx.fillText(`LRN: ${result.lrn || 'N/A'}`, x1 + 8, y1 - 58);
+                    // Display full name on second line
+                    const fullName = result.name || `${result.first_name || ''} ${result.last_name || ''}`.trim();
+                    this.ctx.fillText(fullName, x1 + 8, y1 - 38);
+                    // Display confidence on third line
+                    const confidence = result.confidence ? `${(result.confidence * 100).toFixed(1)}%` : 'N/A';
+                    this.ctx.fillText(`Match: ${confidence}`, x1 + 8, y1 - 18);
+                    
+                    console.log(`📦 Drew green box for ${fullName} (${result.lrn}) at [${x1},${y1}]-[${x2},${y2}]`);
+                } else {
+                    // Draw label background (single line)
+                    const labelHeight = 40;
+                    const boxWidth = x2 - x1;
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(x1, y1 - labelHeight, boxWidth, labelHeight);
+                    
+                    // Draw text in white for better visibility on red
+                    this.ctx.fillStyle = '#FFFFFF';
+                    this.ctx.font = 'bold 18px Arial';
+                    this.ctx.fillText('UNAUTHORIZED', x1 + 8, y1 - 15);
+                    
+                    console.log('📦 Drew red box for unauthorized face');
+                }
+            }
+
+            async autoRecordAttendance(result) {
+                const studentId = result.student_id;
+                const now = Date.now();
+                
+                if (this.recognitionCooldown.has(studentId)) {
+                    const lastRecording = this.recognitionCooldown.get(studentId);
+                    if (now - lastRecording < this.cooldownMs) return;
+                }
+                
+                try {
+                    const response = await fetch('/api/record-attendance/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            student_id: studentId,
+                            type: this.attendanceType
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.recognitionCooldown.set(studentId, now);
+                        this.showNotification(data.message, 'success');
+                    }
+                } catch (error) {
+                    console.error('Error recording attendance:', error);
+                }
+            }
+
+            updateFPS() {
+                this.frameCount++;
+                const now = Date.now();
+                const elapsed = now - this.lastFpsUpdate;
+                
+                if (elapsed >= 1000) {
+                    this.fps = Math.round(this.frameCount * 1000 / elapsed);
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                    
+                    const fpsElement = document.getElementById('fps-counter');
+                    if (fpsElement) {
+                        fpsElement.textContent = `${this.fps} FPS`;
+                        fpsElement.className = this.fps >= 10 ? 'text-green-500 font-bold' : 
+                                               this.fps >= 5 ? 'text-yellow-500 font-bold' : 
+                                               'text-red-500 font-bold';
+                    }
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-5 right-5 px-6 py-4 rounded-lg shadow-lg text-white ${
+                    type === 'success' ? 'bg-green-500' : 
+                    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                } animate-fade-in z-50`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        }
+
+        // Initialize when DOM loads
+        let faceRecognition = null;
+        
+        window.addEventListener('DOMContentLoaded', async () => {
+            faceRecognition = new UltraFastFaceRecognition(ATTENDANCE_TYPE);
+            await faceRecognition.initialize();
+            
+            const webcamVideo = document.getElementById('webcam');
+            
+            // Hook into video playing event
+            webcamVideo.addEventListener('playing', () => {
+                console.log('📹 Camera playing, starting face recognition...');
+                setTimeout(() => {
+                    if (faceRecognition && webcamVideo.readyState === 4) {
+                        faceRecognition.startRecognition();
+                    }
+                }, 1000);
+            });
+            
+            // Stop recognition when video pauses/stops
+            webcamVideo.addEventListener('pause', () => {
+                if (faceRecognition) {
+                    faceRecognition.stopRecognition();
+                }
+            });
+        });
+        
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (faceRecognition) {
+                faceRecognition.stopRecognition();
+            }
+        });
+    })();
     </script>
 </body>
 </html>
