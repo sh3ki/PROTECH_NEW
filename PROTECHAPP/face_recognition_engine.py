@@ -34,6 +34,7 @@ class FaceRecognitionEngine:
         self.last_cache_update = 0
         self.cache_ttl = 300  # Refresh cache every 5 minutes
         self.executor = ThreadPoolExecutor(max_workers=4)
+        self.match_threshold = float(getattr(settings, 'FACE_MATCH_THRESHOLD', 0.65))
         
         # Try to use GPU if available
         self.use_gpu = cv2.cuda.getCudaEnabledDeviceCount() > 0
@@ -97,18 +98,21 @@ class FaceRecognitionEngine:
         if time.time() - self.last_cache_update > self.cache_ttl:
             self.load_all_embeddings()
     
-    def compare_embeddings_vectorized(self, input_embedding, threshold=0.85):
+    def compare_embeddings_vectorized(self, input_embedding, threshold=None):
         """
         Ultra-fast vectorized comparison of input embedding against all cached embeddings
         Uses numpy vectorization for maximum speed
         
         Args:
             input_embedding: 128-d or 512-d face embedding from detected face
-            threshold: Cosine similarity threshold (default 0.85 - HIGH ACCURACY MODE)
+            threshold: Cosine similarity threshold (defaults to settings.FACE_MATCH_THRESHOLD)
         
         Returns:
             tuple: (student_id, confidence) or (None, 0) if no match
         """
+        if threshold is None:
+            threshold = self.match_threshold
+
         if not self.embeddings_cache:
             return None, 0
         
@@ -164,7 +168,7 @@ class FaceRecognitionEngine:
         self.refresh_cache_if_needed()
         
         # Compare against all cached embeddings
-        student_id, confidence = self.compare_embeddings_vectorized(face_embedding)
+        student_id, confidence = self.compare_embeddings_vectorized(face_embedding, self.match_threshold)
         
         if student_id:
             student_info = self.student_info_cache.get(student_id, {})
