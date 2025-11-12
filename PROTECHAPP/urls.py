@@ -181,7 +181,13 @@ urlpatterns = [
     path('registrar/excused/create/', registrar_views.registrar_create_excused_absence, name='registrar_create_excused'),
     path('registrar/excused/<int:excused_id>/', registrar_views.registrar_get_excused_absence, name='registrar_get_excused'),
     path('registrar/excused/<int:excused_id>/update/', registrar_views.registrar_update_excused_absence, name='registrar_update_excused'),
-    path('registrar/excused/<int:excused_id>/delete/', registrar_views.registrar_delete_excused_absence, name='registrar_delete_excused'), 
+    path('registrar/excused/<int:excused_id>/delete/', registrar_views.registrar_delete_excused_absence, name='registrar_delete_excused'),
+    
+    # registrar/face-enrollment routes
+    path('registrar/face-enrollment/students/search/', registrar_views.registrar_search_students_for_face_enrollment, name='registrar_search_students_for_face_enrollment'),
+    path('registrar/face-enrollment/save/', registrar_views.registrar_save_face_embedding, name='registrar_save_face_embedding'),
+    path('registrar/face-enrollment/<int:student_id>/status/', registrar_views.registrar_get_student_face_status, name='registrar_get_student_face_status'),
+    path('registrar/face-enrollment/<int:student_id>/delete/', registrar_views.registrar_delete_face_embedding, name='registrar_delete_face_embedding'), 
     
 
 # ==========================
