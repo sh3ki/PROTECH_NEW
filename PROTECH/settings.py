@@ -139,6 +139,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Set the custom user model
 AUTH_USER_MODEL = 'PROTECHAPP.CustomUser'
 
+# Face recognition tuning
+FACE_MATCH_THRESHOLD = 0.65
+
 # Configure logging
 LOGGING = {
     'version': 1,
