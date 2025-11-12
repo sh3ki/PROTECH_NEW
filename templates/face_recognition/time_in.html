@@ -189,10 +189,10 @@
                     </div>
                     
                     <!-- Actual video element (hidden, used for processing) -->
-                    <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                    <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover" style="position: relative; z-index: 1;"></video>
                     
                     <!-- Canvas overlay for bounding boxes -->
-                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="z-index: 10;"></canvas>
+                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="position: absolute !important; z-index: 9999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;"></canvas>
                     
                     <!-- FPS Counter -->
                     <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg">
@@ -849,27 +849,22 @@
                     return;
                 }
                 
-                // Wait a moment for video to fully initialize
-                setTimeout(() => {
-                    // Set canvas size to match video display size
-                    const videoRect = this.video.getBoundingClientRect();
-                    this.canvas.width = videoRect.width || 1280;
-                    this.canvas.height = videoRect.height || 720;
-                    
-                    // Also set CSS size explicitly
-                    this.canvas.style.width = videoRect.width + 'px';
-                    this.canvas.style.height = videoRect.height + 'px';
-                    
-                    console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
-                    console.log(`📐 Canvas CSS: ${this.canvas.style.width} x ${this.canvas.style.height}`);
-                    console.log(`📐 Video display: ${videoRect.width}x${videoRect.height}`);
-                    console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
-                    
-                    // Draw test rectangle
-                    this.ctx.fillStyle = 'yellow';
-                    this.ctx.fillRect(10, 10, 50, 50);
-                    console.log('🟨 Yellow test square drawn at [10,10]');
-                }, 500);
+                // Set canvas size to match video native resolution
+                this.canvas.width = this.video.videoWidth || 1280;
+                this.canvas.height = this.video.videoHeight || 720;
+                
+                console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
+                console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                
+                // Draw test rectangles to verify canvas visibility
+                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'; // Semi-transparent yellow
+                this.ctx.fillRect(10, 10, 100, 100);
+                
+                this.ctx.strokeStyle = 'red';
+                this.ctx.lineWidth = 5;
+                this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height); // Border around entire canvas
+                
+                console.log('🟨 Test shapes drawn - yellow square top-left, red border around canvas');
                 
                 this.isRunning = true;
                 this.recognitionLoop();
