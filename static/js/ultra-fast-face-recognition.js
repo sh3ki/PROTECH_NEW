@@ -19,6 +19,7 @@ class UltraFastFaceRecognition {
         this.lastFpsUpdate = Date.now();
         this.recognitionCooldown = new Map(); // Cooldown per student to avoid spam
         this.cooldownMs = 5000; // 5 seconds between same student recognition
+        this.currentDetections = []; // Store current frame detections to continuously draw
     }
 
     async initialize() {
@@ -82,11 +83,19 @@ class UltraFastFaceRecognition {
     async recognitionLoop() {
         if (!this.isRunning) return;
         
+        // Clear canvas and redraw detections every frame
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.redrawDetections();
+        
         // Process frame if not already processing
         if (!this.processingFrame) {
             this.processingFrame = true;
-            await this.processFrame();
-            this.processingFrame = false;
+            this.processFrame().then(() => {
+                this.processingFrame = false;
+            }).catch(error => {
+                console.error('Error in processFrame:', error);
+                this.processingFrame = false;
+            });
         }
         
         // Continue loop
@@ -95,14 +104,12 @@ class UltraFastFaceRecognition {
 
     async processFrame() {
         try {
-            // Clear canvas
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
             // Detect faces using BlazeFace
             const predictions = await this.model.estimateFaces(this.video, false);
             
             if (predictions.length === 0) {
-                // No faces detected
+                // No faces detected - clear current detections
+                this.currentDetections = [];
                 return;
             }
             
@@ -124,20 +131,21 @@ class UltraFastFaceRecognition {
             // Send embeddings to backend for recognition (batch processing)
             const results = await this.recognizeFaces(faceEmbeddings);
             
-            // Draw bounding boxes and labels
+            // Store detections for continuous drawing
+            this.currentDetections = [];
             for (let i = 0; i < results.length; i++) {
                 const result = results[i];
                 const box = faceBoundingBoxes[i];
                 
+                this.currentDetections.push({
+                    box: box,
+                    result: result,
+                    isMatched: result.matched
+                });
+                
                 if (result.matched) {
-                    // Matched student - green box
-                    this.drawBoundingBox(box, result, true);
-                    
                     // Auto-record attendance if not in cooldown
                     this.autoRecordAttendance(result);
-                } else {
-                    // Unauthorized - red box
-                    this.drawBoundingBox(box, result, false);
                 }
             }
             
@@ -146,6 +154,13 @@ class UltraFastFaceRecognition {
             
         } catch (error) {
             console.error('Error in processFrame:', error);
+        }
+    }
+    
+    redrawDetections() {
+        // Continuously draw stored detections every frame
+        for (const detection of this.currentDetections) {
+            this.drawBoundingBox(detection.box, detection.result, detection.isMatched);
         }
     }
 
@@ -225,9 +240,11 @@ class UltraFastFaceRecognition {
         const color = isMatched ? '#00FF00' : '#FF0000'; // Green or Red
         const bgColor = isMatched ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)';
         
+        console.log(`🎨 Drawing box at [${x1}, ${y1}] to [${x2}, ${y2}] - Color: ${color}`);
+        
         // Draw rectangle
         this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 4;
         this.ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
         
         // Draw background for text
