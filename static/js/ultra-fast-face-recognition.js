@@ -21,6 +21,9 @@ class UltraFastFaceRecognition {
         this.resizeObserver = null;
         this.scaleX = 1;
         this.scaleY = 1;
+        this.processIntervalMs = 500; // throttle recognition to twice per second
+        this.lastRecognitionTime = 0;
+        this.lastResults = [];
     }
 
     async initialize() {
@@ -232,6 +235,7 @@ class UltraFastFaceRecognition {
 
         if (!predictions.length) {
             this.currentDetections = [];
+            this.lastResults = [];
             this.updateFPS();
             return;
         }
@@ -245,32 +249,46 @@ class UltraFastFaceRecognition {
             };
         });
 
-        this.currentDetections = boxes.map(box => ({ box: box, status: 'unknown' }));
+        const now = Date.now();
+        const shouldRecognize = now - this.lastRecognitionTime >= this.processIntervalMs;
 
-        const embeddings = [];
-        for (const prediction of predictions) {
-            const start = prediction.topLeft;
-            const end = prediction.bottomRight;
-            const size = [end[0] - start[0], end[1] - start[1]];
-            embeddings.push(await this.extractFaceEmbedding(start, size));
+        let recognitionResults;
+
+        if (shouldRecognize) {
+            const embeddings = [];
+            for (const prediction of predictions) {
+                const start = prediction.topLeft;
+                const end = prediction.bottomRight;
+                const size = [end[0] - start[0], end[1] - start[1]];
+                embeddings.push(await this.extractFaceEmbedding(start, size));
+            }
+
+            const results = await this.recognizeFaces(embeddings);
+            recognitionResults = this.normalizeResults(results, boxes.length);
+            this.lastResults = recognitionResults;
+            this.lastRecognitionTime = now;
+        } else {
+            recognitionResults = this.normalizeResults(this.lastResults, boxes.length);
+            this.lastResults = recognitionResults;
         }
 
-        const results = await this.recognizeFaces(embeddings);
-
         this.currentDetections = boxes.map((box, index) => {
-            const result = results[index] || { matched: false };
+            const result = recognitionResults[index];
+            const matched = result && result.matched;
             return {
                 box: box,
                 result: result,
-                status: result.matched ? 'matched' : 'unknown'
+                status: matched ? 'matched' : 'unknown'
             };
         });
 
-        for (const detection of this.currentDetections) {
-            if (detection.status === 'matched') {
-                this.autoRecordAttendance(detection.result).catch(error => {
-                    console.error('Failed to record attendance:', error);
-                });
+        if (shouldRecognize) {
+            for (const detection of this.currentDetections) {
+                if (detection.status === 'matched') {
+                    this.autoRecordAttendance(detection.result).catch(error => {
+                        console.error('Failed to record attendance:', error);
+                    });
+                }
             }
         }
 
@@ -348,6 +366,26 @@ class UltraFastFaceRecognition {
         }
 
         return embedding;
+    }
+
+    normalizeResults(results, length) {
+        const normalized = [];
+        if (!Array.isArray(results)) {
+            for (let i = 0; i < length; i++) {
+                normalized.push({ matched: false });
+            }
+            return normalized;
+        }
+
+        for (let i = 0; i < length; i++) {
+            if (i < results.length && results[i]) {
+                normalized.push(results[i]);
+            } else {
+                normalized.push({ matched: false });
+            }
+        }
+
+        return normalized;
     }
 
     async recognizeFaces(faceEmbeddings) {
