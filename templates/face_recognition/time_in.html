@@ -832,12 +832,6 @@
                 }
                 console.log('✅ Canvas 2D context created');
                 
-                // Test drawing
-                this.ctx.fillStyle = 'red';
-                this.ctx.fillRect(50, 50, 100, 100);
-                console.log('🎨 Test rectangle drawn (should see red square)');
-                setTimeout(() => this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height), 2000);
-                
                 console.log('📥 Loading BlazeFace model...');
                 this.model = await blazeface.load();
                 console.log('✅ BlazeFace model loaded');
@@ -862,16 +856,6 @@
                 this.scaleX = videoRect.width / this.video.videoWidth;
                 this.scaleY = videoRect.height / this.video.videoHeight;
                 console.log(`📐 Scale factors: X=${this.scaleX.toFixed(3)}, Y=${this.scaleY.toFixed(3)}`);
-                
-                // Draw test rectangles to verify canvas visibility
-                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.8)'; // Semi-transparent yellow
-                this.ctx.fillRect(10, 10, 100, 100);
-                
-                this.ctx.strokeStyle = 'red';
-                this.ctx.lineWidth = 5;
-                this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height); // Border around entire canvas
-                
-                console.log('🟨 Test shapes drawn - YOU SHOULD SEE YELLOW SQUARE & RED BORDER NOW!');
                 
                 this.isRunning = true;
                 this.recognitionLoop();
@@ -952,11 +936,21 @@
                         }
                     }
                     
+                    // Draw canvas border for debugging (shows canvas is working)
+                    this.drawDebugBorder();
+                    
                     this.updateFPS();
                     
                 } catch (error) {
                     console.error('Error in processFrame:', error);
                 }
+            }
+
+            drawDebugBorder() {
+                // Draw a thin border around canvas to verify it's positioned correctly
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)'; // Semi-transparent red
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(1, 1, this.canvas.width - 2, this.canvas.height - 2);
             }
 
             async extractFaceEmbedding(start, size) {
