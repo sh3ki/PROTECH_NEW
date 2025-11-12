@@ -849,14 +849,27 @@
                     return;
                 }
                 
-                // Set canvas size to match video display size
-                const videoRect = this.video.getBoundingClientRect();
-                this.canvas.width = videoRect.width;
-                this.canvas.height = videoRect.height;
-                
-                console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
-                console.log(`📐 Video display: ${videoRect.width}x${videoRect.height}`);
-                console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                // Wait a moment for video to fully initialize
+                setTimeout(() => {
+                    // Set canvas size to match video display size
+                    const videoRect = this.video.getBoundingClientRect();
+                    this.canvas.width = videoRect.width || 1280;
+                    this.canvas.height = videoRect.height || 720;
+                    
+                    // Also set CSS size explicitly
+                    this.canvas.style.width = videoRect.width + 'px';
+                    this.canvas.style.height = videoRect.height + 'px';
+                    
+                    console.log(`📐 Canvas sized: ${this.canvas.width}x${this.canvas.height}`);
+                    console.log(`📐 Canvas CSS: ${this.canvas.style.width} x ${this.canvas.style.height}`);
+                    console.log(`📐 Video display: ${videoRect.width}x${videoRect.height}`);
+                    console.log(`📐 Video native: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                    
+                    // Draw test rectangle
+                    this.ctx.fillStyle = 'yellow';
+                    this.ctx.fillRect(10, 10, 50, 50);
+                    console.log('🟨 Yellow test square drawn at [10,10]');
+                }, 500);
                 
                 this.isRunning = true;
                 this.recognitionLoop();
