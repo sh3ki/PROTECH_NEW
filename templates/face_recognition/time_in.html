@@ -192,7 +192,7 @@
                     <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover" style="position: relative; z-index: 1;"></video>
                     
                     <!-- Canvas overlay for bounding boxes -->
-                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="position: absolute !important; z-index: 9999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;"></canvas>
+                    <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none" style="position: absolute !important; z-index: 9999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(255, 0, 0, 0.3) !important;"></canvas>
                     
                     <!-- FPS Counter -->
                     <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg">
@@ -947,10 +947,26 @@
             }
 
             drawDebugBorder() {
-                // Draw a thin border around canvas to verify it's positioned correctly
-                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)'; // Semi-transparent red
-                this.ctx.lineWidth = 2;
-                this.ctx.strokeRect(1, 1, this.canvas.width - 2, this.canvas.height - 2);
+                // Draw BRIGHT OBVIOUS border to verify canvas is working
+                this.ctx.strokeStyle = '#FF00FF'; // BRIGHT MAGENTA
+                this.ctx.lineWidth = 10; // THICK LINE
+                this.ctx.strokeRect(5, 5, this.canvas.width - 10, this.canvas.height - 10);
+                
+                // Draw HUGE rectangle in center
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Semi-transparent green
+                this.ctx.fillRect(centerX - 150, centerY - 150, 300, 300);
+                
+                // Draw X in corners to verify canvas position
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(100, 100);
+                this.ctx.moveTo(100, 0);
+                this.ctx.lineTo(0, 100);
+                this.ctx.stroke();
+                
+                console.log('🎨 Drew BRIGHT MAGENTA border + GREEN SQUARE - YOU MUST SEE THIS!');
             }
 
             async extractFaceEmbedding(start, size) {
