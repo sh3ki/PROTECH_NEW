@@ -8,9 +8,27 @@ let capturedImages = {
 };
 let faceEmbeddings = [null, null, null];
 let videoStream = null;
-let faceDetectionModel = null;
 let detectionInterval = null;
 let latestFaceDetection = null;
+let faceApiModelsLoaded = false;
+let detectorOptions = null;
+
+const FACE_API_MODEL_URL = window.FACE_API_MODEL_URL || 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+const POSE_THRESHOLDS = {
+    front: {
+        angleMin: 0.7,
+        angleMax: 1.4,
+        offsetMax: 0.35
+    },
+    left: {
+        angleMin: 0.8,  // Very lenient - accepts any slight left tilt
+        offsetMin: 0.05  // Very lenient - accepts minimal offset
+    },
+    right: {
+        angleMax: 1.2,  // Very lenient - accepts any slight right tilt
+        offsetMax: -0.05 // Very lenient - accepts minimal offset
+    }
+};
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -28,12 +46,31 @@ function updateStats() {
 }
 
 async function loadFaceDetectionModel() {
+    if (faceApiModelsLoaded) {
+        return;
+    }
+
+    if (typeof faceapi === 'undefined') {
+        console.error('face-api.js is not available on window.');
+        showToast('Face recognition library failed to load.', 'error');
+        return;
+    }
+
     try {
-        faceDetectionModel = await blazeface.load();
-        console.log('Face detection model loaded');
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(FACE_API_MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(FACE_API_MODEL_URL)
+        ]);
+        detectorOptions = new faceapi.TinyFaceDetectorOptions({
+            inputSize: 224,
+            scoreThreshold: 0.5
+        });
+        faceApiModelsLoaded = true;
+        console.log('face-api models loaded for enrollment.');
     } catch (error) {
-        console.error('Error loading face detection model:', error);
-        showToast('Failed to load face detection model', 'error');
+        console.error('Error loading face-api models:', error);
+        showToast('Failed to load face recognition models', 'error');
     }
 }
 
@@ -290,94 +327,167 @@ function stopCamera() {
 }
 
 async function startFaceDetection() {
-    if (!faceDetectionModel) {
-        console.error('Face detection model not loaded');
-        return;
+    if (!faceApiModelsLoaded) {
+        await loadFaceDetectionModel();
+        if (!faceApiModelsLoaded) {
+            return;
+        }
     }
-    
+
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('face-detection-canvas');
     const ctx = canvas.getContext('2d');
-    
+
     detectionInterval = setInterval(async () => {
-        if (video.readyState === 4) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+        if (video.readyState !== 4) {
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        let detection = null;
+        try {
+            detection = await faceapi
+                .detectSingleFace(video, detectorOptions)
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+        } catch (error) {
+            console.error('face-api enrollment detection error:', error);
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (detection && detection.detection) {
+            latestFaceDetection = detection;
+            const box = detection.detection.box;
             
-            const predictions = await faceDetectionModel.estimateFaces(video, false);
+            // Mirror the box horizontally to match the flipped video
+            const mirroredX = canvas.width - box.x - box.width;
             
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (predictions.length > 0) {
-                const face = predictions[0];
-                const topLeft = Array.isArray(face.topLeft) ? face.topLeft : Array.from(face.topLeft || []);
-                const bottomRight = Array.isArray(face.bottomRight) ? face.bottomRight : Array.from(face.bottomRight || []);
-                if (topLeft.length >= 2 && bottomRight.length >= 2) {
-                    latestFaceDetection = {
-                        topLeft: [Math.max(0, topLeft[0]), Math.max(0, topLeft[1])],
-                        bottomRight: [Math.max(0, bottomRight[0]), Math.max(0, bottomRight[1])]
-                    };
-                }
-                
-                // Draw face box
-                const start = face.topLeft;
-                const end = face.bottomRight;
-                const size = [end[0] - start[0], end[1] - start[1]];
-                
-                // Check face pose based on current step
-                const isPoseCorrect = checkFacePose(face, currentStep);
-                
-                ctx.strokeStyle = isPoseCorrect ? '#10B981' : '#EF4444';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(start[0], start[1], size[0], size[1]);
-                
-                // Update UI
-                const captureBtn = document.getElementById('capture-btn');
-                const faceStatus = document.getElementById('face-status');
-                
-                if (isPoseCorrect) {
-                    captureBtn.disabled = false;
-                    faceStatus.textContent = '✓ Perfect! Ready to capture';
-                    faceStatus.className = 'text-sm mt-2 text-green-400 font-semibold';
-                } else {
-                    captureBtn.disabled = true;
-                    faceStatus.textContent = getInstructionForStep(currentStep);
-                    faceStatus.className = 'text-sm mt-2 text-yellow-400';
-                }
+            const isPoseCorrect = checkFacePose(detection, currentStep);
+
+            ctx.strokeStyle = isPoseCorrect ? '#10B981' : '#EF4444';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(mirroredX, box.y, box.width, box.height);
+
+            const captureBtn = document.getElementById('capture-btn');
+            const faceStatus = document.getElementById('face-status');
+
+            if (isPoseCorrect) {
+                captureBtn.disabled = false;
+                faceStatus.textContent = '✓ Perfect! Ready to capture';
+                faceStatus.className = 'text-sm mt-2 text-green-400 font-semibold';
             } else {
-                latestFaceDetection = null;
-                document.getElementById('capture-btn').disabled = true;
-                document.getElementById('face-status').textContent = '⚠ No face detected';
-                document.getElementById('face-status').className = 'text-sm mt-2 text-red-400';
+                captureBtn.disabled = true;
+                faceStatus.textContent = getInstructionForStep(currentStep);
+                faceStatus.className = 'text-sm mt-2 text-yellow-400';
             }
+        } else {
+            latestFaceDetection = null;
+            document.getElementById('capture-btn').disabled = true;
+            document.getElementById('face-status').textContent = '⚠ No face detected';
+            document.getElementById('face-status').className = 'text-sm mt-2 text-red-400';
         }
     }, 200);
 }
 
-function checkFacePose(face, step) {
-    // Get face landmarks
-    const landmarks = face.landmarks;
-    if (!landmarks || landmarks.length < 6) return false;
+function averagePoint(points) {
+    if (!points || !points.length) {
+        return null;
+    }
+
+    const sum = points.reduce((acc, point) => {
+        return { x: acc.x + point.x, y: acc.y + point.y };
+    }, { x: 0, y: 0 });
+
+    return { x: sum.x / points.length, y: sum.y / points.length };
+}
+
+function checkFacePose(detection, step) {
+    if (!detection || !detection.landmarks) {
+        return false;
+    }
+
+    const landmarks = detection.landmarks;
     
-    const leftEye = landmarks[0];
-    const rightEye = landmarks[1];
-    const nose = landmarks[2];
+    // Get the video element to know its width for mirroring
+    const video = document.getElementById('camera-video');
+    const videoWidth = video ? video.videoWidth : 0;
     
-    // Calculate face angle based on eye positions
-    const eyeDistance = Math.abs(rightEye[0] - leftEye[0]);
-    const noseToLeftEye = Math.abs(nose[0] - leftEye[0]);
-    const noseToRightEye = Math.abs(nose[0] - rightEye[0]);
+    // Mirror landmarks horizontally to match the flipped video
+    const mirrorPoint = (point) => {
+        if (!point || !videoWidth) return point;
+        return { x: videoWidth - point.x, y: point.y };
+    };
     
-    const angleRatio = noseToLeftEye / noseToRightEye;
-    
-    switch(step) {
-        case 1: // Front face - straight ahead
-            return angleRatio > 0.85 && angleRatio < 1.15;
-        case 2: // Left face - significant tilt (nose much closer to left eye)
-            return angleRatio > 1.8 && angleRatio < 3.0;
-        case 3: // Right face - significant tilt (nose much closer to right eye)
-            return angleRatio > 0.33 && angleRatio < 0.6;
+    const leftEye = mirrorPoint(averagePoint(landmarks.getLeftEye()));
+    const rightEye = mirrorPoint(averagePoint(landmarks.getRightEye()));
+    const nosePoints = landmarks.getNose();
+    const noseTip = nosePoints && nosePoints.length ? mirrorPoint(nosePoints[nosePoints.length - 1]) : null;
+
+    if (!leftEye || !rightEye || !noseTip) {
+        return false;
+    }
+
+    const eyeDistance = Math.abs(rightEye.x - leftEye.x);
+    if (eyeDistance < 1) {
+        return false;
+    }
+
+    const noseToLeftEye = Math.abs(noseTip.x - leftEye.x);
+    const noseToRightEye = Math.abs(noseTip.x - rightEye.x);
+    const epsilon = 1e-6;
+    const angleRatio = noseToLeftEye / Math.max(noseToRightEye, epsilon);
+    const midX = (leftEye.x + rightEye.x) / 2;
+    const normalizedOffset = (noseTip.x - midX) / Math.max(eyeDistance, epsilon); // ~0 front, positive/right tilt, negative/left tilt
+
+    if (typeof window !== 'undefined' && window.DEBUG_FACE_POSE) {
+        console.debug('[FacePose]', {
+            step,
+            angleRatio: Number(angleRatio.toFixed(2)),
+            normalizedOffset: Number(normalizedOffset.toFixed(2))
+        });
+    }
+
+    switch (step) {
+        case 1:
+            // Front face: LENIENT - accept wide range of "generally forward" poses
+            const isFrontAngle = angleRatio >= POSE_THRESHOLDS.front.angleMin && 
+                                angleRatio <= POSE_THRESHOLDS.front.angleMax;
+            const isFrontOffset = Math.abs(normalizedOffset) <= POSE_THRESHOLDS.front.offsetMax;
+            
+            // Accept if EITHER condition is good (much more lenient)
+            return isFrontAngle || isFrontOffset;
+            
+        case 2:
+            // Left face: VERY LENIENT - accept ANY tilt that's not clearly front-facing
+            const isLeftTurn = normalizedOffset >= POSE_THRESHOLDS.left.offsetMin || 
+                              angleRatio >= POSE_THRESHOLDS.left.angleMin;
+            
+            // Only reject if it's clearly front-facing (strict front check)
+            const isStrictlyFront = (
+                Math.abs(normalizedOffset) <= 0.15 &&
+                angleRatio >= 0.9 &&
+                angleRatio <= 1
+            );
+            
+            return isLeftTurn && !isStrictlyFront;
+            
+        case 3:
+            // Right face: VERY LENIENT - accept ANY tilt that's not clearly front-facing
+            const isRightTurn = normalizedOffset <= POSE_THRESHOLDS.right.offsetMax || 
+                               angleRatio <= POSE_THRESHOLDS.right.angleMax;
+            
+            // Only reject if it's clearly front-facing (strict front check)
+            const isStrictlyFrontRight = (
+                Math.abs(normalizedOffset) <= 0.15 &&
+                angleRatio >= 0.9 &&
+                angleRatio <= 1
+            );
+            
+            return isRightTurn && !isStrictlyFrontRight;
+            
         default:
             return false;
     }
@@ -388,9 +498,9 @@ function getInstructionForStep(step) {
         case 1:
             return 'Look straight at the camera';
         case 2:
-            return 'Turn your head to the LEFT (more tilt needed)';
+            return 'Turn your head slightly to the LEFT (any tilt is okay)';
         case 3:
-            return 'Turn your head to the RIGHT (more tilt needed)';
+            return 'Turn your head slightly to the RIGHT (any tilt is okay)';
         default:
             return 'Position your face in the frame';
     }
@@ -402,6 +512,11 @@ async function captureImage() {
         return;
     }
 
+    if (!latestFaceDetection.descriptor || !latestFaceDetection.descriptor.length) {
+        showToast('Unable to read face embedding. Hold still and try again.', 'error');
+        return;
+    }
+
     const video = document.getElementById('camera-video');
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -410,8 +525,11 @@ async function captureImage() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
 
-    const [x1, y1] = latestFaceDetection.topLeft;
-    const [x2, y2] = latestFaceDetection.bottomRight;
+    const box = latestFaceDetection.detection.box;
+    const x1 = box.x;
+    const y1 = box.y;
+    const x2 = box.x + box.width;
+    const y2 = box.y + box.height;
     const maxWidth = video.videoWidth;
     const maxHeight = video.videoHeight;
     const sx = Math.min(Math.max(0, x1), Math.max(0, maxWidth - 1));
@@ -440,8 +558,7 @@ async function captureImage() {
     // Get image data
     const imageData = canvas.toDataURL('image/jpeg', 0.9);
     
-    // Generate deterministic face embedding using face crop
-    const embedding = generateFaceEmbedding(faceCanvas);
+    const embedding = Array.from(latestFaceDetection.descriptor);
     const embedIndex = Math.max(0, currentStep - 1);
     faceEmbeddings[embedIndex] = embedding;
     
@@ -469,49 +586,6 @@ async function captureImage() {
     currentStep = nextMissingIndex + 1;
     updateStepIndicator();
     updateInstructions();
-}
-
-function generateFaceEmbedding(faceCanvas) {
-    const faceCtx = faceCanvas.getContext('2d');
-    const imageData = faceCtx.getImageData(0, 0, faceCanvas.width, faceCanvas.height);
-    const data = imageData.data;
-    const width = faceCanvas.width;
-    const height = faceCanvas.height;
-
-    const cellsX = 16;
-    const cellsY = 8;
-    const cellWidth = width / cellsX;
-    const cellHeight = height / cellsY;
-    const embedding = new Array(cellsX * cellsY).fill(0);
-
-    for (let cy = 0; cy < cellsY; cy++) {
-        for (let cx = 0; cx < cellsX; cx++) {
-            const startX = Math.floor(cx * cellWidth);
-            const endX = Math.max(startX + 1, Math.floor((cx + 1) * cellWidth));
-            const startY = Math.floor(cy * cellHeight);
-            const endY = Math.max(startY + 1, Math.floor((cy + 1) * cellHeight));
-
-            let sum = 0;
-            let count = 0;
-
-            for (let y = startY; y < endY && y < height; y++) {
-                let offset = (y * width + startX) * 4;
-                for (let x = startX; x < endX && x < width; x++) {
-                    const r = data[offset];
-                    const g = data[offset + 1];
-                    const b = data[offset + 2];
-                    sum += (r + g + b) / 3;
-                    count++;
-                    offset += 4;
-                }
-            }
-
-            const index = cy * cellsX + cx;
-            embedding[index] = count ? (sum / count) / 255 : 0;
-        }
-    }
-
-    return embedding;
 }
 
 function updateCapturePreview() {
