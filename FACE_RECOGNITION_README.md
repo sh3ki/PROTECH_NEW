@@ -19,9 +19,9 @@ Lightning-fast face recognition system optimized for **10+ FPS** performance wit
 - **Confidence Score**: Recognition confidence percentage
 
 ### 🚀 Technical Stack
-- **Frontend**: TensorFlow.js + BlazeFace (ultra-fast face detection)
+- **Frontend**: face-api.js (TinyFaceDetector + FaceRecognitionNet)
 - **Backend**: Django + NumPy (vectorized operations)
-- **Face Detection**: BlazeFace (Google's lightweight model)
+- **Face Detection**: TinyFaceDetector (face-api.js)
 - **Embedding Comparison**: Cosine similarity (vectorized)
 
 ## Architecture
@@ -74,20 +74,19 @@ http://localhost:8000/time-out/
 2. **Vectorization**: NumPy batch operations instead of loops
 3. **Caching**: Recognition results cached to avoid re-processing
 4. **Threading**: Parallel comparison using ThreadPoolExecutor
-5. **Lightweight Model**: BlazeFace (< 1MB) for fast detection
+5. **Lightweight Model**: TinyFaceDetector (~1.3MB) for fast detection
 
 ## System Flow
 
 1. **Initialization**
-   - Load BlazeFace model (client-side)
+   - Load face-api.js models (TinyFaceDetector, landmarks, recognition)
    - Load all student embeddings (server-side)
    - Start webcam feed
 
 2. **Detection Loop** (30 FPS)
    - Capture frame from webcam
-   - Detect faces using BlazeFace
-   - Extract face regions
-   - Generate simplified embeddings
+   - Detect faces using TinyFaceDetector
+   - Extract FaceRecognitionNet descriptors (128-D embeddings)
 
 3. **Recognition** (Async)
    - Send embeddings to backend API
@@ -181,7 +180,7 @@ remarks: TextField
 ## Performance Metrics
 
 ### Expected Performance
-- **Detection Speed**: 30 FPS (BlazeFace)
+- **Detection Speed**: 25-30 FPS (TinyFaceDetector on WebGL)
 - **Recognition Speed**: < 100ms for 1000 students
 - **Memory Usage**: ~50MB for 1000 embeddings
 - **Network Latency**: < 50ms (local network)
@@ -196,7 +195,7 @@ Students    | Comparison Time | FPS
 ```
 
 ## Credits
-- **BlazeFace**: Google Research
+- **face-api.js**: @vladmandic & contributors
 - **TensorFlow.js**: TensorFlow Team
 - **NumPy**: NumPy Developers
 - **OpenCV**: OpenCV Team
