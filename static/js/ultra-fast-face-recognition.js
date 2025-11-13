@@ -1,7 +1,10 @@
 ﻿/**
  * Ultra-fast face recognition overlay renderer.
- * Uses BlazeFace for detection and delegates recognition to the backend.
+ * Uses face-api.js (TinyFaceDetector + FaceRecognitionNet) for embeddings
+ * and delegates identity matching to the Django backend.
  */
+
+const FACE_API_MODEL_URL = window.FACE_API_MODEL_URL || 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
 
 class UltraFastFaceRecognition {
     constructor(attendanceType = 'time_in') {
@@ -9,7 +12,6 @@ class UltraFastFaceRecognition {
         this.video = null;
         this.canvas = null;
         this.ctx = null;
-        this.model = null;
         this.isRunning = false;
         this.processingFrame = false;
         this.currentDetections = [];
@@ -24,6 +26,8 @@ class UltraFastFaceRecognition {
         this.processIntervalMs = 500; // throttle recognition to twice per second
         this.lastRecognitionTime = 0;
         this.lastResults = [];
+        this.modelsLoaded = false;
+        this.detectorOptions = null;
     }
 
     async initialize() {
@@ -42,8 +46,11 @@ class UltraFastFaceRecognition {
                 return;
             }
 
-            this.model = await blazeface.load();
-            console.log('BlazeFace model loaded.');
+            await this.loadModels();
+            if (!this.modelsLoaded) {
+                console.error('face-api models failed to load.');
+                return;
+            }
 
             this.registerVideoEvents();
 
@@ -52,6 +59,33 @@ class UltraFastFaceRecognition {
             }
         } catch (error) {
             console.error('Failed to initialise face recognition:', error);
+        }
+    }
+
+    async loadModels() {
+        if (this.modelsLoaded) {
+            return;
+        }
+
+        if (typeof faceapi === 'undefined') {
+            console.error('face-api.js is not available on window.');
+            return;
+        }
+
+        try {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(FACE_API_MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(FACE_API_MODEL_URL)
+            ]);
+            this.detectorOptions = new faceapi.TinyFaceDetectorOptions({
+                inputSize: 224,
+                scoreThreshold: 0.5
+            });
+            this.modelsLoaded = true;
+            console.log('face-api models loaded.');
+        } catch (error) {
+            console.error('Error loading face-api models:', error);
         }
     }
 
@@ -227,25 +261,33 @@ class UltraFastFaceRecognition {
     }
 
     async processFrame() {
-        if (!this.model || !this.video || this.video.readyState < 2) {
+        if (!this.modelsLoaded || !this.video || this.video.readyState < 2) {
             return;
         }
 
-        const predictions = await this.model.estimateFaces(this.video, false);
+        let detections = [];
+        try {
+            detections = await faceapi
+                .detectAllFaces(this.video, this.detectorOptions)
+                .withFaceLandmarks()
+                .withFaceDescriptors();
+        } catch (error) {
+            console.error('face-api detection error:', error);
+            return;
+        }
 
-        if (!predictions.length) {
+        if (!detections.length) {
             this.currentDetections = [];
             this.lastResults = [];
             this.updateFPS();
             return;
         }
 
-        const boxes = predictions.map(prediction => {
-            const topLeft = prediction.topLeft;
-            const bottomRight = prediction.bottomRight;
+        const boxes = detections.map(detection => {
+            const box = detection.detection.box;
             return {
-                start: [topLeft[0] * this.scaleX, topLeft[1] * this.scaleY],
-                end: [bottomRight[0] * this.scaleX, bottomRight[1] * this.scaleY]
+                start: [box.x * this.scaleX, box.y * this.scaleY],
+                end: [(box.x + box.width) * this.scaleX, (box.y + box.height) * this.scaleY]
             };
         });
 
@@ -255,15 +297,9 @@ class UltraFastFaceRecognition {
         let recognitionResults;
 
         if (shouldRecognize) {
-            const embeddings = [];
-            for (const prediction of predictions) {
-                const start = prediction.topLeft;
-                const end = prediction.bottomRight;
-                const size = [end[0] - start[0], end[1] - start[1]];
-                embeddings.push(await this.extractFaceEmbedding(start, size));
-            }
+            const descriptors = detections.map(det => Array.from(det.descriptor));
 
-            const results = await this.recognizeFaces(embeddings);
+            const results = await this.recognizeFaces(descriptors);
             recognitionResults = this.normalizeResults(results, boxes.length);
             this.lastResults = recognitionResults;
             this.lastRecognitionTime = now;
@@ -295,99 +331,6 @@ class UltraFastFaceRecognition {
         this.updateFPS();
     }
 
-    async extractFaceEmbedding(start, size) {
-    const videoWidth = this.video.videoWidth;
-    const videoHeight = this.video.videoHeight;
-    const rawX1 = start[0];
-    const rawY1 = start[1];
-    const rawX2 = rawX1 + size[0];
-    const rawY2 = rawY1 + size[1];
-
-    const sx = Math.min(Math.max(0, rawX1), Math.max(0, videoWidth - 1));
-    const sy = Math.min(Math.max(0, rawY1), Math.max(0, videoHeight - 1));
-    const ex = Math.min(Math.max(0, rawX2), videoWidth);
-    const ey = Math.min(Math.max(0, rawY2), videoHeight);
-    const width = Math.max(1, ex - sx);
-    const height = Math.max(1, ey - sy);
-
-        const faceCanvas = document.createElement('canvas');
-        faceCanvas.width = 128;
-        faceCanvas.height = 128;
-        const faceCtx = faceCanvas.getContext('2d', { willReadFrequently: true });
-
-        faceCtx.drawImage(
-            this.video,
-            sx,
-            sy,
-            width,
-            height,
-            0,
-            0,
-            faceCanvas.width,
-            faceCanvas.height
-        );
-
-        const imageData = faceCtx.getImageData(0, 0, faceCanvas.width, faceCanvas.height);
-        return this.computeGridEmbedding(imageData.data, faceCanvas.width, faceCanvas.height);
-    }
-
-    computeGridEmbedding(pixelData, width, height) {
-        const cellsX = 16;
-        const cellsY = 8;
-        const cellWidth = width / cellsX;
-        const cellHeight = height / cellsY;
-        const embedding = new Array(cellsX * cellsY).fill(0);
-
-        for (let cy = 0; cy < cellsY; cy++) {
-            for (let cx = 0; cx < cellsX; cx++) {
-                const startX = Math.floor(cx * cellWidth);
-                const endX = Math.max(startX + 1, Math.floor((cx + 1) * cellWidth));
-                const startY = Math.floor(cy * cellHeight);
-                const endY = Math.max(startY + 1, Math.floor((cy + 1) * cellHeight));
-
-                let sum = 0;
-                let count = 0;
-
-                for (let y = startY; y < endY && y < height; y++) {
-                    let offset = (y * width + startX) * 4;
-                    for (let x = startX; x < endX && x < width; x++) {
-                        const r = pixelData[offset];
-                        const g = pixelData[offset + 1];
-                        const b = pixelData[offset + 2];
-                        sum += (r + g + b) / 3;
-                        count++;
-                        offset += 4;
-                    }
-                }
-
-                const index = cy * cellsX + cx;
-                embedding[index] = count ? (sum / count) / 255 : 0;
-            }
-        }
-
-        return embedding;
-    }
-
-    normalizeResults(results, length) {
-        const normalized = [];
-        if (!Array.isArray(results)) {
-            for (let i = 0; i < length; i++) {
-                normalized.push({ matched: false });
-            }
-            return normalized;
-        }
-
-        for (let i = 0; i < length; i++) {
-            if (i < results.length && results[i]) {
-                normalized.push(results[i]);
-            } else {
-                normalized.push({ matched: false });
-            }
-        }
-
-        return normalized;
-    }
-
     async recognizeFaces(faceEmbeddings) {
         if (!faceEmbeddings.length) {
             return [];
@@ -417,6 +360,22 @@ class UltraFastFaceRecognition {
             console.error('Error calling recognition API:', error);
             return faceEmbeddings.map(() => ({ matched: false }));
         }
+    }
+
+    normalizeResults(results, expectedLength) {
+        if (!Array.isArray(results)) {
+            return new Array(expectedLength).fill(null).map(() => ({ matched: false }));
+        }
+
+        if (results.length !== expectedLength) {
+            const padded = results.slice();
+            while (padded.length < expectedLength) {
+                padded.push({ matched: false });
+            }
+            return padded.slice(0, expectedLength);
+        }
+
+        return results;
     }
 
     async autoRecordAttendance(result) {
