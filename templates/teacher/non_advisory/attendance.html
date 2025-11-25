@@ -15,4 +15,234 @@
     <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Attendance Records</h2>
     <p class="text-accent dark:text-gray-400 mt-4">Attendance Records content will appear here.</p>
 </div>
-{% endblock %}
+<!-- Import Attendance Button -->
+<div class="flex justify-center mb-6">
+    <button id="import-attendance-btn" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Import Attendance</button>
+</div>
+
+<!-- Import Attendance Modal (admin-style) -->
+<div id="import-attendance-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden modal-content">
+        <div class="bg-gradient-to-r from-primary to-tertiary px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-file-import text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Import Attendance</h3>
+                    <p class="text-white/80 text-sm">Upload CSV or Excel file to import attendance records</p>
+                </div>
+            </div>
+            <button id="close-import-attendance-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto custom-scrollbar">
+            <div class="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                </h5>
+                <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                    <li>• File must contain columns: ID, Student LRN, Date, Time In, Time Out, Status</li>
+                    <li>• Students will be automatically matched by LRN</li>
+                    <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                    <li>• Maximum file size: 10MB</li>
+                </ul>
+            </div>
+
+            <form id="import-attendance-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="flex items-center justify-center w-full mb-4">
+                    <label for="import-attendance-file" class="flex flex-col items-center justify-center w-full h-44 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                        <div class="flex flex-col items-center justify-center pt-4 pb-4">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                            <p class="mb-1 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                            <p id="import-attendance-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                        </div>
+                        <input id="import-attendance-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                    </label>
+                </div>
+
+                <div id="import-attendance-progress" class="hidden mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing attendance...</span>
+                        <span id="import-attendance-progress-percent" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                        <div id="import-attendance-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="csv-preview" class="mb-4"></div>
+
+                <div id="import-attendance-results" class="hidden"></div>
+            </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-3">
+            <button type="button" id="cancel-import-attendance" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl">Cancel</button>
+            <button type="button" id="submit-import-attendance" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow">Import</button>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        // Local scope to avoid global duplicate identifier errors
+        const importAttendanceBtn = document.getElementById('import-attendance-btn');
+        const importAttendanceModal = document.getElementById('import-attendance-modal');
+        const closeImportAttendanceBtn = document.getElementById('close-import-attendance-modal');
+        const cancelImportAttendance = document.getElementById('cancel-import-attendance');
+        const submitImportAttendanceBtn = document.getElementById('submit-import-attendance');
+        const importAttendanceFile = document.getElementById('import-attendance-file');
+        const importAttendanceForm = document.getElementById('import-attendance-form');
+        const importAttendanceProgress = document.getElementById('import-attendance-progress');
+        const importAttendanceProgressBar = document.getElementById('import-attendance-progress-bar');
+        const importAttendanceProgressPercent = document.getElementById('import-attendance-progress-percent');
+        const importAttendanceResults = document.getElementById('import-attendance-results');
+        const importAttendanceFileName = document.getElementById('import-attendance-file-name');
+        const csvPreview = document.getElementById('csv-preview');
+
+        function openImportAttendanceModal() {
+            const modal = importAttendanceModal;
+            const modalContent = modal.querySelector('.modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            importAttendanceForm.reset();
+            importAttendanceFileName.classList.add('hidden');
+            importAttendanceProgress.classList.add('hidden');
+            submitImportAttendanceBtn.disabled = true;
+            if (csvPreview) csvPreview.innerHTML = '';
+        }
+
+        function closeImportModal() {
+            const modal = importAttendanceModal;
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }, 200);
+            if (csvPreview) csvPreview.innerHTML = '';
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            const fileNameDisplay = importAttendanceFileName;
+            const submitBtn = submitImportAttendanceBtn;
+            if (!file) {
+                fileNameDisplay.classList.add('hidden');
+                submitBtn.disabled = true;
+                if (csvPreview) csvPreview.innerHTML = '';
+                return;
+            }
+            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.ms-excel','text/csv'];
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                e.target.value = '';
+                fileNameDisplay.classList.add('hidden');
+                submitBtn.disabled = true;
+                if (csvPreview) csvPreview.innerHTML = '';
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File too large. Maximum file size is 10MB.', 'error');
+                e.target.value = '';
+                fileNameDisplay.classList.add('hidden');
+                submitBtn.disabled = true;
+                if (csvPreview) csvPreview.innerHTML = '';
+                return;
+            }
+            if ((/\.csv$/i).test(file.name) || file.type === 'text/csv') {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const text = ev.target.result;
+                    const rows = text.split(/\r?\n/).filter(r => r.trim().length > 0).slice(0,5);
+                    let html = '<div class="text-xs text-gray-700 dark:text-gray-300 mb-2">CSV Preview (first 5 rows)</div>';
+                    html += '<div class="overflow-auto border rounded p-2 bg-white dark:bg-gray-800">';
+                    html += '<table class="table-auto text-xs w-full">';
+                    rows.forEach(r => {
+                        html += '<tr class="border-b hover:bg-gray-50 dark:hover:bg-gray-900">';
+                        const cols = r.split(',');
+                        cols.forEach(c => html += `<td class="px-2 py-1">${c.trim()}</td>`);
+                        html += '</tr>';
+                    });
+                    html += '</table></div>';
+                    if (csvPreview) csvPreview.innerHTML = html;
+                };
+                reader.readAsText(file);
+            } else {
+                if (csvPreview) csvPreview.innerHTML = '<div class="text-sm text-gray-600 dark:text-gray-300">Excel file selected. Make sure to follow the provided template for columns.</div>';
+            }
+            fileNameDisplay.textContent = `Selected: ${file.name}`;
+            fileNameDisplay.classList.remove('hidden');
+            submitBtn.disabled = false;
+        }
+
+        function submitImport() {
+            const fileInput = importAttendanceFile;
+            const submitBtn = submitImportAttendanceBtn;
+            if (!fileInput.files[0]) {
+                showToast('Please select a file to import', 'warning');
+                return;
+            }
+            submitBtn.disabled = true;
+            importAttendanceProgress.classList.remove('hidden');
+            importAttendanceProgressBar.style.width = '0%';
+            importAttendanceProgressPercent.textContent = '0%';
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) { progress += Math.random() * 10; if (progress > 90) progress = 90; importAttendanceProgressBar.style.width = progress + '%'; importAttendanceProgressPercent.textContent = Math.round(progress) + '%'; }
+            }, 200);
+            const formData = new FormData(importAttendanceForm);
+            fetch('{% url "import_attendance" %}', { method: 'POST', credentials: 'same-origin', body: formData, headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value } })
+            .then(async response => {
+                const text = await response.text();
+                try { return JSON.parse(text); } catch (e) { return { status: 'error', message: text }; }
+            })
+            .then(data => {
+                clearInterval(progressInterval);
+                importAttendanceProgressBar.style.width = '100%';
+                importAttendanceProgressPercent.textContent = '100%';
+                setTimeout(() => {
+                    if (data.status === 'success') {
+                        showToast(data.message, 'success');
+                        try { if (typeof loadAttendanceRecords === 'function') loadAttendanceRecords(1); } catch(e){}
+                    } else {
+                        showToast(data.message || 'Import failed', 'error');
+                        if (data.errors && data.errors.length > 0) {
+                            const errorList = data.errors.slice(0,5).join('\n');
+                            showToast('Validation Errors:\n' + errorList, 'error');
+                        }
+                    }
+                    submitBtn.disabled = false;
+                    importAttendanceProgress.classList.add('hidden');
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                console.error('Error:', error);
+                showToast('An error occurred during import. Please try again.', 'error');
+                submitBtn.disabled = false;
+                importAttendanceProgress.classList.add('hidden');
+            });
+        }
+
+        // Hook up events
+        importAttendanceBtn?.addEventListener('click', openImportAttendanceModal);
+        closeImportAttendanceBtn?.addEventListener('click', closeImportModal);
+        cancelImportAttendance?.addEventListener('click', closeImportModal);
+        submitImportAttendanceBtn?.addEventListener('click', submitImport);
+        importAttendanceFile?.addEventListener('change', handleFileSelect);
+        importAttendanceModal?.addEventListener('click', function(e){ if (e.target === this) closeImportModal(); });
+    })();
+    </script>
