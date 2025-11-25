@@ -1,0 +1,413 @@
+<!-- PROTECH AI Chatbot Widget -->
+<div id="protech-ai-chatbot" class="fixed bottom-6 right-6 z-[1000]">
+    <!-- Chatbot Toggle Button -->
+    <button id="chatbot-toggle-btn" class="chatbot-toggle-btn bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-tertiary text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110">
+        <!-- AI Robot Icon -->
+        <svg id="chatbot-icon" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+        </svg>
+        <!-- Close Icon (hidden by default) -->
+        <svg id="chatbot-close-icon" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+
+    <!-- Chatbot Window (hidden by default) -->
+    <div id="chatbot-window" class="chatbot-window hidden absolute bottom-20 right-0 w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right">
+        <!-- Chatbot Header -->
+        <div class="chatbot-header bg-gradient-to-r from-primary to-secondary text-white p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">PROTECH AI</h3>
+                    <p class="text-xs text-white/80">Your Virtual Assistant</p>
+                </div>
+            </div>
+            <button id="chatbot-minimize-btn" class="text-white/80 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chatbot Messages Area -->
+        <div id="chatbot-messages" class="chatbot-messages p-4 h-96 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <!-- Welcome Message -->
+            <div class="message-bubble bot-message mb-4">
+                <div class="flex items-start gap-2">
+                    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">
+                            👋 Hello! I'm PROTECH AI, your virtual assistant. I'm here to help you navigate the system, answer questions about features, and guide you through any procedures. How can I assist you today?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Input Area -->
+        <div class="chatbot-input-area p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <form id="chatbot-form" class="flex gap-2">
+                <input 
+                    type="text" 
+                    id="chatbot-input" 
+                    placeholder="Ask me anything..." 
+                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
+                    autocomplete="off"
+                />
+                <button 
+                    type="submit" 
+                    id="chatbot-send-btn"
+                    class="bg-primary hover:bg-secondary text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                Powered by ProtechAI Model V1.0
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chatbot specific styles */
+.chatbot-window {
+    max-height: 600px;
+}
+
+.chatbot-messages {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+.chatbot-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chatbot-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(59, 130, 246, 0.5);
+}
+
+.message-bubble {
+    animation: slideInMessage 0.3s ease-out;
+}
+
+@keyframes slideInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-left: auto;
+    border-radius: 1rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.bot-message {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.typing-indicator {
+    display: inline-flex;
+    gap: 4px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 1rem;
+    border-top-left-radius: 0.25rem;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #4c9cfc;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .chatbot-window {
+        width: calc(100vw - 2rem);
+        max-width: 100%;
+    }
+}
+</style>
+
+<script>
+// PROTECH AI Chatbot JavaScript
+(function() {
+    'use strict';
+    
+    // DOM Elements
+    const chatbotToggleBtn = document.getElementById('chatbot-toggle-btn');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const chatbotIcon = document.getElementById('chatbot-icon');
+    const chatbotCloseIcon = document.getElementById('chatbot-close-icon');
+    const chatbotMinimizeBtn = document.getElementById('chatbot-minimize-btn');
+    const chatbotForm = document.getElementById('chatbot-form');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+    const chatbotSendBtn = document.getElementById('chatbot-send-btn');
+    
+    // Conversation history for context
+    let conversationHistory = [];
+    
+    // Toggle chatbot window
+    function toggleChatbot() {
+        const isHidden = chatbotWindow.classList.contains('hidden');
+        
+        if (isHidden) {
+            chatbotWindow.classList.remove('hidden');
+            chatbotIcon.classList.add('hidden');
+            chatbotCloseIcon.classList.remove('hidden');
+            chatbotInput.focus();
+        } else {
+            chatbotWindow.classList.add('hidden');
+            chatbotIcon.classList.remove('hidden');
+            chatbotCloseIcon.classList.add('hidden');
+        }
+    }
+    
+    // Add message to chat
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message-bubble ${isUser ? 'user-message' : 'bot-message'} mb-4`;
+        
+        if (isUser) {
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-2 justify-end">
+                    <div class="message-content bg-gradient-to-r from-secondary to-tertiary text-white rounded-2xl rounded-br-none p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm">${escapeHtml(message)}</p>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-secondary to-tertiary rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">${formatMessage(message)}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    // Add typing indicator
+    function addTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typing-indicator';
+        typingDiv.className = 'message-bubble bot-message mb-4';
+        typingDiv.innerHTML = `
+            <div class="flex items-start gap-2">
+                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                </div>
+                <div class="typing-indicator dark:bg-gray-700">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+        chatbotMessages.appendChild(typingDiv);
+        scrollToBottom();
+    }
+    
+    // Remove typing indicator
+    function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    // Scroll to bottom of messages
+    function scrollToBottom() {
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Format message (convert newlines to <br>, make links clickable, etc.)
+    function formatMessage(text) {
+        // Escape HTML first
+        text = escapeHtml(text);
+        
+        // Convert newlines to <br>
+        text = text.replace(/\n/g, '<br>');
+        
+        // Make URLs clickable
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        text = text.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-500 hover:underline">$1</a>');
+        
+        return text;
+    }
+    
+    // Send message to backend
+    async function sendMessage(message) {
+        if (!message.trim()) return;
+        
+        // Add user message to chat
+        addMessage(message, true);
+        
+        // Add to conversation history
+        conversationHistory.push({
+            role: 'user',
+            content: message
+        });
+        
+        // Clear input
+        chatbotInput.value = '';
+        
+        // Show typing indicator
+        addTypingIndicator();
+        
+        // Disable send button
+        chatbotSendBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/api/chatbot/message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: conversationHistory
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Remove typing indicator
+            removeTypingIndicator();
+            
+            if (data.success) {
+                // Add bot response to chat
+                addMessage(data.message, false);
+                
+                // Add to conversation history
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: data.message
+                });
+            } else {
+                addMessage('Sorry, I encountered an error: ' + (data.error || 'Unknown error'), false);
+            }
+        } catch (error) {
+            removeTypingIndicator();
+            console.error('Chatbot error:', error);
+            addMessage('Sorry, I\'m having trouble connecting right now. Please try again later.', false);
+        } finally {
+            // Re-enable send button
+            chatbotSendBtn.disabled = false;
+            chatbotInput.focus();
+        }
+    }
+    
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Event Listeners
+    chatbotToggleBtn.addEventListener('click', toggleChatbot);
+    chatbotMinimizeBtn.addEventListener('click', toggleChatbot);
+    
+    chatbotForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = chatbotInput.value.trim();
+        if (message) {
+            sendMessage(message);
+        }
+    });
+    
+    // Allow Enter to send, Shift+Enter for new line
+    chatbotInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatbotForm.dispatchEvent(new Event('submit'));
+        }
+    });
+    
+})();
+</script>
