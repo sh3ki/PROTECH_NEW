@@ -1,4 +1,5 @@
 {% extends 'components/base_component.html' %}
+{% load static %}
 
 {% block title %}PROTECH - Section Management{% endblock %}
 {% block page_title %}Section Management{% endblock %}
@@ -8,11 +9,1357 @@
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-    <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Section Management</h2>
-    <p class="text-accent dark:text-gray-400 mt-4">Section Management content will appear here.</p>
+{% csrf_token %}
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Total Sections -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sections</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_sections }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sections with Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">With Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ sections_with_students }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sections with Advisors -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">With Advisors</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ sections_with_advisors }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-primary dark:border-tertiary transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-primary/10 dark:bg-tertiary/20 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_students }}</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="section-search" placeholder="Search by section or grade name..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div id="section-search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="animate-spin h-5 w-5 text-primary dark:text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="section-search-results-count" class="hidden absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span></span>
+                </div>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <!-- Grade filter with icon -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="grade-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Grades</option>
+                        <!-- Grades will be dynamically sorted -->
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Advisor filter with icon -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="advisor-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Sections</option>
+                        <option value="with_advisor" {% if advisor_filter == 'with_advisor' %}selected{% endif %}>With Advisor</option>
+                        <option value="without_advisor" {% if advisor_filter == 'without_advisor' %}selected{% endif %}>Without Advisor</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-sections-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-sections-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
+            <button id="print-sections-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Section table container -->
+<div id="section-table-container" class="relative">
+    <!-- Loading overlay -->
+    <div id="section-table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-primary dark:text-tertiary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading sections...</p>
+        </div>
+    </div>
+
+    <!-- Section Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+        <div class="overflow-x-auto">
+            <table id="sections-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section Name</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Students</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Advisor</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- Table content will be dynamically loaded -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Component -->
+        {% include 'components/pagination.html' with pagination_id='section-pagination-container' items_per_page=10 %}
+    </div>
+
+    <!-- No results message -->
+    <div id="section-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No sections found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="section-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3">
+        <!-- Toast notifications will be dynamically added here -->
+    </div>
+</div>
+
+<!-- Add/Edit Section Modal -->
+<div id="section-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <form id="section-form" class="transition-all">
+                    <div class="bg-white dark:bg-gray-800 px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <div class="flex items-center justify-between mb-5">
+                                    <h3 class="text-2xl leading-6 font-bold text-gray-900 dark:text-white" id="section-modal-title">Add Section</h3>
+                                    <button type="button" id="close-section-modal-x" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-1 gap-y-6">
+                                    <div>
+                                        <label for="section-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Section Name *</label>
+                                        <input type="text" name="name" id="section-name" required class="mt-1 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white px-4 py-3" placeholder="e.g., A, B, C, etc.">
+                                    </div>
+                                    <div>
+                                        <label for="section-grade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grade *</label>
+                                        <select name="grade_id" id="section-grade" required class="mt-1 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white px-4 py-3">
+                                            <option value="">Select Grade</option>
+                                            {% for grade in grades %}
+                                                <option value="{{ grade.id }}">{{ grade.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-md px-6 py-3 bg-gradient-to-r from-secondary to-secondary/80 text-base font-medium text-white hover:from-secondary/90 hover:to-secondary/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Save Section
+                            </span>
+                        </button>
+                        <button type="button" id="close-section-modal" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Section Modal -->
+<div id="delete-section-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white mb-2">Delete Section</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    Are you sure you want to delete "<span id="delete-section-name" class="font-semibold"></span>" from <span id="delete-section-grade" class="font-semibold"></span>? This action cannot be undone and will also remove all students from this section.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="confirm-delete-section" type="button" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-base font-medium text-white hover:from-red-700 hover:to-red-600 dark:from-red-700 dark:to-red-600 dark:hover:from-red-800 dark:hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        Delete Section
+                    </button>
+                    <button type="button" id="cancel-delete-section" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Section Modal for Class List -->
+<div id="view-section-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6">
+                    <div class="sm:flex sm:items-start mb-4">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-grow">
+                            <div class="flex items-center justify-between">
+                                <h3 id="view-section-title" class="text-2xl leading-6 font-bold text-gray-900 dark:text-white"></h3>
+                                <button type="button" id="close-view-section-modal-x" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="mt-1 flex items-center">
+                                <div class="text-sm text-gray-500 dark:text-gray-400 font-medium">Section Advisor:</div>
+                                <div id="view-section-advisor" class="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Class List</h4>
+                        <div id="view-section-students" class="max-h-96 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                            <!-- Students will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="print-class-list" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-base font-medium text-white hover:from-blue-700 hover:to-blue-600 dark:from-blue-700 dark:to-blue-600 dark:hover:from-blue-800 dark:hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Print Class List
+                        </span>
+                    </button>
+                    <button type="button" id="close-view-section-modal" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Animation styles */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes highlightRow {
+        0% { background-color: rgba(var(--color-primary-rgb), 0.1); }
+        100% { background-color: transparent; }
+    }
+
+    .highlight-row {
+        animation: highlightRow 2s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateY(-1rem);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateY(-1rem);
+            opacity: 0;
+        }
+    }
+    
+    #section-toast-container {
+        pointer-events: none;
+    }
+    
+    #section-toast-container > div {
+        pointer-events: auto;
+    }
+</style>
+
+<script src="{% static 'js/pagination-component.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- DOM Elements ---
+    const sectionSearch = document.getElementById('section-search');
+    const gradeFilter = document.getElementById('grade-filter');
+    const advisorFilter = document.getElementById('advisor-filter');
+    const addSectionBtn = document.getElementById('add-section-btn');
+    const sectionModal = document.getElementById('section-modal');
+    const deleteSectionModal = document.getElementById('delete-section-modal');
+    const sectionForm = document.getElementById('section-form');
+    const sectionModalTitle = document.getElementById('section-modal-title');
+    const sectionNameInput = document.getElementById('section-name');
+    const sectionGradeSelect = document.getElementById('section-grade');
+    const sectionTableLoading = document.getElementById('section-table-loading');
+    const sectionToastContainer = document.getElementById('section-toast-container');
+    const sectionNoResults = document.getElementById('section-no-results');
+    const sectionSearchSpinner = document.getElementById('section-search-spinner');
+    const sectionSearchResultsCount = document.getElementById('section-search-results-count');
+    const sectionTableContainer = document.getElementById('section-table-container');
+    const sectionPaginationContainer = document.getElementById('section-pagination-container');
+    const sectionsTable = document.getElementById('sections-table');
+    
+    // --- State ---
+    let currentSectionId = null;
+    let currentPage = 1;
+    let searchTimeout = null;
+    
+    // CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // --- Export Dropdown Functionality ---
+    const exportSectionsBtn = document.getElementById('export-sections-btn');
+    const exportSectionsDropdown = document.getElementById('export-sections-dropdown');
+    const exportSectionsOptions = document.querySelectorAll('.export-sections-option');
+
+    // Toggle dropdown on button click
+    if (exportSectionsBtn && exportSectionsDropdown) {
+        exportSectionsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportSectionsDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportSectionsBtn.contains(e.target) && !exportSectionsDropdown.contains(e.target)) {
+                exportSectionsDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Handle export format selection
+    exportSectionsOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const format = this.getAttribute('data-format');
+            exportSectionsDropdown.classList.add('hidden');
+
+            // Show loading state
+            sectionTableLoading.classList.remove('hidden');
+
+            // Get current filter parameters
+            const searchQuery = sectionSearch ? sectionSearch.value : '';
+            const gradeFilterValue = gradeFilter ? gradeFilter.value : '';
+            const advisorFilterValue = advisorFilter ? advisorFilter.value : '';
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (gradeFilterValue) params.append('grade', gradeFilterValue);
+            if (advisorFilterValue) params.append('advisor', advisorFilterValue);
+            params.append('format', format);
+
+            // Make the export request
+            const exportUrl = `/principal/sections/export/?${params.toString()}`;
+
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                sectionTableLoading.classList.add('hidden');
+
+                if (!response.ok) {
+                    // Check if response is JSON (error response)
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || `Export failed with status ${response.status}`);
+                        });
+                    }
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `sections_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+
+                    showToast(`Sections exported successfully as ${format.toUpperCase()}!`, 'success');
+                });
+            })
+            .catch(error => {
+                sectionTableLoading.classList.add('hidden');
+                console.error('Export error:', error);
+                showToast('Failed to export sections: ' + error.message, 'error');
+            });
+        });
+    });
+    
+    // Initialize Pagination Component
+    const sectionPagination = new PaginationComponent({
+        containerId: 'section-pagination-container',
+        fetchFunction: fetchSections,
+        itemsPerPage: 10
+    });
+    
+    // --- Utility Functions ---
+    function showToast(message, type = 'success', duration = 5000) {
+        // Create toast element
+        const toast = document.createElement('div');
+        
+        // Set base classes - using top animation with translate-y-[-1rem]
+        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0';
+        
+        // Additional classes based on type
+        let iconHTML = '';
+        switch (type) {
+            case 'success':
+                toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
+                iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+            case 'error':
+                toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
+                iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+            case 'warning':
+                toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
+                iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+            case 'info':
+                toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
+                iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 4a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>`;
+                break;
+        }
+        
+        // Add content to toast
+        toast.innerHTML = `
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center">
+                    ${iconHTML}
+                    <div class="ml-3 text-sm font-normal">${message}</div>
+                </div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" data-dismiss-target="#toast" aria-label="Close">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        
+        // Add toast to container
+        sectionToastContainer.appendChild(toast);
+        
+        // Animate toast in - slide down from top
+        setTimeout(() => {
+            toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
+        }, 10);
+        
+        // Add click event to close button
+        const closeButton = toast.querySelector('button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                removeToast(toast);
+            });
+        }
+        
+        // Auto-dismiss after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+    }
+    
+    function removeToast(toast) {
+        // Slide back up when removing (for top position)
+        toast.classList.add('opacity-0', 'translate-y-[-1rem]');
+        setTimeout(() => { 
+            if (toast && toast.parentNode) 
+                toast.parentNode.removeChild(toast); 
+        }, 300);
+    }
+    
+    function debounce(func, wait) {
+        clearTimeout(searchTimeout);
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+    
+    function showLoading() {
+        if (sectionTableLoading) sectionTableLoading.classList.remove('hidden');
+        if (sectionSearchSpinner) sectionSearchSpinner.classList.remove('hidden');
+        if (sectionSearchResultsCount) sectionSearchResultsCount.classList.add('hidden');
+    }
+    
+    function hideLoading() {
+        if (sectionTableLoading) sectionTableLoading.classList.add('hidden');
+        if (sectionSearchSpinner) sectionSearchSpinner.classList.add('hidden');
+        if (sectionSearchResultsCount && sectionSearch && sectionSearch.value.trim()) {
+            sectionSearchResultsCount.classList.remove('hidden');
+        }
+    }
+    
+    function sortGradesNaturally(grades) {
+        return [...grades].sort((a, b) => {
+            // Extract numbers from grade names for proper numeric sorting
+            const extractNumber = (str) => {
+                const match = str.match(/(\d+)/);
+                return match ? parseInt(match[1]) : 0;
+            };
+            
+            const numA = extractNumber(a.name);
+            const numB = extractNumber(b.name);
+            
+            // If both have numbers, sort by number
+            if (numA && numB) {
+                return numA - numB;
+            }
+            
+            // If only one has a number, put numbered ones first
+            if (numA && !numB) return -1;
+            if (!numA && numB) return 1;
+            
+            // If neither has numbers, sort alphabetically
+            return a.name.localeCompare(b.name);
+        });
+    }
+    
+    function initializeGradeFilter() {
+        const grades = [
+            {% for grade in grades %}
+                { id: {{ grade.id }}, name: "{{ grade.name }}" },
+            {% endfor %}
+        ];
+        
+        const sortedGrades = sortGradesNaturally(grades);
+        
+        // Clear existing options except "All Grades"
+        const allGradesOption = gradeFilter.querySelector('option[value=""]');
+        gradeFilter.innerHTML = '';
+        gradeFilter.appendChild(allGradesOption);
+        
+        // Add sorted grades
+        sortedGrades.forEach(grade => {
+            const option = document.createElement('option');
+            option.value = grade.id;
+            option.textContent = grade.name;
+            if ('{{ grade_filter }}' == grade.id.toString()) {
+                option.selected = true;
+            }
+            gradeFilter.appendChild(option);
+        });
+    }
+
+    // --- AJAX/Data Functions ---
+    function fetchSections(page = 1, itemsPerPage = null) {
+        const searchQuery = sectionSearch ? sectionSearch.value.trim() : '';
+        const gradeFilterValue = gradeFilter ? gradeFilter.value : '';
+        const advisorFilterValue = advisorFilter ? advisorFilter.value : '';
+        
+        showLoading();
+        currentPage = page;
+        
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (gradeFilterValue) params.append('grade', gradeFilterValue);
+        if (advisorFilterValue) params.append('advisor', advisorFilterValue);
+        params.append('page', page);
+        if (itemsPerPage) params.append('items_per_page', itemsPerPage);
+        
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        fetch(`/principal/sections/search/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (sectionSearchResultsCount) {
+                sectionSearchResultsCount.textContent = `${data.total_count} result${data.total_count !== 1 ? 's' : ''}`;
+            }
+            
+            if (data.total_count === 0) {
+                if (sectionNoResults) sectionNoResults.classList.remove('hidden');
+                if (sectionsTable) sectionsTable.closest('.overflow-x-auto').classList.add('hidden');
+                if (sectionPaginationContainer) sectionPaginationContainer.classList.add('hidden');
+            } else {
+                if (sectionNoResults) sectionNoResults.classList.add('hidden');
+                if (sectionsTable) sectionsTable.closest('.overflow-x-auto').classList.remove('hidden');
+                if (sectionPaginationContainer) sectionPaginationContainer.classList.remove('hidden');
+                
+                updateSectionsTable(data.sections);
+                sectionPagination.update(data.pagination);
+            }
+            
+            hideLoading();
+            attachSectionTableEventListeners();
+        })
+        .catch(error => {
+            console.error('Error fetching sections:', error);
+            hideLoading();
+            showToast('Failed to load sections. Please try again later.', 'error');
+        });
+    }
+    
+    function updateSectionsTable(sections) {
+        if (!sectionsTable) return;
+        
+        const tableBody = sectionsTable.querySelector('tbody');
+        if (!tableBody) return;
+        
+        let html = '';
+        
+        if (sections.length === 0) {
+            html = `
+            <tr>
+                <td colspan="6" class="px-6 py-10 text-center">
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-7H3a2 2 0 00-2 2v8a2 2 0 002 2h2l3 3 3-3h5a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No sections found</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Get started by creating your first section</p>
+                    </div>
+                </td>
+            </tr>`;
+        } else {
+            sections.forEach((section, index) => {
+                const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+                const advisorDisplay = section.advisor ? section.advisor.name : '<span class="text-gray-400 dark:text-gray-500 italic">No advisor</span>';
+                const statusHtml = (section.is_active === true)
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-100">Active</span>`
+                    : (section.is_active === false)
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-100">Inactive</span>`
+                    : `<span class="text-gray-500 italic">Unknown</span>`;
+
+                html += `
+                <tr class="${rowClass} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-lg font-bold text-gray-900 dark:text-white">${section.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                                ${section.grade_name}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                                ${section.students_count} student${section.students_count !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ${advisorDisplay}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ${statusHtml}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${section.created_at_display}
+                    </td>
+                </tr>`;
+            });
+        }
+        
+        tableBody.innerHTML = html;
+        
+        tableBody.classList.add('animate-fadeIn');
+        setTimeout(() => {
+            tableBody.classList.remove('animate-fadeIn');
+        }, 500);
+    }
+    
+    // updateSectionPagination function removed - now using PaginationComponent
+    
+    // --- Event Handlers ---
+    function attachSectionTableEventListeners() {
+        document.querySelectorAll('.edit-section').forEach(button => {
+            button.addEventListener('click', function() {
+                const sectionId = this.dataset.sectionId;
+                const sectionName = this.dataset.sectionName;
+                const gradeId = this.dataset.gradeId;
+                
+                currentSectionId = sectionId;
+                sectionModalTitle.textContent = 'Edit Section';
+                sectionNameInput.value = sectionName;
+                sectionGradeSelect.value = gradeId;
+                sectionModal.classList.remove('hidden');
+            });
+        });
+        
+        document.querySelectorAll('.view-section').forEach(button => {
+            button.addEventListener('click', function() {
+                const sectionId = this.dataset.sectionId;
+                const sectionName = this.dataset.sectionName;
+                const gradeName = this.dataset.gradeName;
+                const advisorName = this.dataset.advisor || 'No Advisor';
+                
+                // Set modal title and details
+                document.getElementById('view-section-title').textContent = `${gradeName} - ${sectionName}`;
+                document.getElementById('view-section-advisor').textContent = advisorName;
+                
+                // Show loading in student list
+                const studentListContainer = document.getElementById('view-section-students');
+                studentListContainer.innerHTML = `
+                    <div class="flex justify-center py-6">
+                        <svg class="animate-spin h-8 w-8 text-primary dark:text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                `;
+                
+                // Show the modal
+                document.getElementById('view-section-modal').classList.remove('hidden');
+                
+                // Fetch students in this section
+                fetch(`/principal/sections/${sectionId}/students/`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (data.students.length === 0) {
+                            studentListContainer.innerHTML = `
+                                <div class="text-center py-6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    <p class="text-gray-500 dark:text-gray-400">No students in this section</p>
+                                </div>
+                            `;
+                        } else {
+                            let html = `
+                                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <div class="grid grid-cols-12 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 py-2">
+                                        <div class="col-span-1 px-4">#</div>
+                                        <div class="col-span-3 px-4">LRN</div>
+                                        <div class="col-span-8 px-4">Student Name</div>
+                                    </div>
+                            `;
+                            
+                            data.students.forEach((student, index) => {
+                                const rowClass = index % 2 === 0 ? '' : 'bg-gray-50 dark:bg-gray-800/50';
+                                html += `
+                                    <div class="grid grid-cols-12 py-3 ${rowClass}">
+                                        <div class="col-span-1 px-4 text-sm text-gray-500 dark:text-gray-400">${index + 1}</div>
+                                        <div class="col-span-3 px-4 text-sm font-medium">${student.lrn}</div>
+                                        <div class="col-span-8 px-4 font-medium">${student.full_name}</div>
+                                    </div>
+                                `;
+                            });
+                            
+                            html += '</div>';
+                            studentListContainer.innerHTML = html;
+                        }
+                    } else {
+                        studentListContainer.innerHTML = `
+                            <div class="text-center py-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 dark:text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p class="text-red-500 dark:text-red-400">Error loading students</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching section students:', error);
+                    studentListContainer.innerHTML = `
+                        <div class="text-center py-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 dark:text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-red-500 dark:text-red-400">Failed to load students. Please try again later.</p>
+                        </div>
+                    `;
+                });
+            });
+        });
+        
+        document.querySelectorAll('.delete-section').forEach(button => {
+            button.addEventListener('click', function() {
+                const sectionId = this.dataset.sectionId;
+                const sectionName = this.dataset.sectionName;
+                const gradeName = this.dataset.gradeName;
+                
+                currentSectionId = sectionId;
+                document.getElementById('delete-section-name').textContent = sectionName;
+                document.getElementById('delete-section-grade').textContent = gradeName;
+                deleteSectionModal.classList.remove('hidden');
+            });
+        });
+    }
+    
+    // Event listeners
+    if (sectionSearch) {
+        sectionSearch.addEventListener('input', debounce(() => fetchSections(1), 300));
+    }
+    if (gradeFilter) {
+        gradeFilter.addEventListener('change', () => fetchSections(1));
+    }
+    if (advisorFilter) {
+        advisorFilter.addEventListener('change', () => fetchSections(1));
+    }
+    if (addSectionBtn) {
+        addSectionBtn.addEventListener('click', function() {
+            currentSectionId = null;
+            sectionModalTitle.textContent = 'Add Section';
+            sectionNameInput.value = '';
+            sectionGradeSelect.value = '';
+            sectionModal.classList.remove('hidden');
+        });
+    }
+    document.getElementById('close-section-modal').addEventListener('click', function() {
+        sectionModal.classList.add('hidden');
+    });
+    document.getElementById('close-section-modal-x').addEventListener('click', function() {
+        sectionModal.classList.add('hidden');
+    });
+    document.getElementById('cancel-delete-section').addEventListener('click', function() {
+        deleteSectionModal.classList.add('hidden');
+    });
+
+    // Form submission
+    if (sectionForm) {
+        sectionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            const url = currentSectionId ? `/principal/sections/${currentSectionId}/update/` : '/principal/sections/create/';
+            const method = currentSectionId ? 'PATCH' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    sectionModal.classList.add('hidden');
+                    fetchSections(currentPage);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    }
+    
+    // Delete confirmation
+    document.getElementById('confirm-delete-section').addEventListener('click', function() {
+        if (!currentSectionId) return;
+        
+        fetch(`/principal/sections/${currentSectionId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                deleteSectionModal.classList.add('hidden');
+                fetchSections(currentPage);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred. Please try again.', 'error');
+        });
+    });
+    
+    // Close modals on outside click
+    window.addEventListener('click', function(event) {
+        if (event.target === sectionModal) sectionModal.classList.add('hidden');
+        if (event.target === deleteSectionModal) deleteSectionModal.classList.add('hidden');
+        if (event.target === document.getElementById('view-section-modal')) {
+            document.getElementById('view-section-modal').classList.add('hidden');
+        }
+    });
+    
+    // View Section Modal
+    document.getElementById('close-view-section-modal').addEventListener('click', function() {
+        document.getElementById('view-section-modal').classList.add('hidden');
+    });
+    document.getElementById('close-view-section-modal-x').addEventListener('click', function() {
+        document.getElementById('view-section-modal').classList.add('hidden');
+    });
+
+    // Print Class List
+    document.getElementById('print-class-list').addEventListener('click', function() {
+        const sectionTitle = document.getElementById('view-section-title').textContent;
+        const advisor = document.getElementById('view-section-advisor').textContent;
+        
+        // Create print content
+        const printContent = `
+            <div style="font-family: Arial, sans-serif; margin: 20px;">
+                <div style="margin-bottom: 30px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">PROTECH: THE TECH TO PROTECT</div>
+                    <div style="font-size: 14px; margin-bottom: 20px;">Face Recognition Attendance Monitoring System</div>
+                </div>
+                <div style="text-align: left; margin-bottom: 20px;">
+                    <p style="margin: 5px 0;"><strong>Section:</strong> ${sectionTitle}</p>
+                    <p style="margin: 5px 0;"><strong>Advisory Teacher:</strong> ${advisor}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                <h1 style="text-align: center; font-size: 18px; margin-bottom: 20px;">CLASS LIST</h1>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 10%;">#</th>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 30%;">LRN</th>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 60%;">Student Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${document.getElementById('view-section-students').querySelectorAll('.grid').length > 1 ? 
+                            Array.from(document.getElementById('view-section-students').querySelectorAll('.grid:not(:first-child)')).map((row, index) => {
+                                const columns = row.querySelectorAll('div[class^="col-span"]');
+                                if (columns.length >= 3) {
+                                    return `<tr>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${columns[1].textContent}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${columns[2].textContent}</td>
+                                    </tr>`;
+                                }
+                                return '';
+                            }).join('') : 
+                            '<tr><td colspan="3" style="text-align: center; padding: 8px; border: 1px solid #ddd;">No students in this section</td></tr>'
+                        }
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        // Store original content
+        const originalContent = document.body.innerHTML;
+        
+        // Replace body content with print content
+        document.body.innerHTML = printContent;
+        
+        // Print
+        window.print();
+        
+        // Restore original content
+        document.body.innerHTML = originalContent;
+        
+        // Re-initialize page since we replaced the DOM
+        location.reload();
+    });
+    
+    // Print Sections Button Handler
+    const printSectionsBtn = document.getElementById('print-sections-btn');
+    
+    if (printSectionsBtn) {
+        printSectionsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateSectionPrintDocument();
+        });
+    }
+    
+    // Generate print document for sections
+    function generateSectionPrintDocument() {
+        // Get current filter values
+        const searchQuery = sectionSearch ? sectionSearch.value.trim() : '';
+        const gradeValue = gradeFilter ? gradeFilter.value : '';
+        const advisorValue = advisorFilter ? advisorFilter.value : '';
+        
+        // Build filter info string
+        let filterInfo = '';
+        const filters = [];
+        if (searchQuery) filters.push(`Search: ${searchQuery}`);
+        if (gradeValue) {
+            const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
+            filters.push(`Grade: ${gradeText}`);
+        }
+        if (advisorValue) filters.push(`Advisor: ${advisorValue}`);
+        if (filters.length > 0) {
+            filterInfo = filters.join(', ');
+        }
+        
+        // Get table rows and clean them for printing
+        const tableBody = sectionsTable ? sectionsTable.querySelector('tbody') : null;
+        if (!tableBody) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        const rows = tableBody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        let printRows = '';
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                // Extract data from cells
+                const sectionName = cells[0] ? cells[0].textContent.trim() : '';
+                const grade = cells[1] ? cells[1].textContent.trim() : '';
+                const students = cells[2] ? cells[2].textContent.trim() : '';
+                const advisor = cells[3] ? cells[3].textContent.trim() : '';
+                const status = cells[4] ? cells[4].textContent.trim() : '';
+                const created = cells[5] ? cells[5].textContent.trim() : '';
+
+                printRows += `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${sectionName}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${students}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${advisor}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${status}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${created}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        // Create hidden iframe for printing
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+        
+        const printDocument = printFrame.contentWindow.document;
+        printDocument.open();
+        printDocument.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Sections Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        color: #333;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 10px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        color: #1a202c;
+                    }
+                    .header h2 {
+                        margin: 5px 0 0 0;
+                        font-size: 16px;
+                        color: #4a5568;
+                        font-weight: normal;
+                    }
+                    .info {
+                        margin-bottom: 20px;
+                    }
+                    .info p {
+                        margin: 5px 0;
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #f7fafc;
+                        padding: 12px;
+                        text-align: left;
+                        border: 1px solid #ddd;
+                        font-weight: bold;
+                        color: #2d3748;
+                    }
+                    td {
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9fafb;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #718096;
+                    }
+                    @media print {
+                        body { margin: 15px; }
+                        .header { margin-bottom: 20px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>PROTECH: THE TECH TO PROTECT</h1>
+                    <h2>Face Recognition Attendance Monitoring System</h2>
+                </div>
+                <div class="info">
+                    <p><strong>Report:</strong> Sections List</p>
+                    <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                    ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Section Name</th>
+                            <th>Grade</th>
+                            <th>Students</th>
+                            <th>Advisor</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${printRows}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
+                </div>
+            </body>
+            </html>
+        `);
+        printDocument.close();
+        
+        // Wait for content to load, then print
+        printFrame.contentWindow.focus();
+        setTimeout(() => {
+            printFrame.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(printFrame);
+            }, 1000);
+        }, 250);
+    }
+    
+    // Initialize grade filter and fetch sections on page load
+    initializeGradeFilter();
+    fetchSections();
+    
+    // Set initial values from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (sectionSearch && urlParams.has('search')) sectionSearch.value = urlParams.get('search');
+    if (gradeFilter && urlParams.has('grade')) gradeFilter.value = urlParams.get('grade');
+    if (advisorFilter && urlParams.has('advisor')) advisorFilter.value = urlParams.get('advisor');
+    if (urlParams.has('page')) {
+        currentPage = parseInt(urlParams.get('page'));
+        if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
+    }
+});
+</script>
 {% endblock %}
