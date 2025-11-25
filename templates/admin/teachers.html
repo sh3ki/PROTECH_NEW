@@ -142,12 +142,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-teachers-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-teachers-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
             <button id="print-teachers-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -265,12 +292,20 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
                             <div class="flex justify-end space-x-2">
-                                <!-- Assign as Advisor button (existing) -->
+                                <!-- Assign as Advisor button (existing). Disabled if teacher is inactive -->
+                                {% if teacher.is_active %}
                                 <button class="assign-advisory text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Assign as Advisor">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </button>
+                                {% else %}
+                                <button class="assign-advisory opacity-50 cursor-not-allowed pointer-events-none text-blue-600 dark:text-blue-400 transition-colors p-1.5 rounded-full" disabled data-teacher-id="{{ teacher.id }}" title="Inactive - cannot assign">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </button>
+                                {% endif %}
                                 <!-- Reset Password -->
                                 <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-teacher-id="{{ teacher.id }}" title="Reset Password">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -805,6 +840,232 @@
     </div>
 </div>
 
+<!-- Import Teachers Modal -->
+<div id="import-teachers-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Teachers</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file with teacher data</p>
+                    </div>
+                </div>
+                <button id="close-import-teachers-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="/admin/teachers/import/template/" 
+                       class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Teacher ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new teachers</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">First Name</td>
+                                    <td class="p-2">Teacher first name (required)</td>
+                                    <td class="p-2">John</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Middle Name</td>
+                                    <td class="p-2">Teacher middle name (optional)</td>
+                                    <td class="p-2">Smith</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Last Name</td>
+                                    <td class="p-2">Teacher last name (required)</td>
+                                    <td class="p-2">Doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Username</td>
+                                    <td class="p-2">Unique username (required)</td>
+                                    <td class="p-2">john.doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Email</td>
+                                    <td class="p-2">Email address (required)</td>
+                                    <td class="p-2">john.doe@school.edu</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Password</td>
+                                    <td class="p-2">Auto-generated for new teachers</td>
+                                    <td class="p-2">Leave blank (system generated)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Excel Format Preview -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                        <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                        Excel/CSV Format Preview (Matches Export Format):
+                    </h5>
+                    
+                    <!-- Excel-style table preview -->
+                    <div class="bg-white dark:bg-gray-800 rounded border overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr style="background-color: #1F4E78;">
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 40px;">ID</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">First Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Middle Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Last Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Username</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 150px;">Email</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Password</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-800 dark:text-gray-200">
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">1</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">John</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Doe</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">john.doe</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">john.doe@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400 italic">auto-generated</td>
+                                </tr>
+                                <tr class="bg-gray-50 dark:bg-gray-750">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">2</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Jane</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">jane.smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">jane.smith@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400 italic">auto-generated</td>
+                                </tr>
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">3</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Maria</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Cruz</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Santos</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">maria.santos</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">maria.santos@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400 italic">auto-generated</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3 flex items-start space-x-2">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="font-semibold mb-1">Pro Tips:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                <li><strong>Leave ID blank</strong> for new teachers (ID is auto-generated)</li>
+                                <li><strong>Passwords are auto-generated</strong> and sent to teachers' email addresses</li>
+                                <li>Username and email must be unique across the system</li>
+                                <li>Middle Name is optional, other fields are required</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new teachers.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
+                        <li>• <strong>Passwords are auto-generated</strong> for new teachers and sent via email</li>
+                        <li>• Username and email must be unique across the system</li>
+                        <li>• First name, last name, username, and email are required fields</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-teachers-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-teachers-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-teachers-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-teachers-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-teachers-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing teachers...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-teachers-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-teachers-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results -->
+                    <div id="import-teachers-results" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-teachers" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="button" id="submit-import-teachers" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
+                    <i class="fas fa-upload mr-2"></i>
+                    Import Teachers
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1016,7 +1277,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+                console.error('HTTP Error:', response.status, response.statusText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('Invalid content type:', contentType);
+                throw new Error('Server returned HTML instead of JSON. Check server logs for errors.');
+            }
             return response.json();
         })
         .then(data => {
@@ -1168,12 +1437,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                </button>` :
+                                </button>` : (
+                                teacher.is_active ?
                                 `<button class="assign-advisory text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 transition-colors p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Assign as Advisor">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                     </svg>
+                                </button>` :
+                                `<button class="assign-advisory opacity-50 cursor-not-allowed pointer-events-none text-blue-600 dark:text-blue-400 transition-colors p-1.5 rounded-full" disabled data-teacher-id="${teacher.id}" title="Inactive - cannot assign">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                    </svg>
                                 </button>`
+                            )
                             }
                             <!-- Reset Password button -->
                             <button class="reset-password text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-full" data-teacher-id="${teacher.id}" title="Reset Password">
@@ -1274,6 +1550,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function attachTeacherTableEventListeners() {
         // Attach assign-advisory button event listeners
         document.querySelectorAll('.assign-advisory').forEach(button => {
+            // Skip disabled/non-interactive assign buttons (inactive teachers)
+            if (button.disabled || button.classList.contains('pointer-events-none') || button.classList.contains('cursor-not-allowed')) return;
             button.addEventListener('click', function() {
                 const teacherId = this.dataset.teacherId;
                 
@@ -1399,6 +1677,277 @@ document.addEventListener('DOMContentLoaded', function() {
     if (closeAddTeacherModalXBtn) closeAddTeacherModalXBtn.addEventListener('click', closeAddTeacherModal);
     if (addTeacherUploadTrigger) addTeacherUploadTrigger.addEventListener('click', () => addTeacherProfilePicInput && addTeacherProfilePicInput.click());
     if (addTeacherUploadTriggerBtn) addTeacherUploadTriggerBtn.addEventListener('click', () => addTeacherProfilePicInput && addTeacherProfilePicInput.click());
+    
+    // Export Teachers Button Handler
+    // Export dropdown functionality
+    const exportTeachersBtn = document.getElementById('export-teachers-btn');
+    const exportDropdown = document.getElementById('export-dropdown');
+    const exportOptions = document.querySelectorAll('.export-option');
+    
+    // Toggle dropdown on button click
+    if (exportTeachersBtn && exportDropdown) {
+        exportTeachersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportTeachersBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+                exportDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Handle export format selection
+    exportOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const format = this.getAttribute('data-format');
+            exportDropdown.classList.add('hidden');
+            
+            // Show loading state
+            showLoading();
+            
+            // Get current filter parameters
+            const searchQuery = teacherSearch ? teacherSearch.value : '';
+            const advisoryFilterValue = advisoryFilter ? advisoryFilter.value : '';
+            const statusFilterValue = statusFilter ? statusFilter.value : '';
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (advisoryFilterValue) params.append('advisory', advisoryFilterValue);
+            if (statusFilterValue) params.append('status', statusFilterValue);
+            params.append('format', format); // Add format parameter
+            
+            // Make the export request
+            const exportUrl = `/admin/teachers/export/?${params.toString()}`;
+            
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                hideLoading();
+                
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+                
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `teachers_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+                
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+                    
+                    showToast('Teachers exported successfully!', 'success');
+                });
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Export error:', error);
+                showToast('Failed to export teachers: ' + error.message, 'error');
+            });
+        });
+    });
+    
+    // Print Teachers Button Handler
+    const printTeachersBtn = document.getElementById('print-teachers-btn');
+    
+    if (printTeachersBtn) {
+        printTeachersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateTeacherPrintDocument();
+        });
+    }
+    
+    // Generate print document for teachers
+    function generateTeacherPrintDocument() {
+        // Get current filter values
+        const searchQuery = teacherSearch ? teacherSearch.value.trim() : '';
+        const advisoryValue = advisoryFilter ? advisoryFilter.value : '';
+        const statusValue = statusFilter ? statusFilter.value : '';
+        const sectionValue = sectionFilter ? sectionFilter.value : '';
+        
+        // Build filter info string
+        let filterInfo = '';
+        const filters = [];
+        if (searchQuery) filters.push(`Search: ${searchQuery}`);
+        if (advisoryValue) filters.push(`Advisory: ${advisoryValue}`);
+        if (statusValue) filters.push(`Status: ${statusValue}`);
+        if (sectionValue) filters.push(`Section: ${sectionValue}`);
+        if (filters.length > 0) {
+            filterInfo = filters.join(', ');
+        }
+        
+        // Get table rows and clean them for printing
+        const tableBody = teachersTable ? teachersTable.querySelector('tbody') : null;
+        if (!tableBody) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        const rows = tableBody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        let printRows = '';
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                printRows += '<tr>';
+                // Username
+                printRows += `<td>${cells[0]?.textContent.trim() || ''}</td>`;
+                // Full Name (skip profile image cell)
+                printRows += `<td>${cells[2]?.textContent.trim() || ''}</td>`;
+                // Email
+                printRows += `<td>${cells[3]?.textContent.trim() || ''}</td>`;
+                // Advisory Section
+                printRows += `<td>${cells[4]?.textContent.trim() || ''}</td>`;
+                // Status
+                printRows += `<td>${cells[5]?.textContent.trim() || ''}</td>`;
+                printRows += '</tr>';
+            }
+        });
+        
+        // Create hidden iframe for printing
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+        
+        const printDocument = printFrame.contentWindow.document;
+        printDocument.open();
+        printDocument.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Teachers Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        color: #333;
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #1f2937;
+                        margin-bottom: 10px;
+                    }
+                    .header-info {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        color: #6b7280;
+                        font-size: 14px;
+                    }
+                    .filter-info {
+                        background: #f3f4f6;
+                        padding: 10px;
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        font-size: 12px;
+                        color: #4b5563;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #1f2937;
+                        color: white;
+                        padding: 12px 8px;
+                        text-align: left;
+                        font-size: 12px;
+                        border: 1px solid #374151;
+                    }
+                    td {
+                        padding: 10px 8px;
+                        border: 1px solid #e5e7eb;
+                        font-size: 11px;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9fafb;
+                    }
+                    .print-date {
+                        text-align: right;
+                        margin-top: 30px;
+                        font-size: 12px;
+                        color: #6b7280;
+                    }
+                    @media print {
+                        body { margin: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Teachers Report</h1>
+                <div class="header-info">
+                    <strong>PROTECH School Management System</strong><br>
+                    Generated on: ${new Date().toLocaleString()}
+                </div>
+                ${filterInfo ? `<div class="filter-info"><strong>Applied Filters:</strong> ${filterInfo}</div>` : ''}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Advisory Section</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${printRows}
+                    </tbody>
+                </table>
+                <div class="print-date">
+                    <p>Report printed on: ${new Date().toLocaleString()}</p>
+                </div>
+            </body>
+            </html>
+        `);
+        printDocument.close();
+        
+        // Wait for content to load, then print
+        printFrame.contentWindow.focus();
+        setTimeout(() => {
+            printFrame.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(printFrame);
+            }, 1000);
+        }, 250);
+    }
+    
     if (addTeacherProfilePicInput) {
         addTeacherProfilePicInput.addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
@@ -1432,31 +1981,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = document.getElementById('add-teacher-email').value.trim();
             const grade = document.getElementById('add-teacher-grade').value;
             const section = document.getElementById('add-teacher-section').value;
-            const password = document.getElementById('add-teacher-password').value;
-            const password_confirmation = document.getElementById('add-teacher-password-confirmation').value;
 
             // Validation
-            if (!first_name || !last_name || !username || !email || !password || !password_confirmation) {
+            if (!first_name || !last_name || !username || !email) {
                 showToast('Please fill in all required fields.', 'error');
                 return;
             }
-            if (password.length < 8) {
-                showToast('Password must be at least 8 characters long.', 'error');
-                return;
-            }
-            if (password !== password_confirmation) {
-                showToast("Passwords don't match.", 'error');
-                return;
-            }
 
-            // Prepare data for teacher creation
+            // Prepare data for teacher creation (password will be auto-generated)
             const data = {
                 first_name,
                 middle_name,
                 last_name,
                 username,
                 email,
-                password,
                 role: 'TEACHER',
                 is_active: true
             };
@@ -1799,8 +2337,194 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // --- Import Teachers Modal Handlers ---
+    const importTeachersBtn = $('import-teachers-btn');
+    const importTeachersModal = $('import-teachers-modal');
+    const closeImportTeachersModal = $('close-import-teachers-modal');
+    const cancelImportTeachers = $('cancel-import-teachers');
+    const submitImportTeachers = $('submit-import-teachers');
+    const importTeachersFile = $('import-teachers-file');
+    const importTeachersForm = $('import-teachers-form');
+    const importTeachersProgress = $('import-teachers-progress');
+    const importTeachersProgressBar = $('import-teachers-progress-bar');
+    const importTeachersProgressText = $('import-teachers-progress-text');
+    const importTeachersResults = $('import-teachers-results');
+
+    function openImportModal() {
+        importTeachersModal.classList.remove('hidden');
+        importTeachersModal.classList.add('flex');
+        setTimeout(() => {
+            importTeachersModal.classList.remove('opacity-0');
+            importTeachersModal.querySelector('.transform').classList.remove('scale-95');
+        }, 10);
+        
+        // Reset form and file display
+        importTeachersForm.reset();
+        const importTeachersFileName = $('import-teachers-file-name');
+        if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+        if (submitImportTeachers) submitImportTeachers.disabled = true;
+        importTeachersProgress.classList.add('hidden');
+        importTeachersResults.classList.add('hidden');
+    }
+
+    function closeImportModal() {
+        importTeachersModal.classList.add('opacity-0');
+        importTeachersModal.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => {
+            importTeachersModal.classList.add('hidden');
+            importTeachersModal.classList.remove('flex');
+            importTeachersForm.reset();
+            importTeachersProgress.classList.add('hidden');
+            importTeachersResults.classList.add('hidden');
+            importTeachersProgressBar.style.width = '0%';
+            importTeachersProgressText.textContent = '0%';
+        }, 300);
+    }
+
+    if (importTeachersBtn) importTeachersBtn.addEventListener('click', openImportModal);
+    if (closeImportTeachersModal) closeImportTeachersModal.addEventListener('click', closeImportModal);
+    if (cancelImportTeachers) cancelImportTeachers.addEventListener('click', closeImportModal);
+
+    // Handle file selection for teachers import
+    const importTeachersFileName = $('import-teachers-file-name');
+    if (importTeachersFile && submitImportTeachers) {
+        // Initially disable submit button
+        submitImportTeachers.disabled = true;
+        
+        // File change handler
+        importTeachersFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                    e.target.value = '';
+                    if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                    submitImportTeachers.disabled = true;
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('File too large. Maximum file size is 10MB.', 'error');
+                    e.target.value = '';
+                    if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                    submitImportTeachers.disabled = true;
+                    return;
+                }
+                
+                if (importTeachersFileName) {
+                    importTeachersFileName.textContent = `Selected: ${file.name}`;
+                    importTeachersFileName.classList.remove('hidden');
+                }
+                submitImportTeachers.disabled = false;
+            } else {
+                if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                submitImportTeachers.disabled = true;
+            }
+        });
+    }
+
+    if (submitImportTeachers) {
+        submitImportTeachers.addEventListener('click', function() {
+            const file = importTeachersFile.files[0];
+            if (!file) {
+                showToast('Please select a file to import', 'error');
+                return;
+            }
+
+            const formData = new FormData(importTeachersForm);
+            
+            // Ensure file is in the FormData
+            if (!formData.has('file')) {
+                formData.append('file', file);
+            }
+
+            importTeachersProgress.classList.remove('hidden');
+            importTeachersResults.classList.add('hidden');
+            submitImportTeachers.disabled = true;
+
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                if (progress <= 90) {
+                    importTeachersProgressBar.style.width = progress + '%';
+                    importTeachersProgressText.textContent = progress + '%';
+                }
+            }, 200);
+
+            fetch('/admin/teachers/import/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                importTeachersProgressBar.style.width = '100%';
+                importTeachersProgressText.textContent = '100%';
+
+                setTimeout(() => {
+                    importTeachersProgress.classList.add('hidden');
+                    importTeachersResults.classList.remove('hidden');
+
+                    if (data.status === 'success') {
+                        let html = `<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                            <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>Import Successful!
+                            </h5>
+                            <p class="text-green-700 dark:text-green-300 text-sm">${data.message}</p>`;
+                        
+                        if (data.errors && data.errors.length > 0) {
+                            html += `<div class="mt-3 border-t border-green-300 dark:border-green-700 pt-3">
+                                <p class="text-red-600 dark:text-red-400 font-medium text-sm mb-2">Errors:</p>
+                                <ul class="text-sm text-red-600 dark:text-red-400 space-y-1">`;
+                            data.errors.forEach(error => {
+                                html += `<li>• ${error}</li>`;
+                            });
+                            html += `</ul></div>`;
+                        }
+                        html += `</div>`;
+                        
+                        importTeachersResults.innerHTML = html;
+                        showToast(data.message, 'success');
+                        
+                        // Refresh the table
+                        fetchTeachers(currentPage);
+                    } else {
+                        importTeachersResults.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                            <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
+                                <i class="fas fa-exclamation-circle mr-2"></i>Import Failed
+                            </h5>
+                            <p class="text-red-700 dark:text-red-300 text-sm">${data.message}</p>
+                        </div>`;
+                        showToast(data.message, 'error');
+                    }
+
+                    submitImportTeachers.disabled = false;
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                importTeachersProgress.classList.add('hidden');
+                importTeachersResults.classList.remove('hidden');
+                importTeachersResults.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
+                        <i class="fas fa-exclamation-circle mr-2"></i>Import Failed
+                    </h5>
+                    <p class="text-red-700 dark:text-red-300 text-sm">${error.message}</p>
+                </div>`;
+                showToast('Import failed: ' + error.message, 'error');
+                submitImportTeachers.disabled = false;
+            });
+        });
+    }
+
     // --- Initial Load & URL Params ---
-    fetchTeachers();
+    // Set filter values from URL params BEFORE fetching
     const urlParams = new URLSearchParams(window.location.search);
     if (teacherSearch && urlParams.has('search')) teacherSearch.value = urlParams.get('search');
     if (advisoryFilter && urlParams.has('advisory')) advisoryFilter.value = urlParams.get('advisory');
@@ -1810,6 +2534,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPage = parseInt(urlParams.get('page'));
         if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
     }
+    // Now fetch teachers with the correct filter values
+    fetchTeachers(currentPage);
 });
 </script>
 {% endblock %}
