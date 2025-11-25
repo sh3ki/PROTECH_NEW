@@ -1,0 +1,253 @@
+{% extends 'components/base_component.html' %}
+{% load static %}
+
+{% block title %}PROTECH - Messages{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block sidebar %}
+    {% include 'components/sidebar/admin_sidebar.html' with active='messages' %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .conversation-item.active {
+        background-color: rgba(79, 70, 229, 0.1);
+        border-left: 4px solid #4F46E5;
+    }
+    
+    #messagesContainer {
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .message {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Ensure modals are on top */
+    #newConversationModal,
+    #addParticipantModal {
+        z-index: 9999 !important;
+        position: fixed !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="height: calc(100vh - 160px);" data-user-id="{{ request.user.id }}" data-user-name="{{ request.user.first_name }} {{ request.user.last_name }}">
+    
+    <!-- Conversations List -->
+    <div class="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Conversations</h2>
+            <button id="newConversationBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Message
+            </button>
+        </div>
+        
+        <div id="conversationsList" class="overflow-y-auto" style="max-height: calc(100vh - 200px);">
+            <!-- Conversations will be loaded here -->
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <p>Loading conversations...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Area -->
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col" style="height: 100%;">
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="flex items-center justify-center h-full">
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Messages</h2>
+                <p class="text-accent dark:text-gray-400 mt-4">Select a conversation to start messaging</p>
+            </div>
+        </div>
+        
+        <!-- Chat Interface -->
+        <div id="chatArea" class="hidden flex flex-col h-full">
+            <!-- Chat Header -->
+            <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                <!-- Header content will be loaded dynamically -->
+            </div>
+            
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="flex-1 p-4 space-y-4 overflow-y-auto">
+                <!-- Messages will be loaded here -->
+            </div>
+            
+            <!-- Message Input -->
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                <div class="flex items-end space-x-2">
+                    <textarea 
+                        id="messageInput" 
+                        rows="2" 
+                        class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none overflow-y-auto"
+                        placeholder="Type your message..."
+                        style="max-height: 144px;"
+                    ></textarea>
+                    <button 
+                        id="sendMessageBtn" 
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Conversation Modal -->
+<div id="newConversationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">New Conversation</h3>
+                <button onclick="messaging.hideNewConversationModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Conversation Type Tabs -->
+            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+                <button id="privateTabBtn" class="flex-1 py-2 px-4 text-center font-medium border-b-2" style="color: #7c3aed; border-color: #7c3aed;">
+                    Private Chat
+                </button>
+                <button id="groupTabBtn" class="flex-1 py-2 px-4 text-center font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 border-b-2 border-transparent">
+                    Group Chat
+                </button>
+            </div>
+            
+            <!-- Private Chat Content -->
+            <div id="privateContent">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Search for a user
+                    </label>
+                    <input 
+                        type="text" 
+                        id="searchUsersInput" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Search by name or email..."
+                    >
+                </div>
+                
+                <div id="userSearchResults" class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <!-- Search results will be displayed here -->
+                </div>
+            </div>
+            
+            <!-- Group Chat Content -->
+            <div id="groupContent" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Group Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="groupNameInput" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Enter group name..."
+                    >
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Add Participants
+                    </label>
+                    <input 
+                        type="text" 
+                        id="searchGroupUsersInput" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Search users to add..."
+                    >
+                </div>
+                
+                <!-- Selected Participants -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Selected Participants
+                    </label>
+                    <div id="selectedParticipants" class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[60px]">
+                        <p class="text-gray-500 text-sm">No participants selected</p>
+                    </div>
+                </div>
+                
+                <div id="groupUserSearchResults" class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
+                    <!-- Search results will be displayed here -->
+                </div>
+                
+                <button id="createGroupBtn" class="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg font-semibold">
+                    Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Participant Modal (for existing groups) -->
+<div id="addParticipantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Add Members</h3>
+                <button onclick="messaging.hideModal('addParticipantModal')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <input 
+                    type="text" 
+                    id="addParticipantSearchInput" 
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Search users to add..."
+                >
+            </div>
+            
+            <div id="addParticipantResults" class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Firebase Web SDK for Real-time Listeners -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Configuration -->
+<script>
+const firebaseConfig = {
+    apiKey: "{{ firebase_config.apiKey }}",
+    authDomain: "{{ firebase_config.authDomain }}",
+    projectId: "{{ firebase_config.projectId }}",
+    storageBucket: "{{ firebase_config.storageBucket }}",
+    messagingSenderId: "{{ firebase_config.messagingSenderId }}",
+    appId: "{{ firebase_config.appId }}"
+};
+</script>
+
+<!-- Real-time Messaging (with Firebase listeners) -->
+<script src="{% static 'js/realtime-messaging.js' %}"></script>
+{% endblock %}
