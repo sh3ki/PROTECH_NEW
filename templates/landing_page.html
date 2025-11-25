@@ -1,19 +1,17 @@
-<html class="dark">
 {% extends 'base.html' %}
 {% load static %}
 
 {% block dark_toggle %}{% endblock %}
 
 {% block content %}
-<div class="fixed inset-0 z-[-1] bg-black/40 dark:bg-black/60">
-    <img src="{% static 'public/images/schoold.svg' %}" alt="Background"
-         class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none" />
+<div class="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden">
+        <!-- Page content sits above the site background provided by base.html -->
 </div>
 
-<div class="flex flex-col items-center justify-center min-h-[80vh]">
-    <div class="bg-black/75 rounded-3xl shadow-2xl border border-white/20 text-white backdrop-blur-lg px-8 py-10 max-w-xl w-full text-center">
+<div class="flex flex-col items-center justify-center min-h-[80vh] relative" style="z-index: 10;">
+    <div class="bg-surface/90 dark:bg-black/30 rounded-3xl shadow-2xl border border-white/40 text-white backdrop-blur-lg px-8 py-10 max-w-xl w-full text-center" style="z-index: 10;">
         <h2 class="text-4xl font-extrabold mb-4 drop-shadow">Welcome to PROTECH</h2>
-        <p class="text-lg mb-8 text-gray-200 drop-shadow">
+        <p class="text-lg mb-8 text-white/80 drop-shadow">
             Our advanced face recognition system makes attendance monitoring easy and reliable.
         </p>
         <h3 class="text-2xl font-bold mb-8">Face Recognition Attendance Monitoring System</h3>
@@ -34,8 +32,5 @@
         </div>
     </div>
 </div>
-<script>
-    // Add this to your dark mode toggle logic
-    document.documentElement.classList.toggle('dark');
-</script>
+{# Dark-mode toggle handled in site-wide JS / base template; removed forced toggle here #}
 {% endblock %}
