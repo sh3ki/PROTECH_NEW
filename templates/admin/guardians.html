@@ -147,18 +147,45 @@
 
 <!-- Action buttons -->
         <div class="flex flex-wrap md:flex-nowrap gap-2">
-            <button id="import-students-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <button id="import-guardians-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-guardians-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
             <button id="print-students-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -553,6 +580,229 @@
 <!-- Toast Container -->
 <div id="guardian-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+<!-- Import Guardians Modal -->
+<div id="import-guardians-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-3xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Guardians</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file</p>
+                    </div>
+                </div>
+                <button id="close-import-guardians-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="/admin/guardians/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Guardian ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new guardians</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">First Name</td>
+                                    <td class="p-2">Guardian first name (required)</td>
+                                    <td class="p-2">John</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Middle Name</td>
+                                    <td class="p-2">Guardian middle name (optional)</td>
+                                    <td class="p-2">Smith</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Last Name</td>
+                                    <td class="p-2">Guardian last name (required)</td>
+                                    <td class="p-2">Doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Relationship</td>
+                                    <td class="p-2">Relationship to student (required)</td>
+                                    <td class="p-2">FATHER, MOTHER, GUARDIAN</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Contact Number</td>
+                                    <td class="p-2">Phone number (required)</td>
+                                    <td class="p-2">09123456789</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Email</td>
+                                    <td class="p-2">Email address (optional)</td>
+                                    <td class="p-2">john.doe@email.com</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Student Name</td>
+                                    <td class="p-2">Student full name (required)</td>
+                                    <td class="p-2">Jane Doe</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Excel Format Preview -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                        <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                        Excel/CSV Format Preview (Matches Export Format):
+                    </h5>
+                    
+                    <!-- Excel-style table preview -->
+                    <div class="bg-white dark:bg-gray-800 rounded border overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr style="background-color: #1F4E78;">
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 40px;">ID</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">First Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Middle Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Last Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Relationship</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 110px;">Contact Number</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 140px;">Email</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 120px;">Student Name</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-800 dark:text-gray-200">
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">1</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">John</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Doe</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">FATHER</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09123456789</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">john.doe@email.com</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Jane Doe</td>
+                                </tr>
+                                <tr class="bg-gray-50 dark:bg-gray-750">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">2</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Maria</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Cruz</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Santos</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">MOTHER</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09187654321</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">maria.santos@email.com</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Pedro Santos</td>
+                                </tr>
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">3</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Robert</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Garcia</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">GUARDIAN</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09198765432</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Anna Garcia</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3 flex items-start space-x-2">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="font-semibold mb-1">Pro Tips:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                <li><strong>Leave ID blank</strong> for new guardians (ID is auto-generated)</li>
+                                <li><strong>Valid relationships:</strong> FATHER, MOTHER, GUARDIAN, GRANDMOTHER, GRANDFATHER, AUNT, UNCLE, SIBLING, OTHER</li>
+                                <li>Student must exist in the system (matched by full name)</li>
+                                <li>Email is optional, Middle Name is optional</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new guardians.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
+                        <li>• Valid relationships: FATHER, MOTHER, GUARDIAN, GRANDMOTHER, GRANDFATHER, AUNT, UNCLE, SIBLING, OTHER</li>
+                        <li>• Contact number must be in valid format (e.g., 09123456789)</li>
+                        <li>• Student must exist in the system</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-guardians-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-guardians-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-guardians-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-guardians-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-guardians-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing guardians...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-guardians-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-guardians-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Results / Messages (populated by JS) -->
+                    <div id="import-guardians-results" class="hidden mt-4"></div>
+                </form>
+            </div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-guardians" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
+                <button type="button" id="submit-import-guardians" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"><i class="fas fa-upload mr-2"></i>Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Global variables
@@ -584,6 +834,7 @@ const sectionFilter = document.getElementById('section-filter');
 document.addEventListener('DOMContentLoaded', function() {
     initializeFilterDropdowns();
     initializeEventListeners();
+    initializePrintButton();
     
     // Initialize Pagination Component
     guardianPagination = new PaginationComponent({
@@ -595,6 +846,197 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGuardians();
     initializeCascadingDropdowns();
 });
+
+// Initialize Print Button Functionality
+function initializePrintButton() {
+    const printBtn = document.getElementById('print-students-btn');
+    
+    if (printBtn) {
+        printBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateGuardianPrintDocument();
+        });
+    }
+}
+
+// Generate print document for guardians
+function generateGuardianPrintDocument() {
+    // Get current filter values
+    const searchQuery = searchInput ? searchInput.value.trim() : '';
+    const gradeValue = gradeFilter ? gradeFilter.value : '';
+    const sectionValue = sectionFilter ? sectionFilter.value : '';
+    const relationshipValue = relationshipFilter ? relationshipFilter.value : '';
+    
+    // Build filter info string
+    let filterInfo = '';
+    const filters = [];
+    if (searchQuery) filters.push(`Search: ${searchQuery}`);
+    if (gradeValue) {
+        const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
+        filters.push(`Grade: ${gradeText}`);
+    }
+    if (sectionValue) {
+        const sectionText = sectionFilter.options[sectionFilter.selectedIndex].text;
+        filters.push(`Section: ${sectionText}`);
+    }
+    if (relationshipValue) filters.push(`Relationship: ${relationshipValue}`);
+    if (filters.length > 0) {
+        filterInfo = filters.join(', ');
+    }
+    
+    // Get table rows and clean them for printing
+    if (!guardianTableBody) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    const rows = guardianTableBody.querySelectorAll('tr');
+    if (rows.length === 0) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    let printRows = '';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            // Extract data from cells (skip action buttons column)
+            const guardianName = cells[0] ? cells[0].querySelector('.font-bold')?.textContent.trim() : '';
+            const relationship = cells[1] ? cells[1].textContent.trim() : '';
+            const contact = cells[2] ? cells[2].textContent.trim() : '';
+            const children = cells[3] ? cells[3].textContent.trim() : '';
+            
+            printRows += `
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${guardianName}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${relationship}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${contact}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${children}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    // Create hidden iframe for printing
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+    
+    const printDocument = printFrame.contentWindow.document;
+    printDocument.open();
+    printDocument.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Guardians Report</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #333;
+                    padding-bottom: 10px;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #1a202c;
+                }
+                .header h2 {
+                    margin: 5px 0 0 0;
+                    font-size: 16px;
+                    color: #4a5568;
+                    font-weight: normal;
+                }
+                .info {
+                    margin-bottom: 20px;
+                }
+                .info p {
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background-color: #f7fafc;
+                    padding: 12px;
+                    text-align: left;
+                    border: 1px solid #ddd;
+                    font-weight: bold;
+                    color: #2d3748;
+                }
+                td {
+                    padding: 12px;
+                    border: 1px solid #ddd;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9fafb;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #718096;
+                }
+                @media print {
+                    body { margin: 15px; }
+                    .header { margin-bottom: 20px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>PROTECH: THE TECH TO PROTECT</h1>
+                <h2>Face Recognition Attendance Monitoring System</h2>
+            </div>
+            <div class="info">
+                <p><strong>Report:</strong> Guardians List</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Guardian Name</th>
+                        <th>Relationship</th>
+                        <th>Contact</th>
+                        <th>Children</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${printRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+        </body>
+        </html>
+    `);
+    printDocument.close();
+    
+    // Wait for content to load, then print
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+        printFrame.contentWindow.print();
+        // Remove iframe after printing
+        setTimeout(() => {
+            document.body.removeChild(printFrame);
+        }, 1000);
+    }, 250);
+}
 
 // Natural sort function for grades (same as in students.html and sections.html)
 function sortGradesNaturally(grades) {
@@ -726,6 +1168,102 @@ function initializeEventListeners() {
     document.getElementById('confirm-delete-guardian').addEventListener('click', confirmDeleteGuardian);
     document.getElementById('close-guardian-children-modal').addEventListener('click', closeChildrenModal);
 
+    // Export dropdown functionality
+    const exportGuardiansBtn = document.getElementById('export-guardians-btn');
+    const exportDropdown = document.getElementById('export-dropdown');
+    const exportOptions = document.querySelectorAll('.export-option');
+    
+    // Toggle dropdown on button click
+    if (exportGuardiansBtn && exportDropdown) {
+        exportGuardiansBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportGuardiansBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+                exportDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Handle export format selection
+    exportOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const format = this.getAttribute('data-format');
+            exportDropdown.classList.add('hidden');
+            
+            // Show loading state
+            showLoading();
+            
+            // Get current filter parameters
+            const searchQuery = searchInput ? searchInput.value : '';
+            const relationshipValue = relationshipFilter ? relationshipFilter.value : '';
+            const gradeValue = gradeFilter ? gradeFilter.value : '';
+            const sectionValue = sectionFilter ? sectionFilter.value : '';
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (relationshipValue) params.append('relationship', relationshipValue);
+            if (gradeValue) params.append('grade', gradeValue);
+            if (sectionValue) params.append('section', sectionValue);
+            params.append('format', format); // Add format parameter
+            
+            // Make the export request
+            const exportUrl = `/admin/guardians/export/?${params.toString()}`;
+            
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                hideLoading();
+                
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+                
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `guardians_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+                
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+                    
+                    showToast('Guardians exported successfully!', 'success');
+                });
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Export error:', error);
+                showToast('Failed to export guardians: ' + error.message, 'error');
+            });
+        });
+    });
+
     // Form submission
     guardianForm.addEventListener('submit', handleGuardianSubmit);
 
@@ -783,14 +1321,39 @@ function loadGuardians(page = 1, itemsPerPage = null) {
                 if (data.total_count === 0) {
                     if (guardianTableContainer) guardianTableContainer.classList.add('hidden');
                     if (guardianNoResults) guardianNoResults.classList.remove('hidden');
+                    
+                    // Update pagination to show 0 results
+                    if (guardianPagination) {
+                        guardianPagination.update({
+                            current_page: 1,
+                            total_pages: 1,
+                            has_previous: false,
+                            has_next: false,
+                            start_index: 0,
+                            end_index: 0,
+                            total_count: 0,
+                            num_pages: 1,
+                            page_range: [1]
+                        });
+                    }
                 } else {
                     if (guardianTableContainer) guardianTableContainer.classList.remove('hidden');
                     if (guardianNoResults) guardianNoResults.classList.add('hidden');
                     
                     renderGuardiansTable(data.guardians);
                     
-                    // Update pagination component
-                    guardianPagination.update(data.pagination);
+                    // Update pagination component with proper indices
+                    guardianPagination.update({
+                        current_page: data.pagination.current_page,
+                        total_pages: data.pagination.total_pages,
+                        has_previous: data.pagination.has_previous,
+                        has_next: data.pagination.has_next,
+                        start_index: data.pagination.start_index,
+                        end_index: data.pagination.end_index,
+                        total_count: data.pagination.total_count,
+                        num_pages: data.pagination.num_pages,
+                        page_range: data.pagination.page_range
+                    });
                 }
                 
                 updateResultsCount(data.total_count);
@@ -1534,4 +2097,181 @@ select[multiple] option:checked {
     height: 48px;
 }
 </style>
+
+<script>
+// Import Guardians Handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const $ = id => document.getElementById(id);
+    const importGuardiansBtn = $('import-guardians-btn');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Declare variables first before using them
+    const importGuardiansFile = $('import-guardians-file');
+    const importGuardiansFileName = $('import-guardians-file-name');
+    const submitImportGuardians = $('submit-import-guardians');
+
+    if (importGuardiansBtn) {
+        importGuardiansBtn.addEventListener('click', () => {
+            const modal = $('import-guardians-modal');
+            modal.classList.remove('hidden', 'opacity-0');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                const inner = modal.querySelector('.transform');
+                if (inner && inner.classList) inner.classList.remove('scale-95');
+            }, 10);
+            
+            // Reset form and file display
+            $('import-guardians-form').reset();
+            if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+            if (submitImportGuardians) submitImportGuardians.disabled = true;
+            $('import-guardians-progress').classList.add('hidden');
+            $('import-guardians-results').classList.add('hidden');
+        });
+    }
+
+    [$('close-import-guardians-modal'), $('cancel-import-guardians')].forEach(btn => {
+        if (btn) btn.addEventListener('click', () => {
+            const modal = $('import-guardians-modal');
+            modal.classList.add('opacity-0');
+            const innerClose = modal.querySelector('.transform');
+            if (innerClose && innerClose.classList) innerClose.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                $('import-guardians-form').reset();
+                $('import-guardians-progress').classList.add('hidden');
+                $('import-guardians-results').classList.add('hidden');
+                        const bar = $('import-guardians-progress-bar');
+                        const pct = $('import-guardians-progress-percent');
+                        if (bar) bar.style.width = '0%';
+                        if (pct) pct.textContent = '0%';
+            }, 300);
+        });
+    });
+
+    // Handle file selection for guardians import
+    
+    if (importGuardiansFile && submitImportGuardians) {
+        // Initially disable submit button
+        submitImportGuardians.disabled = true;
+        
+        // File change handler
+        importGuardiansFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                    e.target.value = '';
+                    if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+                    submitImportGuardians.disabled = true;
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('File too large. Maximum file size is 10MB.', 'error');
+                    e.target.value = '';
+                    if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+                    submitImportGuardians.disabled = true;
+                    return;
+                }
+                
+                if (importGuardiansFileName) {
+                    importGuardiansFileName.textContent = `Selected: ${file.name}`;
+                    importGuardiansFileName.classList.remove('hidden');
+                }
+                submitImportGuardians.disabled = false;
+            } else {
+                if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+                submitImportGuardians.disabled = true;
+            }
+        });
+    }
+    
+    if (submitImportGuardians) {
+        submitImportGuardians.addEventListener('click', () => {
+            const file = $('import-guardians-file').files[0];
+            if (!file) return showToast('Please select a file', 'error');
+
+            const formData = new FormData($('import-guardians-form'));
+            if (!formData.has('file')) {
+                formData.append('file', file);
+            }
+
+            $('import-guardians-progress').classList.remove('hidden');
+            $('import-guardians-results').classList.add('hidden');
+            submitImportGuardians.disabled = true;
+
+            let progress = 0;
+            const percentEl = $('import-guardians-progress-percent');
+            const progressBar = $('import-guardians-progress-bar');
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                if (progress <= 90) {
+                    if (progressBar) progressBar.style.width = progress + '%';
+                    if (percentEl) percentEl.textContent = progress + '%';
+                }
+            }, 200);
+
+            fetch('/admin/guardians/import/', {method: 'POST', body: formData})
+                .then(r => r.json())
+                .then(data => {
+                    clearInterval(progressInterval);
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (percentEl) percentEl.textContent = '100%';
+                    setTimeout(() => {
+                        $('import-guardians-progress').classList.add('hidden');
+                        $('import-guardians-results').classList.remove('hidden');
+                        const results = $('import-guardians-results');
+                        if (data.status === 'success') {
+                            // Build detailed summary
+                            let details = '<ul class="mt-2 text-sm text-gray-700 dark:text-gray-300 space-y-1">';
+                            if (data.created) details += `<li>• Created: ${data.created}</li>`;
+                            if (data.updated) details += `<li>• Updated: ${data.updated}</li>`;
+                            if (data.skipped_rows) details += `<li>• Skipped: ${data.skipped_rows.length} row(s)</li>`;
+                            details += '</ul>';
+
+                            let detailTable = '';
+                            if (data.skipped_rows && data.skipped_rows.length) {
+                                const rowsToShow = data.skipped_rows.slice(0, 20);
+                                detailTable = `<div class="mt-3 overflow-auto"><table class="min-w-full text-sm"><thead><tr class="text-left"><th class="pr-4">Row</th><th class="pr-4">Guardian</th><th class="pr-4">Student</th><th>Reason</th></tr></thead><tbody>`;
+                                rowsToShow.forEach(r => {
+                                    const row = r.row || '';
+                                    const g = r.guardian || r.username || '';
+                                    const s = r.student || r.lrn || '';
+                                    const reason = r.reason || '';
+                                    detailTable += `<tr><td class="pr-4">${row}</td><td class="pr-4">${g}</td><td class="pr-4">${s}</td><td>${reason}</td></tr>`;
+                                });
+                                detailTable += `</tbody></table>`;
+                                if (data.skipped_rows.length > 20) detailTable += `<p class="text-xs text-gray-500 mt-2">Showing first 20 skipped rows of ${data.skipped_rows.length}.</p>`;
+                                detailTable += `</div>`;
+                            }
+
+                            results.innerHTML = `<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4"><h5 class="font-medium text-green-800 dark:text-green-200 mb-2"><i class="fas fa-check-circle mr-2"></i>Success!</h5><p class="text-green-700 dark:text-green-300 text-sm">${data.message}</p>${details}${detailTable}</div>`;
+                            showToast(data.message, 'success');
+                            loadGuardians(currentPage);
+                        } else {
+                            results.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"><h5 class="font-medium text-red-800 dark:text-red-200 mb-2"><i class="fas fa-exclamation-circle mr-2"></i>Failed</h5><p class="text-red-700 dark:text-red-300 text-sm">${data.message}</p></div>`;
+                            showToast(data.message, 'error');
+                        }
+                        submitImportGuardians.disabled = false;
+                    }, 500);
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    $('import-guardians-progress').classList.add('hidden');
+                    $('import-guardians-results').classList.remove('hidden');
+                    $('import-guardians-results').innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"><p class="text-red-700 dark:text-red-300 text-sm">${error.message}</p></div>`;
+                    showToast('Import failed', 'error');
+                    submitImportGuardians.disabled = false;
+                });
+        });
+    }
+});
+</script>
 {% endblock %}
