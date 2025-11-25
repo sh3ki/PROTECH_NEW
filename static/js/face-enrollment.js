@@ -105,6 +105,15 @@ function setupEventListeners() {
     document.getElementById('retake-left-btn').addEventListener('click', () => retakeImage('left'));
     document.getElementById('retake-right-btn').addEventListener('click', () => retakeImage('right'));
 
+    // Policy modal
+    document.getElementById('view-policy-btn').addEventListener('click', openPolicyModal);
+    document.getElementById('close-policy-modal').addEventListener('click', closePolicyModal);
+    document.getElementById('close-policy-modal-btn').addEventListener('click', closePolicyModal);
+    document.getElementById('policy-modal-backdrop').addEventListener('click', closePolicyModal);
+    
+    // Main policy agreement checkbox
+    document.getElementById('policy-agreement').addEventListener('change', checkSubmitEligibility);
+
     // Submit enrollment
     document.getElementById('submit-enrollment-btn').addEventListener('click', submitEnrollment);
 
@@ -116,6 +125,19 @@ function setupEventListeners() {
             searchResults.classList.add('hidden');
         }
     });
+}
+
+function openPolicyModal() {
+    const modal = document.getElementById('policy-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePolicyModal() {
+    const modal = document.getElementById('policy-modal');
+    
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
 }
 
 async function searchStudents(query) {
@@ -278,6 +300,10 @@ function resetCaptureState() {
     updateStepIndicator();
     updateCapturePreview();
     document.getElementById('submit-enrollment-btn').disabled = true;
+    
+    // Reset policy agreement
+    const policyCheckbox = document.getElementById('policy-agreement');
+    policyCheckbox.checked = false;
     
     // Reset instructions
     document.querySelectorAll('[id^="instruction-"]').forEach(el => {
@@ -575,11 +601,11 @@ async function captureImage() {
     if (nextMissingIndex === -1) {
         // All steps completed
         stopCamera();
-        document.getElementById('submit-enrollment-btn').disabled = false;
+        checkSubmitEligibility();
         currentStep = 3;
         updateStepIndicator();
         updateInstructions();
-        showToast('All faces captured! You can now submit the enrollment.', 'success');
+        showToast('All faces captured! Please agree to the policy to submit.', 'success');
         return;
     }
 
@@ -680,6 +706,14 @@ function updateInstructions() {
     document.getElementById(`instruction-${currentStep}`).classList.add('font-bold');
 }
 
+function checkSubmitEligibility() {
+    const allFacesCaptured = faceEmbeddings.every(Array.isArray);
+    const policyAgreed = document.getElementById('policy-agreement').checked;
+    const submitBtn = document.getElementById('submit-enrollment-btn');
+    
+    submitBtn.disabled = !(allFacesCaptured && policyAgreed);
+}
+
 async function submitEnrollment() {
     if (!selectedStudent) {
         showToast('Please select a student first', 'error');
@@ -688,6 +722,11 @@ async function submitEnrollment() {
     
     if (!faceEmbeddings.every(Array.isArray)) {
         showToast('Please capture all three face angles', 'error');
+        return;
+    }
+    
+    if (!document.getElementById('policy-agreement').checked) {
+        showToast('Please agree to the school policy before submitting', 'error');
         return;
     }
     
