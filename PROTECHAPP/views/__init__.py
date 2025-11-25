@@ -5,3 +5,5 @@ from .non_advisory_teacher_views import *
 from .principal_views import *
 from .registrar_views import *
 from .face_recognition_views import *
+from .message_views import *
+from .chatbot_views import *
