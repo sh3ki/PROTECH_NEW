@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-3xl flex flex-col md:flex-row bg-white/90 rounded-3xl shadow-2xl border border-white/40 backdrop-blur-lg overflow-hidden animate-fade-in-up">
+<div class="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden">
+    <!-- Background image with object-fit -->
+    <img src="{% static 'images/background.png' %}" alt="" class="absolute top-0 left-0 w-full h-full object-cover" style="z-index: 0; min-width: 100vw; min-height: 100vh;">
+    <!-- Transparent overlay: light uses white tint; dark uses black tint -->
+    <div class="absolute top-0 left-0 w-full h-full bg-white/70 dark:bg-black/60" style="z-index: 1; min-width: 100vw; min-height: 100vh;"></div>
+    <div class="w-full max-w-3xl flex flex-col md:flex-row bg-white/90 dark:bg-black/30 rounded-3xl shadow-2xl border border-white/40 backdrop-blur-lg overflow-hidden animate-fade-in-up relative" style="z-index: 10;">
         <!-- Left: Branding/Info -->
         <div class="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-primary to-secondary text-white px-10 py-12 w-1/2 relative">
             <div class="flex flex-col items-center">
@@ -31,49 +36,51 @@
             </div>
             {% if messages %}
                 {% for message in messages %}
-                    <div class="{% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} p-3 rounded-lg mb-4 animate-fade-in">
+                    <div class="django-message {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} p-3 rounded-lg mb-4 animate-fade-in relative">
                         {{ message }}
+                        <button type="button" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="this.parentElement.remove()">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 {% endfor %}
             {% endif %}
-            <form method="post" class="space-y-6 w-full max-w-sm mx-auto">
+            <!-- Login Form -->
+            <form method="post" id="loginForm" class="space-y-6 w-full max-w-sm mx-auto">
                 {% csrf_token %}
                 <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-white mb-1">Username or Email</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-white/60">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </span>
                         <input type="text" id="username" name="username" required
-                            class="pl-10 pr-3 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary text-gray-900 transition-all duration-200 shadow-sm" 
+                            class="pl-10 pr-3 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-black/20 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:shadow-none focus:outline-none text-gray-900 dark:text-white transition-all duration-200" 
                             placeholder="Enter your username or email" />
                     </div>
                 </div>
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-white mb-1">Password</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-white/60">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </span>
                         <input type="password" id="password" name="password" required
-                            class="pl-10 pr-10 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary text-gray-900 transition-all duration-200 shadow-sm" />
-                        <!-- Show Password Toggle -->
+                            class="pl-10 pr-10 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-black/20 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:shadow-none focus:outline-none text-gray-900 dark:text-white transition-all duration-200" 
+                            placeholder="Enter your password" />
+                            <!-- Show Password Toggle -->
                         <button type="button" id="togglePassword" tabindex="-1"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary focus:outline-none">
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-white/60 hover:text-primary focus:outline-none">
                             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />
                             </svg>
                         </button>
-                    </div>
-                    <!-- Password Strength Bar -->
-                    <div class="mt-2">
-                        <div id="password-strength-bar" class="h-2 rounded bg-gray-200 transition-all duration-300"></div>
-                        <div id="password-strength-text" class="text-xs mt-1 font-semibold"></div>
                     </div>
                 </div>
                 <div>
@@ -85,15 +92,151 @@
                         Sign In
                     </button>
                 </div>
+                <div class="text-center">
+                    <button type="button" id="forgotPasswordBtn" class="text-sm text-primary dark:text-white hover:text-secondary dark:hover:text-white/80 font-medium transition-colors duration-200">
+                        Forgot Password?
+                    </button>
+                </div>
             </form>
-            <div class="text-center mt-6">
-                <a href="{% url 'landing_page' %}"
-                    class="inline-flex items-center justify-center gap-2 bg-white border border-primary text-primary font-semibold py-3 px-6 rounded-lg shadow transition-all duration-200 hover:bg-primary hover:text-white hover:scale-105">
+
+            <!-- Forgot Password Form - Step 1: Email Input -->
+            <div id="forgotPasswordForm" class="space-y-6 w-full max-w-sm mx-auto hidden">
+                <div id="successMessage" class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 text-green-800 p-4 rounded-lg mb-4 hidden animate-fade-in shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="font-medium">Verification code sent to your email!</span>
+                    </div>
+                    <p class="text-sm mt-1 ml-7">Please check your inbox and enter the 6-digit code below.</p>
+                </div>
+                <div id="errorMessage" class="bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 text-red-800 p-4 rounded-lg mb-4 hidden animate-fade-in shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="font-medium" id="errorMessageText"></span>
+                    </div>
+                </div>
+                
+                <!-- Step 1: Email Input -->
+                <div id="emailStep">
+                    <div>
+                        <label for="resetEmail" class="block text-sm font-medium text-gray-700 dark:text-white mb-1">Email Address</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-white/60">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </span>
+                            <input type="email" id="resetEmail" required
+                                class="pl-10 pr-3 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-black/20 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary text-gray-900 dark:text-white transition-all duration-200 shadow-sm" 
+                                placeholder="Enter your email address" />
+                        </div>
+                    </div>
+                    <button type="button" id="sendCodeBtn"
+                        class="w-full mt-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        Send Verification Code
+                    </button>
+                </div>
+
+                <!-- Step 2: Verification Code Input -->
+                <div id="verificationStep" class="hidden">
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 shadow-sm">
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-gradient-to-br from-primary to-secondary p-3 rounded-full shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 text-center mb-2">Enter Verification Code</h3>
+                        <p class="text-sm text-gray-600 text-center mb-4">We've sent a 6-digit code to your email</p>
+                        <div class="flex justify-center gap-2 mb-3">
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary focus:bg-blue-50 transition-all duration-200 shadow-sm" />
+                        </div>
+                        <div class="flex items-center justify-center text-xs text-gray-500 mb-4">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Code expires in 10 minutes</span>
+                        </div>
+                    </div>
+                    <button type="button" id="verifyCodeBtn"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Verify Code
+                    </button>
+                    <div class="flex justify-center mt-4 text-sm">
+                        <button type="button" id="requestNewCodeBtn" class="text-primary hover:text-secondary font-medium transition-colors duration-200 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Didn't receive the code? Resend
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: New Password Input -->
+                <div id="newPasswordStep" class="hidden">
+                    <div class="mb-4">
+                        <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-white mb-1">New Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </span>
+                            <input type="password" id="newPassword" required
+                                class="pl-10 pr-10 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-black/20 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary text-gray-900 dark:text-white transition-all duration-200 shadow-sm" 
+                                placeholder="Enter new password" />
+                            <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary focus:outline-none">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-white mb-1">Confirm Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </span>
+                            <input type="password" id="confirmPassword" required
+                                class="pl-10 pr-10 py-2 block w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-black/20 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary text-gray-900 dark:text-white transition-all duration-200 shadow-sm" 
+                                placeholder="Confirm new password" />
+                            <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary focus:outline-none">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" id="resetPasswordBtn"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        Reset Password
+                    </button>
+                </div>
+
+            </div>
+            <div class="text-center mt-6 relative" style="z-index: 20;">
+                <button type="button" id="backToLoginBtn"
+                    class="inline-flex items-center justify-center gap-2 bg-white border border-primary text-primary font-semibold py-3 px-6 rounded-lg shadow transition-all duration-200 hover:bg-primary hover:text-white hover:scale-105 relative" style="z-index: 20;">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     Back to Home
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -106,64 +249,298 @@
     100% { opacity: 1; transform: translateY(0);}
 }
 .animate-fade-in-up { animation: fade-in-up 0.7s cubic-bezier(.4,0,.2,1) both; }
-/* Password strength bar colors */
-.strength-weak { background: #f87171; }      /* red-400 */
-.strength-medium { background: #fbbf24; }    /* yellow-400 */
-.strength-strong { background: #34d399; }    /* green-400 */
 </style>
 
-<!-- Password Show/Hide & Strength Script -->
+<!-- Password Show/Hide & Forgot Password Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Auto-dismiss Django messages after 3 seconds
+    const djangoMessages = document.querySelectorAll('.django-message');
+    djangoMessages.forEach(message => {
+        setTimeout(() => {
+            message.style.transition = 'opacity 0.5s ease-out';
+            message.style.opacity = '0';
+            setTimeout(() => {
+                if (message && message.parentNode) {
+                    message.remove();
+                }
+            }, 500);
+        }, 3000);
+    });
+
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
     const eyeIcon = document.getElementById('eyeIcon');
-    const strengthBar = document.getElementById('password-strength-bar');
-    const strengthText = document.getElementById('password-strength-text');
 
     // Show/hide password
-    togglePassword.addEventListener('click', function () {
-        const type = passwordInput.type === 'password' ? 'text' : 'password';
-        passwordInput.type = type;
-        // Toggle eye icon
-        eyeIcon.innerHTML = type === 'password'
-            ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />`
-            : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-9 0-1.657.403-3.216 1.125-4.575M6.22 6.22A9.956 9.956 0 0112 5c5 0 9 4 9 9 0 1.657-.403 3.216-1.125 4.575M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`;
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            // Toggle eye icon
+            eyeIcon.innerHTML = type === 'password'
+                ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />`
+                : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-9 0-1.657.403-3.216 1.125-4.575M6.22 6.22A9.956 9.956 0 0112 5c5 0 9 4 9 9 0 1.657-.403 3.216-1.125 4.575M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`;
+        });
+    }
+
+    // Toggle password visibility for new password fields
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function () {
+            const input = this.previousElementSibling.previousElementSibling;
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            
+            this.querySelector('svg').innerHTML = type === 'password'
+                ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-7 9-9 9s-9-4-9-9 7-9 9-9 9 4 9 9z" />`
+                : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-9 0-1.657.403-3.216 1.125-4.575M6.22 6.22A9.956 9.956 0 0112 5c5 0 9 4 9 9 0 1.657-.403 3.216-1.125 4.575M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`;
+        });
     });
 
-    // Password strength checker
-    passwordInput.addEventListener('input', function () {
-        const val = passwordInput.value;
-        let strength = 0;
-        if (val.length >= 8) strength++;
-        if (/[A-Z]/.test(val)) strength++;
-        if (/[0-9]/.test(val)) strength++;
-        if (/[^A-Za-z0-9]/.test(val)) strength++;
+    // Forgot Password Flow
+    const loginForm = document.getElementById('loginForm');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
+    
+    const emailStep = document.getElementById('emailStep');
+    const verificationStep = document.getElementById('verificationStep');
+    const newPasswordStep = document.getElementById('newPasswordStep');
+    
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+    const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+    const requestNewCodeBtn = document.getElementById('requestNewCodeBtn');
+    
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    let userEmail = '';
+    let verificationCode = '';
 
-        // Update bar and text
-        if (!val) {
-            strengthBar.className = 'h-2 rounded bg-gray-200 transition-all duration-300';
-            strengthBar.style.width = '0%';
-            strengthText.textContent = '';
-        } else if (strength <= 1) {
-            strengthBar.className = 'h-2 rounded strength-weak transition-all duration-300';
-            strengthBar.style.width = '33%';
-            strengthText.textContent = 'Weak password';
-            strengthText.style.color = '#f87171';
-        } else if (strength === 2 || strength === 3) {
-            strengthBar.className = 'h-2 rounded strength-medium transition-all duration-300';
-            strengthBar.style.width = '66%';
-            strengthText.textContent = 'Medium password';
-            strengthText.style.color = '#fbbf24';
-        } else {
-            strengthBar.className = 'h-2 rounded strength-strong transition-all duration-300';
-            strengthBar.style.width = '100%';
-            strengthText.textContent = 'Strong password';
-            strengthText.style.color = '#34d399';
+    // Show Forgot Password Form
+    forgotPasswordBtn.addEventListener('click', function () {
+        loginForm.classList.add('hidden');
+        forgotPasswordForm.classList.remove('hidden');
+        emailStep.classList.remove('hidden');
+        verificationStep.classList.add('hidden');
+        newPasswordStep.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        
+        // Hide Django messages when switching to forgot password
+        document.querySelectorAll('.django-message').forEach(msg => msg.style.display = 'none');
+    });
+
+    // Back to Home
+    backToLoginBtn.addEventListener('click', function () {
+        window.location.href = "{% url 'landing_page' %}";
+    });
+
+    // Send Verification Code
+    sendCodeBtn.addEventListener('click', function () {
+        const email = document.getElementById('resetEmail').value;
+        if (!email) {
+            showError('Please enter your email address');
+            return;
         }
+
+        userEmail = email;
+        
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.textContent = 'Sending...';
+        
+        fetch('/send-verification-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                emailStep.classList.add('hidden');
+                verificationStep.classList.remove('hidden');
+                successMessage.classList.remove('hidden');
+                successMessage.textContent = data.message || 'A 6-digit verification code has been sent to your email. Please check your inbox.';
+                errorMessage.classList.add('hidden');
+            } else {
+                showError(data.message || 'Failed to send verification code. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = 'Send Verification Code';
+        });
     });
+
+    // Request New Code
+    requestNewCodeBtn.addEventListener('click', function () {
+        verificationStep.classList.add('hidden');
+        emailStep.classList.remove('hidden');
+        successMessage.classList.add('hidden');
+        document.querySelectorAll('.code-input').forEach(input => input.value = '');
+    });
+
+    // Code Input Auto-focus
+    const codeInputs = document.querySelectorAll('.code-input');
+    codeInputs.forEach((input, index) => {
+        input.addEventListener('input', function (e) {
+            if (this.value.length === 1) {
+                if (index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+            }
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                codeInputs[index - 1].focus();
+            }
+        });
+
+        // Only allow numbers
+        input.addEventListener('keypress', function (e) {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Verify Code
+    verifyCodeBtn.addEventListener('click', function () {
+        const enteredCode = Array.from(codeInputs).map(input => input.value).join('');
+        
+        if (enteredCode.length !== 6) {
+            showError('Please enter the complete 6-digit code');
+            return;
+        }
+
+        verificationCode = enteredCode;
+        verifyCodeBtn.disabled = true;
+        verifyCodeBtn.textContent = 'Verifying...';
+
+        fetch('/verify-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                email: userEmail,
+                code: enteredCode 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                verificationStep.classList.add('hidden');
+                newPasswordStep.classList.remove('hidden');
+                successMessage.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+            } else {
+                showError(data.message || 'Invalid verification code. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            verifyCodeBtn.disabled = false;
+            verifyCodeBtn.textContent = 'VERIFY CODE';
+        });
+    });
+
+    // Reset Password
+    resetPasswordBtn.addEventListener('click', function () {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!newPassword || !confirmPassword) {
+            showError('Please fill in both password fields');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showError('Passwords do not match');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            showError('Password must be at least 8 characters long');
+            return;
+        }
+
+        resetPasswordBtn.disabled = true;
+        resetPasswordBtn.textContent = 'Resetting...';
+
+        fetch('/reset-password/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                email: userEmail,
+                code: verificationCode,
+                new_password: newPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                successMessage.classList.remove('hidden');
+                successMessage.textContent = data.message || 'Password reset successfully! You can now login with your new password.';
+                errorMessage.classList.add('hidden');
+                
+                setTimeout(() => {
+                    forgotPasswordForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                    document.getElementById('resetEmail').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    codeInputs.forEach(input => input.value = '');
+                    successMessage.classList.add('hidden');
+                    
+                    // Show success message in login form
+                    const loginSuccessMsg = document.createElement('div');
+                    loginSuccessMsg.className = 'bg-green-100 text-green-700 p-3 rounded-lg mb-4 animate-fade-in';
+                    loginSuccessMsg.textContent = 'Password reset successfully! Please login with your new password.';
+                    loginForm.insertBefore(loginSuccessMsg, loginForm.firstChild);
+                    
+                    setTimeout(() => loginSuccessMsg.remove(), 5000);
+                }, 2000);
+            } else {
+                showError(data.message || 'Failed to reset password. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            resetPasswordBtn.disabled = false;
+            resetPasswordBtn.textContent = 'Reset Password';
+        });
+    });
+
+    function showError(message) {
+        document.getElementById('errorMessageText').textContent = message;
+        errorMessage.classList.remove('hidden');
+        successMessage.classList.add('hidden');
+        
+        setTimeout(() => {
+            errorMessage.classList.add('hidden');
+        }, 5000);
+    }
 });
 </script>
 {% endblock %}
