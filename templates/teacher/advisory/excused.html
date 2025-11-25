@@ -1,4 +1,6 @@
 {% extends 'components/base_component.html' %}
+{% load static %}
+{% load excuse_filters %}
 
 {% block title %}PROTECH - Excused Absences{% endblock %}
 {% block page_title %}Excused Absences{% endblock %}
@@ -8,11 +10,760 @@
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-    <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Excused Absences</h2>
-    <p class="text-accent dark:text-gray-400 mt-4">Excused Absences content will appear here.</p>
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_excused }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ active_count }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Upcoming Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ upcoming_count }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-red-500 dark:border-red-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Expired Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ expired_count }}</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('excuse-search');
+    const statusFilter = document.getElementById('excuse-status-filter');
+    const startInput = document.getElementById('excuse-start');
+    const endInput = document.getElementById('excuse-end');
+
+    function filterRows() {
+        const q = (searchInput && searchInput.value || '').toLowerCase().trim();
+        const status = statusFilter ? statusFilter.value : '';
+        const start = startInput ? startInput.value : '';
+        const end = endInput ? endInput.value : '';
+
+        const rows = document.querySelectorAll('#excused-table tbody tr');
+        let anyVisible = false;
+
+        rows.forEach(row => {
+            // skip placeholder rows that might have colspan
+            if (row.querySelector('td[colspan]')) return;
+
+            const name = (row.dataset.name || '').toLowerCase();
+            const lrn = (row.dataset.lrn || '').toLowerCase();
+            const reason = (row.dataset.reason || '').toLowerCase();
+            const statusRow = row.dataset.status || '';
+            const effective = row.dataset.effective || '';
+            const rowEnd = row.dataset.end || '';
+            const absent = row.dataset.absent || '';
+
+            const matchesSearch = q === '' || name.includes(q) || lrn.includes(q) || reason.includes(q);
+            const matchesStatus = status === '' || statusRow === status;
+
+            let matchesDate = true;
+            if (start) {
+                // require that either absent or effective is on/after start
+                matchesDate = ((absent && absent >= start) || (effective && effective >= start));
+            }
+            if (end && matchesDate) {
+                // if row has an end date, require it to be on/before the end filter
+                if (rowEnd) {
+                    matchesDate = rowEnd <= end;
+                }
+            }
+
+            const show = matchesSearch && matchesStatus && matchesDate;
+            row.style.display = show ? '' : 'none';
+            if (show) anyVisible = true;
+        });
+    }
+
+    [searchInput, statusFilter, startInput, endInput].forEach(el => {
+        if (el) el.addEventListener('input', filterRows);
+        if (el) el.addEventListener('change', filterRows);
+    });
+
+    // Set default dates to today if not provided and make end date respect start
+    const todayISO = new Date().toISOString().slice(0,10);
+    if (startInput && !startInput.value) startInput.value = todayISO;
+    if (endInput && !endInput.value) endInput.value = todayISO;
+    if (startInput && endInput) {
+        endInput.min = startInput.value;
+        startInput.addEventListener('change', function() {
+            if (startInput.value) {
+                endInput.min = startInput.value;
+                if (endInput.value < startInput.value) endInput.value = startInput.value;
+            }
+            filterRows();
+        });
+    }
+
+    // Export dropdown (admin-style)
+    const exportBtn = document.getElementById('export-excused-btn');
+    const exportDropdown = document.getElementById('export-excused-dropdown');
+    // Helper: fetch a file URL and trigger browser download using response filename or suggested name
+    function downloadFile(url, suggestedName) {
+        fetch(url, { credentials: 'same-origin' })
+            .then(response => {
+                if (!response.ok) throw new Error('Export failed: HTTP ' + response.status);
+                return Promise.all([response.blob(), response.headers.get('content-disposition')]);
+            })
+            .then(([blob, contentDisposition]) => {
+                let filename = suggestedName || 'export';
+                if (contentDisposition) {
+                    const match = /filename\*?=(?:UTF-8'')?"?([^";\n]+)/i.exec(contentDisposition);
+                    if (match && match[1]) {
+                        try { filename = decodeURIComponent(match[1]); } catch (e) { filename = match[1]; }
+                    }
+                }
+
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            })
+            .catch(err => {
+                console.error('Download error', err);
+                alert('Failed to download export: ' + err.message);
+            });
+    }
+    if (exportBtn && exportDropdown) {
+        exportBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); exportDropdown.classList.toggle('hidden'); });
+        document.addEventListener('click', function(e) { if (!exportBtn.contains(e.target) && !exportDropdown.contains(e.target)) exportDropdown.classList.add('hidden'); });
+        exportDropdown.querySelectorAll('a[data-format]').forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.preventDefault(); 
+                exportDropdown.classList.add('hidden'); 
+                const format = this.dataset.format;
+                const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf';
+                const suggested = `excused_export.${ext}`;
+                const url = `/teacher/advisory/excused/export/?format=${format}`;
+                downloadFile(url, suggested);
+            });
+        });
+    }
+
+    // Print button
+    const printBtn = document.getElementById('excuse-print-btn');
+    if (printBtn) printBtn.addEventListener('click', function() { window.print(); });
+
+    // Toast notification function
+    function showToast(message, type = 'success', duration = 5000) {
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'fixed top-5 right-5 z-50';
+        
+        const toast = document.createElement('div');
+        toast.className = `flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0 ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            type === 'warning' ? 'bg-yellow-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        
+        const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+        toast.innerHTML = `
+            <span class="text-lg font-bold mr-3">${icon}</span>
+            <span class="font-medium">${message}</span>
+        `;
+        
+        document.body.appendChild(toastContainer);
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
+        }, 10);
+        
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-[-1rem]');
+            setTimeout(() => {
+                toastContainer.remove();
+            }, 300);
+        }, duration);
+    }
+
+    // Import Modal Functionality
+    const importBtn = document.getElementById('import-excused-btn');
+    const importExcusedModal = document.getElementById('import-excused-modal');
+    const closeImportExcusedModal = document.getElementById('close-import-excused-modal');
+    const cancelImportExcused = document.getElementById('cancel-import-excused');
+    const submitImportExcused = document.getElementById('submit-import-excused');
+    const importExcusedFile = document.getElementById('import-excused-file');
+    const importExcusedForm = document.getElementById('import-excused-form');
+    const importExcusedProgress = document.getElementById('import-excused-progress');
+    const importExcusedProgressBar = document.getElementById('import-excused-progress-bar');
+    const importExcusedProgressText = document.getElementById('import-excused-progress-text');
+    const importExcusedResults = document.getElementById('import-excused-results');
+    const importExcusedFileName = document.getElementById('import-excused-file-name');
+
+    function openImportExcusedModal() {
+        importExcusedModal.classList.remove('hidden');
+        importExcusedModal.classList.add('flex');
+        setTimeout(() => {
+            importExcusedModal.classList.remove('opacity-0');
+            importExcusedModal.querySelector('.transform').classList.remove('scale-95');
+        }, 10);
+        
+        // Reset on open
+        if (importExcusedFileName) importExcusedFileName.classList.add('hidden');
+        if (submitImportExcused) submitImportExcused.disabled = true;
+    }
+
+    function closeImportExcusedModalFunc() {
+        importExcusedModal.classList.add('opacity-0');
+        importExcusedModal.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => {
+            importExcusedModal.classList.add('hidden');
+            importExcusedModal.classList.remove('flex');
+            importExcusedForm.reset();
+            importExcusedProgress.classList.add('hidden');
+            importExcusedResults.classList.add('hidden');
+            importExcusedProgressBar.style.width = '0%';
+            importExcusedProgressText.textContent = '0%';
+        }, 300);
+    }
+
+    if (importBtn) {
+        importBtn.addEventListener('click', openImportExcusedModal);
+    }
+
+    if (closeImportExcusedModal) {
+        closeImportExcusedModal.addEventListener('click', closeImportExcusedModalFunc);
+    }
+
+    if (cancelImportExcused) {
+        cancelImportExcused.addEventListener('click', closeImportExcusedModalFunc);
+    }
+
+    // File change handler
+    if (importExcusedFile && submitImportExcused) {
+        submitImportExcused.disabled = true;
+        
+        importExcusedFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                    e.target.value = '';
+                    if (importExcusedFileName) importExcusedFileName.classList.add('hidden');
+                    submitImportExcused.disabled = true;
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('File too large. Maximum file size is 10MB.', 'error');
+                    e.target.value = '';
+                    if (importExcusedFileName) importExcusedFileName.classList.add('hidden');
+                    submitImportExcused.disabled = true;
+                    return;
+                }
+                
+                if (importExcusedFileName) {
+                    importExcusedFileName.textContent = `Selected: ${file.name}`;
+                    importExcusedFileName.classList.remove('hidden');
+                }
+                submitImportExcused.disabled = false;
+            } else {
+                if (importExcusedFileName) importExcusedFileName.classList.add('hidden');
+                submitImportExcused.disabled = true;
+            }
+        });
+    }
+
+    // Prevent default form submit to avoid navigation — use AJAX handler instead
+    if (importExcusedForm) {
+        importExcusedForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    }
+
+    if (submitImportExcused) {
+        submitImportExcused.addEventListener('click', function() {
+            const file = importExcusedFile.files[0];
+            if (!file) {
+                showToast('Please select a file to import', 'error');
+                return;
+            }
+
+            const formData = new FormData(importExcusedForm);
+            
+            if (!formData.has('file')) {
+                formData.append('file', file);
+            }
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            importExcusedProgress.classList.remove('hidden');
+            importExcusedResults.classList.add('hidden');
+            submitImportExcused.disabled = true;
+
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 10;
+                    importExcusedProgressBar.style.width = progress + '%';
+                    importExcusedProgressText.textContent = progress + '%';
+                }
+            }, 200);
+
+            fetch('{% url "import_excused_absences" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                importExcusedProgressBar.style.width = '100%';
+                importExcusedProgressText.textContent = '100%';
+                
+                setTimeout(() => {
+                    importExcusedProgress.classList.add('hidden');
+                    importExcusedResults.classList.remove('hidden');
+                    
+                    if (data.status === 'success') {
+                        importExcusedResults.innerHTML = `
+                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
+                                    <div>
+                                        <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${data.message}</h5>
+                                        <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                            ${data.created > 0 ? `<li>• Created: ${data.created}</li>` : ''}
+                                            ${data.updated > 0 ? `<li>• Updated: ${data.updated}</li>` : ''}
+                                            ${data.skipped > 0 ? `<li>• Skipped: ${data.skipped}</li>` : ''}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        showToast('Excused absences imported successfully!', 'success');
+                        // Keep modal open and show results in the modal; do not navigate away or reload the page.
+                    } else {
+                        let errorHtml = `
+                            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                        <p class="text-sm text-red-700 dark:text-red-300">${data.message}</p>
+                        `;
+                        
+                        if (data.errors && data.errors.length > 0) {
+                            errorHtml += '<ul class="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">';
+                            data.errors.forEach(error => {
+                                errorHtml += `<li>• ${error}</li>`;
+                            });
+                            errorHtml += '</ul>';
+                        }
+                        
+                        errorHtml += '</div></div></div>';
+                        importExcusedResults.innerHTML = errorHtml;
+                        showToast('Import failed. Please check the errors.', 'error');
+                    }
+                    
+                    submitImportExcused.disabled = false;
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                importExcusedProgress.classList.add('hidden');
+                importExcusedResults.classList.remove('hidden');
+                importExcusedResults.innerHTML = `
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                            <div>
+                                <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Network Error</h5>
+                                <p class="text-sm text-red-700 dark:text-red-300">${error.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                showToast('Failed to import excused absences. Please try again.', 'error');
+                submitImportExcused.disabled = false;
+            });
+        });
+    }
+
+    // Add Excused placeholder
+    const addBtn = document.getElementById('add-excused-btn');
+    if (addBtn) addBtn.addEventListener('click', function() { alert('Open Add Excused modal (not implemented)'); });
+
+    // Enter key triggers search
+    if (searchInput) searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); filterRows(); } });
+
+    // Initial filter pass
+    filterRows();
+
+    // Simple delete placeholder (exposed globally)
+    window.deleteExcuse = function(id) {
+        if (confirm('Are you sure you want to delete this excused absence?')) {
+            alert('Delete excuse id: ' + id + ' (not yet implemented)');
+            // TODO: implement AJAX call to delete on server
+        }
+    }
+});
+</script>
+
+<!-- Search & Filters -->
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="excuse-search" placeholder="Search by name, LRN, or section..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <select id="excuse-status-filter" class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm">
+                    <option value="">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Expired">Expired</option>
+                </select>
+                
+                <div class="flex items-center gap-2">
+                    <input id="excuse-start" type="date" placeholder="Start Date" class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm">
+                    <span class="text-gray-400 dark:text-gray-500">to</span>
+                    <input id="excuse-end" type="date" placeholder="End Date" class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm">
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <button id="import-excused-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <span class="hidden sm:inline">Import</span>
+            </button>
+            
+            <div class="relative">
+                <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div id="export-excused-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as PDF</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Excel</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Word</span>
+                    </a>
+                </div>
+            </div>
+            
+            <button id="excuse-print-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
+            
+            <button id="add-excused-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span class="hidden sm:inline">Add Excused</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Excused Absences Table -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div>
+        <table id="excused-table" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LRN</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date Absent</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Effective Date</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">End Date</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Excuse Letter</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {% for excuse in excused_absences %}
+                <tr class="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" 
+                    data-name="{{ excuse.student.first_name }} {{ excuse.student.last_name }}" 
+                        data-lrn="{{ excuse.student.lrn }}" 
+                        data-reason="" 
+                    data-effective="{{ excuse.effective_date|date:'Y-m-d' }}" 
+                    data-end="{% if excuse.end_date %}{{ excuse.end_date|date:'Y-m-d' }}{% else %}{% endif %}" 
+                    data-absent="{% if excuse.date_absent %}{{ excuse.date_absent|date:'Y-m-d' }}{% else %}{{ excuse.effective_date|date:'Y-m-d' }}{% endif %}"
+                    data-status="{{ excuse.current_status }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                {% if excuse.student.profile_pic %}
+                                        <img class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700" src="/profile-pics/{{ excuse.student.profile_pic }}/" alt="{{ excuse.student.first_name }}">
+                                    {% else %}
+                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold ring-2 ring-gray-200 dark:ring-gray-700">{{ excuse.student.first_name|first }}{{ excuse.student.last_name|first }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 dark:text-white">{{ excuse.student.lrn }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-bold text-gray-900 dark:text-white">{{ excuse.student.first_name }} {% if excuse.student.middle_name %}{{ excuse.student.middle_name|first }}.{% endif %} {{ excuse.student.last_name }}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ excuse.student.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 dark:text-white">{{ excuse.date_absent|date:"M d, Y"|default:excuse.effective_date|date:"M d, Y" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 dark:text-white">{{ excuse.effective_date|date:"M d, Y" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 dark:text-white">{{ excuse.end_date|date:"M d, Y"|default:"--" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if excuse.excuse_letter %}
+                            <a href="{% url 'serve_private_excuse_letter' excuse.excuse_letter|basename %}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">View</a>
+                        {% else %}
+                            <span class="text-sm text-gray-500">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if excuse.current_status == 'Active' %}
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Active</span>
+                        {% elif excuse.current_status == 'Upcoming' %}
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Upcoming</span>
+                        {% else %}
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex items-center justify-center space-x-3">
+                            <a href="#" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full" title="View">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            <button onclick="deleteExcuse({{ excuse.id }})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="px-6 py-20 text-center">
+                        <div class="flex flex-col items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No excused absences</h3>
+                            <p class="text-gray-500 dark:text-gray-400">No excused absences found for your advisory class</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Import Excused Absences Modal -->
+<div id="import-excused-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Excused Absences</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file to import excused absence records</p>
+                    </div>
+                </div>
+                <button id="close-import-excused-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• File must contain columns: ID, Student LRN, Absence Date, Reason, Effective Date, End Date, Status</li>
+                        <li>• Students will be automatically matched by LRN</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="border-t dark:border-gray-700 pt-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                
+                <form id="import-excused-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full mb-4">
+                        <label for="import-excused-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-excused-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-excused-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-excused-progress" class="hidden mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing excused absences...</span>
+                            <span id="import-excused-progress-text" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-excused-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results -->
+                    <div id="import-excused-results" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-excused" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="button" id="submit-import-excused" class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
+                    <i class="fas fa-upload mr-2"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
+
+<style>
+/* Completely hide scrollbar for table container */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Custom scrollbar for modal */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
