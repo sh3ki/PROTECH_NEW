@@ -1,54 +1,83 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block dark_toggle %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-    <div class="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 shadow-2xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 md:p-14 w-full max-w-2xl text-center animate-fade-in transition-all">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-primary mb-3 drop-shadow">Select Attendance Device Option</h2>
-        <p class="text-gray-600 dark:text-gray-300 text-lg mb-10">Choose whether the device is for time in or time out</p>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
-            <!-- TIME IN -->
-            <a href="{% url 'time_in' %}" role="button" tabindex="0"
-                class="group bg-gradient-to-br from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white rounded-2xl py-7 px-6 shadow-xl flex flex-col items-center justify-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-700">
-                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-4 shadow-lg transition-all duration-300">
-                    <svg class="h-9 w-9 text-white drop-shadow" fill="none" stroke="currentColor"
-                        stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                </span>
-                <span class="font-extrabold text-lg tracking-wide">TIME IN</span>
+<div class="h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <style>
+        /* Glass card - dark blue theme */
+            .glass-card {
+                background: linear-gradient(180deg, rgba(6,18,40,0.64), rgba(8,24,48,0.50));
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border: 1px solid rgba(255,255,255,0.06);
+                box-shadow: 0 12px 30px rgba(3,10,30,0.45);
+                border-radius: 18px;
+                max-width: 520px;
+                padding: 26px;
+                color: #fff;
+            }
+
+        /* Subtle gradient overlay on the background (keeps building visible) */
+        .bg-photo-overlay {
+            background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.25) 100%);
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+        .card-appear { animation: fadeUp 520ms cubic-bezier(.2,.9,.2,1) both; z-index:20 }
+        .btn-pop { animation: pop 420ms cubic-bezier(.2,.9,.2,1) both; }
+
+        /* Buttons: stronger hover lift and soft shadow */
+        .glass-btn { transition: transform .22s ease, box-shadow .22s ease; }
+        .glass-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+
+        /* Increase gap between buttons on small+ screens */
+        .btn-group { gap: 24px; }
+
+        /* Footer tweaks */
+        .footer-text { opacity: 0.6; letter-spacing: 0.6px; font-size: 11px; color: rgba(255,255,255,0.9); }
+    </style>
+
+    <!-- removed full-page dark overlay to avoid large rectangle behind card -->
+
+    <!-- Centered glass card with modern buttons -->
+    <div class="w-full mx-auto glass-card text-center max-h-[72vh] overflow-auto card-appear" style="z-index:20;">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-2">Select Attendance Mode</h1>
+        <p class="text-white/85 text-sm mb-5">Choose whether the device is for <strong class="text-white">Time In</strong> or <strong class="text-white">Time Out</strong></p>
+
+        <div class="flex flex-col sm:flex-row btn-group justify-center items-center">
+            <a href="{% url 'time_in' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1e40af,#2563eb);">
+                <div class="bg-white/20 p-4 rounded-full">
+                    <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                </div>
+                <span class="font-semibold text-lg">TIME IN</span>
             </a>
 
-            <!-- TIME OUT -->
-            <a href="{% url 'time_out' %}" role="button" tabindex="0"
-                class="group bg-gradient-to-br from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-2xl py-7 px-6 shadow-xl flex flex-col items-center justify-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-indigo-400 dark:focus:ring-indigo-600">
-                <span class="bg-white/30 group-hover:bg-white/50 rounded-full p-4 shadow-lg transition-all duration-300">
-                    <svg class="h-9 w-9 text-white drop-shadow" fill="none" stroke="currentColor"
-                        stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </span>
-                <span class="font-extrabold text-lg tracking-wide">TIME OUT</span>
+            <a href="{% url 'time_out' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1f4ed8,#7c3aed); animation-delay: 120ms;">
+                <div class="bg-white/20 p-4 rounded-full">
+                    <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </div>
+                <span class="font-semibold text-lg">TIME OUT</span>
             </a>
         </div>
 
-        <!-- Combined "or" and Back Button" INSIDE the card -->
-        <div class="flex flex-col items-center mt-6">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="h-px w-12 bg-gray-300 dark:bg-gray-700"></div>
-                <span class="text-gray-400 font-semibold">or</span>
-                <div class="h-px w-12 bg-gray-300 dark:bg-gray-700"></div>
-            </div>
-            <a href="{% url 'landing_page' %}"
-                class="inline-flex items-center gap-2 bg-white/90 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-primary dark:text-blue-300 font-semibold py-2 px-7 rounded-xl shadow hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-gray-700 transition duration-200">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Home
-            </a>
+        <div class="flex items-center gap-3 mt-8 justify-center">
+            <div class="h-px bg-gray-300 w-16"></div>
+            <span class="text-gray-400 font-medium">or</span>
+            <div class="h-px bg-gray-300 w-16"></div>
         </div>
+
+        <a href="{% url 'landing_page' %}" class="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-xl bg-white/12 border border-white/10 text-white text-sm shadow-sm hover:shadow-md">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Home
+        </a>
+        <div class="mt-6 footer-text">© {{ year|default:"2025" }} PROTECH. All rights reserved.</div>
     </div>
-</div>
+
 {% endblock %}
