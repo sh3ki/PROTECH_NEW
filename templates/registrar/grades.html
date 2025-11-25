@@ -107,12 +107,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-grades-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-grades-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
             <button id="print-grades-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -367,6 +394,125 @@
         pointer-events: auto;
     }
 </style>
+
+<!-- Import Grades Modal -->
+<div id="import-grades-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden z-[9999] p-4 transition-opacity duration-300 overflow-hidden flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] relative overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content flex flex-col">
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Grades</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file</p>
+                    </div>
+                </div>
+                <button id="close-import-grades-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1 pb-24">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="/registrar/grades/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Grade ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new grades</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Grade Name</td>
+                                    <td class="p-2">Grade level name (required, must be unique)</td>
+                                    <td class="p-2">Grade 7, Grade 8, Grade 9</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new grades.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
+                        <li>• Grade names must be unique across the system</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-grades-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-grades-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-grades-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-grades-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar (hidden initially) -->
+                    <div id="import-grades-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing grades...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-grades-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-grades-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results (hidden initially) -->
+                    <div id="import-grades-results" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 z-50 bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-grades" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
+                <button type="button" id="submit-import-grades" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"><i class="fas fa-upload mr-2"></i>Import</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
@@ -752,8 +898,8 @@ document.addEventListener('DOMContentLoaded', function() {
     printGradeSectionsBtn.onclick = function() {
         const gradeTitle = viewGradeTitle.textContent;
         const sectionsList = viewGradeSections.innerHTML;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
+        
+        const printContent = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -812,13 +958,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     </tbody>
                 </table>
-                <div style="margin-top: 30px; text-align: center;">
-                    <button onclick="window.print()" style="padding: 10px 20px; background-color: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer;">Print</button>
-                </div>
             </body>
             </html>
-        `);
-        printWindow.document.close();
+        `;
+        
+        // Create hidden iframe for printing
+        let printFrame = document.getElementById('sections-print-frame');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'sections-print-frame';
+            printFrame.style.position = 'absolute';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = 'none';
+            document.body.appendChild(printFrame);
+        }
+        
+        const doc = printFrame.contentWindow.document;
+        doc.open();
+        doc.write(printContent);
+        doc.close();
+        
+        // Wait for content to load before printing
+        setTimeout(() => {
+            printFrame.contentWindow.print();
+        }, 250);
     };
 
     // Search debounce
@@ -842,6 +1006,460 @@ document.addEventListener('DOMContentLoaded', function() {
             gradeModal.classList.remove('hidden');
         };
     }
+    
+    // Export dropdown functionality
+    function initializeExportDropdown() {
+        const exportBtn = document.getElementById('export-grades-btn');
+        const dropdown = document.getElementById('export-dropdown');
+        const exportOptions = document.querySelectorAll('.export-option');
+
+        if (!exportBtn || !dropdown) return;
+
+        // Toggle dropdown
+        exportBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Handle export option clicks
+        exportOptions.forEach(option => {
+            option.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const format = option.dataset.format;
+                dropdown.classList.add('hidden');
+
+                // Get current search value
+                const searchValue = document.getElementById('grade-search')?.value || '';
+
+                // Build URL with search parameter
+                const params = new URLSearchParams({
+                    format: format,
+                    search: searchValue
+                });
+
+                try {
+                    showToast(`Generating ${format.toUpperCase()} export...`, 'info', 3000);
+                    
+                    const response = await fetch(`/registrar/grades/export/?${params.toString()}`);
+                    
+                    // Check if response is JSON (error) or blob (file)
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        showToast(data.error || 'Export failed', 'error');
+                        return;
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    
+                    // Set filename based on format
+                    let filename = 'grades_list';
+                    if (format === 'excel') filename += '.xlsx';
+                    else if (format === 'pdf') filename += '.pdf';
+                    else if (format === 'word') filename += '.docx';
+                    
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showToast(`${format.toUpperCase()} file downloaded successfully!`, 'success');
+                } catch (error) {
+                    console.error('Export error:', error);
+                    showToast('Failed to export file', 'error');
+                }
+            });
+        });
+    }
+    
+    // Initialize export dropdown
+    initializeExportDropdown();
+    
+    // Print button functionality
+    function initializePrintButton() {
+        const printBtn = document.getElementById('print-grades-btn');
+        if (!printBtn) return;
+
+        printBtn.addEventListener('click', () => {
+            const printContent = generateGradePrintDocument();
+            
+            // Create hidden iframe for printing
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(printContent);
+            doc.close();
+            
+            // Wait for content to load before printing
+            iframe.contentWindow.focus();
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                // Remove iframe after printing
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            }, 250);
+        });
+    }
+
+    function generateGradePrintDocument() {
+        // Get current search value
+        const searchValue = document.getElementById('grade-search')?.value || '';
+        
+        // Get the visible table rows
+        const tableRows = document.querySelectorAll('#grades-table tbody tr');
+        let tableRowsHtml = '';
+        let rowCount = 0;
+        
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+                rowCount++;
+                
+                // Extract Grade Name (cell 0)
+                const nameCell = cells[0].querySelector('.text-lg.font-medium');
+                const name = nameCell ? nameCell.textContent.trim() : cells[0].textContent.trim();
+                
+                // Extract Total Sections (cell 1)
+                const sectionsCell = cells[1].querySelector('.text-lg.font-semibold');
+                const sections = sectionsCell ? sectionsCell.textContent.trim() : cells[1].textContent.trim();
+                
+                // Extract Total Students (cell 2)
+                const studentsCell = cells[2].querySelector('.text-lg.font-semibold');
+                const students = studentsCell ? studentsCell.textContent.trim() : cells[2].textContent.trim();
+                
+                tableRowsHtml += `
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">${name}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; text-align: center;">${sections}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; text-align: center;">${students}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        const currentDate = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Grades List - PROTECH</title>
+                <style>
+                    @media print {
+                        body { margin: 0; padding: 20px; }
+                        @page { margin: 1cm; }
+                    }
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 20px;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        border-bottom: 3px solid #2563eb;
+                        padding-bottom: 20px;
+                    }
+                    .header h1 {
+                        color: #1e40af;
+                        margin: 0 0 10px 0;
+                        font-size: 28px;
+                    }
+                    .header h2 {
+                        color: #374151;
+                        margin: 0;
+                        font-size: 20px;
+                        font-weight: normal;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #2563eb;
+                        color: white;
+                        padding: 12px;
+                        text-align: left;
+                        font-weight: 600;
+                    }
+                    th:nth-child(2), th:nth-child(3) {
+                        text-align: center;
+                    }
+                    td {
+                        padding: 12px;
+                        border-bottom: 1px solid #e5e7eb;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9fafb;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        text-align: center;
+                        color: #6b7280;
+                        font-size: 14px;
+                        border-top: 1px solid #e5e7eb;
+                        padding-top: 15px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>PROTECH Attendance System</h1>
+                    <h2>Grades List</h2>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Grade Name</th>
+                            <th>Total Sections</th>
+                            <th>Total Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRowsHtml || '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #6b7280;">No grades found</td></tr>'}
+                    </tbody>
+                </table>
+                
+                <div class="footer">
+                    <p>Generated on ${currentDate}</p>
+                    <p>PROTECH Attendance System</p>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+    
+    // Initialize print button
+    initializePrintButton();
+    
+    // Import Grades Modal
+    const importGradesModal = document.getElementById('import-grades-modal');
+    const importGradesBtn = document.getElementById('import-grades-btn');
+    const closeImportGradesModal = document.getElementById('close-import-grades-modal');
+    const cancelImportGrades = document.getElementById('cancel-import-grades');
+    const submitImportGrades = document.getElementById('submit-import-grades');
+    const importGradesForm = document.getElementById('import-grades-form');
+    const importGradesFile = document.getElementById('import-grades-file');
+    const importGradesFileName = document.getElementById('import-grades-file-name');
+    const importGradesProgress = document.getElementById('import-grades-progress');
+    const importGradesProgressBar = document.getElementById('import-grades-progress-bar');
+    const importGradesResults = document.getElementById('import-grades-results');
+
+    function openImportGradesModal() {
+        importGradesModal.classList.remove('hidden');
+        importGradesModal.classList.add('flex');
+        setTimeout(() => {
+            const modalContent = importGradesModal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }
+        }, 10);
+        
+        // Reset form and file display
+        importGradesForm.reset();
+        const fileNameDisplay = importGradesFileName || document.getElementById('import-grades-file-name');
+        if (fileNameDisplay) fileNameDisplay.classList.add('hidden');
+        // prevent background scrolling while modal is open
+        document.body.classList.add('overflow-hidden');
+        // clear previous results and reset progress bar
+        if (importGradesResults) { importGradesResults.classList.add('hidden'); importGradesResults.innerHTML = ''; }
+        if (importGradesProgressBar) importGradesProgressBar.style.width = '0%';
+        if (submitImportGrades) submitImportGrades.disabled = true;
+        importGradesProgress.classList.add('hidden');
+        importGradesResults.classList.add('hidden');
+    }
+
+    function closeImportGradesModalFunc() {
+        const modalContent = importGradesModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+            importGradesModal.classList.add('hidden');
+            importGradesModal.classList.remove('flex');
+            importGradesForm.reset();
+            importGradesProgress.classList.add('hidden');
+            importGradesResults.classList.add('hidden');
+            importGradesResults.innerHTML = '';
+            importGradesProgressBar.style.width = '0%';
+            // restore background scrolling
+            document.body.classList.remove('overflow-hidden');
+        }, 300);
+    }
+
+    if (importGradesBtn) {
+        importGradesBtn.addEventListener('click', openImportGradesModal);
+    }
+    closeImportGradesModal.addEventListener('click', closeImportGradesModalFunc);
+    cancelImportGrades.addEventListener('click', closeImportGradesModalFunc);
+    
+    // Handle file selection for grades import
+    if (importGradesFile && submitImportGrades) {
+        submitImportGrades.disabled = true;
+        
+        importGradesFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileNameDisplay = document.getElementById('import-grades-file-name');
+            if (file) {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                    e.target.value = '';
+                    if (fileNameDisplay) fileNameDisplay.classList.add('hidden');
+                    submitImportGrades.disabled = true;
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('File too large. Maximum file size is 10MB.', 'error');
+                    e.target.value = '';
+                    if (fileNameDisplay) fileNameDisplay.classList.add('hidden');
+                    submitImportGrades.disabled = true;
+                    return;
+                }
+                
+                if (fileNameDisplay) {
+                    fileNameDisplay.textContent = `Selected: ${file.name}`;
+                    fileNameDisplay.classList.remove('hidden');
+                }
+                submitImportGrades.disabled = false;
+            } else {
+                if (fileNameDisplay) fileNameDisplay.classList.add('hidden');
+                submitImportGrades.disabled = true;
+            }
+        });
+    }
+
+    submitImportGrades.addEventListener('click', async function() {
+        if (!importGradesFile.files[0]) {
+            showToast('Please select a file', 'error');
+            return;
+        }
+
+        const formData = new FormData(importGradesForm);
+        importGradesProgress.classList.remove('hidden');
+        importGradesResults.classList.add('hidden');
+        submitImportGrades.disabled = true;
+
+        let progress = 0;
+        const progressPercent = document.getElementById('import-grades-progress-percent');
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            if (progress <= 90) {
+                importGradesProgressBar.style.width = progress + '%';
+                if (progressPercent) progressPercent.textContent = progress + '%';
+            }
+        }, 200);
+
+        try {
+            const response = await fetch('/registrar/grades/import/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            clearInterval(progressInterval);
+            importGradesProgressBar.style.width = '100%';
+            if (progressPercent) progressPercent.textContent = '100%';
+
+            const result = await response.json();
+            
+            setTimeout(() => {
+                importGradesProgress.classList.add('hidden');
+                importGradesResults.classList.remove('hidden');
+
+                if (result.success || result.status === 'success') {
+                    importGradesResults.innerHTML = `
+                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
+                                <div>
+                                    <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${result.message}</h5>
+                                    <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                        ${result.created > 0 ? `<li>• Created: ${result.created}</li>` : ''}
+                                        ${result.updated > 0 ? `<li>• Updated: ${result.updated}</li>` : ''}
+                                        ${result.skipped > 0 ? `<li>• Skipped: ${result.skipped}</li>` : ''}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    showToast('Grades imported successfully!', 'success');
+                    setTimeout(() => {
+                        loadGrades(1);
+                    }, 2000);
+                } else {
+                    let errorHtml = `
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                    <p class="text-sm text-red-700 dark:text-red-300">${result.error || result.message}</p>
+                    `;
+                    
+                    if (result.errors && result.errors.length > 0) {
+                        errorHtml += '<ul class="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">';
+                        result.errors.forEach(error => {
+                            errorHtml += `<li>• ${error}</li>`;
+                        });
+                        errorHtml += '</ul>';
+                    }
+                    
+                    errorHtml += '</div></div></div>';
+                    importGradesResults.innerHTML = errorHtml;
+                    showToast('Import failed. Please check the errors.', 'error');
+                }
+            }, 500);
+        } catch (error) {
+            clearInterval(progressInterval);
+            importGradesProgress.classList.add('hidden');
+            importGradesResults.classList.remove('hidden');
+            importGradesResults.innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                        <div>
+                            <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Network Error</h5>
+                            <p class="text-sm text-red-700 dark:text-red-300">${error.message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showToast('Import failed', 'error');
+        } finally {
+            submitImportGrades.disabled = false;
+        }
+    });
 });
 </script>
 {% endblock %}
