@@ -218,9 +218,16 @@ class UltraFastFaceRecognition {
         const start = box.start || [0, 0];
         const end = box.end || [0, 0];
 
-        const x1 = Math.max(0, Math.min(start[0], this.canvas.width));
+        // Flip coordinates horizontally for mirrored video
+        const canvasWidth = this.canvas.width;
+        const x1_original = Math.max(0, Math.min(start[0], canvasWidth));
+        const x2_original = Math.max(0, Math.min(end[0], canvasWidth));
+        
+        // Mirror the X coordinates
+        const x1 = canvasWidth - x2_original;
+        const x2 = canvasWidth - x1_original;
+        
         const y1 = Math.max(0, Math.min(start[1], this.canvas.height));
-        const x2 = Math.max(0, Math.min(end[0], this.canvas.width));
         const y2 = Math.max(0, Math.min(end[1], this.canvas.height));
 
         const width = Math.max(0, x2 - x1);
