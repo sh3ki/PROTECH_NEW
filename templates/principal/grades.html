@@ -1,18 +1,483 @@
 {% extends 'components/base_component.html' %}
+{% load static %}
 
-{% block title %}PROTECH - Grade Management{% endblock %}
-{% block page_title %}Grade Management{% endblock %}
+{% block title %}PROTECH - Grades{% endblock %}
+{% block page_title %}Grades{% endblock %}
 
 {% block sidebar %}
     {% include 'components/sidebar/principal_sidebar.html' with active='grades' %}
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    </svg>
-    <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">Grade Management</h2>
-    <p class="text-accent dark:text-gray-400 mt-4">Grade Management content will appear here.</p>
+{% csrf_token %}
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Grades</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_grades }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">With Sections</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ grades_with_sections }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-7H3a2 2 0 00-2 2v8a2 2 0 002 2h2l3 3 3-3h5a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sections</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_sections }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-primary dark:border-tertiary transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-primary/10 dark:bg-tertiary/20 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_students }}</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Search Controls -->
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <div class="relative flex-grow lg:w-1/3">
+            <input type="text" id="grade-search" placeholder="Search by grade name..." 
+                class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <div id="grade-search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                <svg class="animate-spin h-5 w-5 text-primary dark:text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Export and Print Buttons -->
+        <div class="flex gap-2">
+            <button id="export-grades-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span class="hidden sm:inline">Export</span>
+            </button>
+            <button id="print-grades-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Grades Table -->
+<div id="grade-table-container" class="relative">
+    <div id="grade-table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-primary dark:text-tertiary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading grades...</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+        <div class="overflow-x-auto">
+            <table id="grades-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sections</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Students</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for grade in grades %}
+                    <tr class="{% cycle 'bg-white dark:bg-gray-800' 'bg-gray-50 dark:bg-gray-800/50' %} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-lg font-bold text-gray-900 dark:text-white">{{ grade.name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-lg text-gray-900 dark:text-white">{{ grade.sections_count }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-lg text-gray-900 dark:text-white">{{ grade.students_count }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No grades found</h3>
+                                <p class="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'components/pagination.html' with pagination_id='grade-pagination-container' %}
+    </div>
+    <div id="grade-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No grades found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+        </div>
+    </div>
+</div>
+
+<div id="grade-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<script src="{% static 'js/pagination-component.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const $ = id => document.getElementById(id);
+    const gradeSearch = $('grade-search');
+    const gradeTableLoading = $('grade-table-loading');
+    const gradesTable = $('grades-table');
+    const gradeNoResults = $('grade-no-results');
+    const gradeToastContainer = $('grade-toast-container');
+    const gradeSearchSpinner = $('grade-search-spinner');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let searchTimeout = null;
+
+    // Count actual data rows (excluding empty/template rows)
+    let initialRowCount = 10;
+    if (gradesTable) {
+        const tbody = gradesTable.querySelector('tbody');
+        if (tbody) {
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                const cells = row.querySelectorAll('td');
+                return cells.length > 1; // Has actual data cells, not just colspan
+            });
+            initialRowCount = rows.length > 0 ? rows.length : 10;
+        }
+    }
+
+    const gradePagination = new PaginationComponent({
+        containerId: 'grade-pagination-container',
+        fetchFunction: fetchGrades,
+        itemsPerPage: initialRowCount
+    });
+
+    function showToast(message, type = 'success', duration = 5000) {
+        const toast = document.createElement('div');
+        toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0';
+        let iconHTML = type === 'success' ?
+            `<svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>` :
+            `<svg class="w-5 h-5 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
+        toast.classList.add(type === 'success' ? 'bg-green-100' : 'bg-red-100', type === 'success' ? 'text-green-800' : 'text-red-800', 'border-l-4', type === 'success' ? 'border-green-500' : 'border-red-500');
+        toast.innerHTML = `<div class="flex items-center">${iconHTML}<div class="text-sm font-semibold">${message}</div></div>`;
+        gradeToastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.remove('translate-y-[-1rem]', 'opacity-0'), 10);
+        setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-[-1rem]'); setTimeout(() => toast.remove(), 300); }, duration);
+    }
+
+    function showLoading() {
+        if (gradeTableLoading) gradeTableLoading.classList.remove('hidden');
+        if (gradeSearchSpinner) gradeSearchSpinner.classList.remove('hidden');
+    }
+    function hideLoading() {
+        if (gradeTableLoading) gradeTableLoading.classList.add('hidden');
+        if (gradeSearchSpinner) gradeSearchSpinner.classList.add('hidden');
+    }
+
+    function debounce(func, wait) {
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    function fetchGrades(page = 1) {
+        const searchQuery = gradeSearch ? gradeSearch.value.trim() : '';
+        showLoading();
+
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        params.append('page', page);
+
+        fetch(`/principal/grades/search/?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRFToken': csrfToken }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tableContainer = gradesTable?.closest('.bg-white');
+            
+            if (data.total_count === 0) {
+                if (tableContainer) tableContainer.classList.add('hidden');
+                if (gradeNoResults) gradeNoResults.classList.remove('hidden');
+                if (gradeResultsCounter) gradeResultsCounter.classList.add('hidden');
+            } else {
+                if (tableContainer) tableContainer.classList.remove('hidden');
+                if (gradeNoResults) gradeNoResults.classList.add('hidden');
+                updateGradesTable(data.grades);
+                gradePagination.update(data.pagination);
+            }
+            hideLoading();
+        })
+        .catch(() => {
+            hideLoading();
+            const tableContainer = gradesTable?.closest('.bg-white');
+            if (tableContainer) tableContainer.classList.add('hidden');
+            if (gradeNoResults) gradeNoResults.classList.remove('hidden');
+            showToast('Failed to load grades', 'error');
+        });
+    }
+
+    function updateGradesTable(grades) {
+        if (!gradesTable) return;
+        const tableBody = gradesTable.querySelector('tbody');
+        if (!tableBody) return;
+        let html = '';
+        
+        grades.forEach((grade, index) => {
+            const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+            html += `
+            <tr class="${rowClass} hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">${grade.name}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-lg text-gray-900 dark:text-white">${grade.sections_count}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-lg text-gray-900 dark:text-white">${grade.students_count}</div>
+                </td>
+            </tr>`;
+        });
+        tableBody.innerHTML = html;
+    }
+
+    // Print Functionality
+    function generateGradePrintDocument() {
+        // Get filter values
+        const searchQuery = gradeSearch?.value || '';
+
+        // Build filter info string
+        let filterInfo = '';
+        if (searchQuery) filterInfo += `Search: "${searchQuery}"`;
+        if (!filterInfo) filterInfo = 'All Grades';
+
+        // Get table data (only visible rows)
+        const tableBody = gradesTable?.querySelector('tbody');
+        if (!tableBody || tableBody.children.length === 0) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        let tableContent = '';
+
+        rows.forEach(row => {
+            // Only print visible rows
+            if (row.style.display === 'none') return;
+            
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0 && cells.length >= 3) {
+                // Extract: Grade, Sections, Students
+                const grade = cells[0]?.textContent.trim() || '';
+                const sections = cells[1]?.textContent.trim() || '';
+                const students = cells[2]?.textContent.trim() || '';
+
+                tableContent += `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${sections}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${students}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        if (!tableContent) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+
+        // Create print document
+        const printWindow = document.createElement('iframe');
+        printWindow.style.position = 'fixed';
+        printWindow.style.width = '0';
+        printWindow.style.height = '0';
+        printWindow.style.border = '0';
+        document.body.appendChild(printWindow);
+
+        const printDocument = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Grades Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 20px;
+                        color: #333;
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #2c3e50;
+                        margin-bottom: 10px;
+                    }
+                    .filter-info {
+                        text-align: center;
+                        color: #7f8c8d;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #34495e;
+                        color: white;
+                        padding: 12px;
+                        text-align: left;
+                        border: 1px solid #2c3e50;
+                        font-weight: bold;
+                    }
+                    td {
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f8f9fa;
+                    }
+                    @media print {
+                        body {
+                            padding: 10px;
+                        }
+                        table {
+                            page-break-inside: auto;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Grades Report</h1>
+                <div class="filter-info">${filterInfo}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Grade</th>
+                            <th>Sections</th>
+                            <th>Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableContent}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const doc = printWindow.contentWindow.document;
+        doc.open();
+        doc.write(printDocument);
+        doc.close();
+
+        // Wait for content to load, then print
+        setTimeout(() => {
+            printWindow.contentWindow.focus();
+            printWindow.contentWindow.print();
+
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(printWindow);
+            }, 1000);
+        }, 250);
+    }
+
+    // Export functionality
+    const exportBtn = document.getElementById('export-grades-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const dropdown = document.createElement('div');
+            dropdown.className = 'absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden';
+            dropdown.innerHTML = `
+                <a href="/principal/grades/export/?format=excel" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Excel</a>
+                <a href="/principal/grades/export/?format=pdf" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as PDF</a>
+                <a href="/principal/grades/export/?format=word" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Word</a>
+            `;
+            const existing = document.querySelector('.export-dropdown');
+            if (existing) existing.remove();
+            dropdown.classList.add('export-dropdown');
+            exportBtn.parentElement.style.position = 'relative';
+            exportBtn.parentElement.appendChild(dropdown);
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.remove();
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        });
+    }
+
+    // Print button event listener
+    const printGradesBtn = $('print-grades-btn');
+    if (printGradesBtn) {
+        printGradesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateGradePrintDocument();
+        });
+    }
+
+    if (gradeSearch) gradeSearch.addEventListener('input', debounce(() => fetchGrades(1), 300));
+
+    // Don't fetch on initial load - use Django-rendered content
+});
+</script>
 {% endblock %}
