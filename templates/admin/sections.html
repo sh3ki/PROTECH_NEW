@@ -143,12 +143,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-sections-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-sections-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-sections-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-sections-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
             <button id="print-sections-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -414,6 +441,202 @@
     }
 </style>
 
+<!-- Import Sections Modal -->
+<div id="import-sections-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-3xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Sections</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file</p>
+                    </div>
+                </div>
+                <button id="close-import-sections-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="/admin/sections/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Section ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new sections</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Section Name</td>
+                                    <td class="p-2">Section name (required)</td>
+                                    <td class="p-2">A, B, C</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Grade</td>
+                                    <td class="p-2">Grade name (required)</td>
+                                    <td class="p-2">Grade 7</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Room Number</td>
+                                    <td class="p-2">Room number (optional)</td>
+                                    <td class="p-2">101, 102</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Capacity</td>
+                                    <td class="p-2">Maximum students (optional)</td>
+                                    <td class="p-2">40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Excel Format Preview -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                        <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                        Excel/CSV Format Preview (Matches Export Format):
+                    </h5>
+                    
+                    <!-- Excel-style table preview -->
+                    <div class="bg-white dark:bg-gray-800 rounded border overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr style="background-color: #1F4E78;">
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 40px;">ID</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 120px;">Section Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Grade</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Room Number</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 80px;">Capacity</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-800 dark:text-gray-200">
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">1</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section A</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 7</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">101</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">40</td>
+                                </tr>
+                                <tr class="bg-gray-50 dark:bg-gray-750">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">2</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section B</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 7</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">102</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">40</td>
+                                </tr>
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">3</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section A</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 8</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">201</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">35</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3 flex items-start space-x-2">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="font-semibold mb-1">Pro Tips:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                <li><strong>Leave ID blank</strong> for new sections (ID is auto-generated)</li>
+                                <li><strong>Section Name + Grade</strong> combination must be unique</li>
+                                <li>Grade must already exist in the system</li>
+                                <li>Room Number and Capacity are optional</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new sections.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
+                        <li>• Grade must exist in the system</li>
+                        <li>• Section name + Grade combination must be unique</li>
+                        <li>• Room Number and Capacity are optional fields</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-sections-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-sections-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-sections-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-sections-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-sections-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing sections...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-sections-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-sections-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Results / Messages -->
+                    <div id="import-sections-results" class="hidden mt-4"></div>
+                </form>
+            </div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-sections" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
+                <button type="button" id="submit-import-sections" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"><i class="fas fa-upload mr-2"></i>Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -444,6 +667,100 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // CSRF token
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // --- Export Dropdown Functionality ---
+    const exportSectionsBtn = document.getElementById('export-sections-btn');
+    const exportSectionsDropdown = document.getElementById('export-sections-dropdown');
+    const exportSectionsOptions = document.querySelectorAll('.export-sections-option');
+
+    // Toggle dropdown on button click
+    if (exportSectionsBtn && exportSectionsDropdown) {
+        exportSectionsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportSectionsDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportSectionsBtn.contains(e.target) && !exportSectionsDropdown.contains(e.target)) {
+                exportSectionsDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Handle export format selection
+    exportSectionsOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const format = this.getAttribute('data-format');
+            exportSectionsDropdown.classList.add('hidden');
+
+            // Show loading state
+            sectionTableLoading.classList.remove('hidden');
+
+            // Get current filter parameters
+            const searchQuery = sectionSearch ? sectionSearch.value : '';
+            const gradeFilterValue = gradeFilter ? gradeFilter.value : '';
+            const advisorFilterValue = advisorFilter ? advisorFilter.value : '';
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (gradeFilterValue) params.append('grade', gradeFilterValue);
+            if (advisorFilterValue) params.append('advisor', advisorFilterValue);
+            params.append('format', format);
+
+            // Make the export request
+            const exportUrl = `/admin/sections/export/?${params.toString()}`;
+
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                sectionTableLoading.classList.add('hidden');
+
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `sections_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+
+                    showToast(`Sections exported successfully as ${format.toUpperCase()}!`, 'success');
+                });
+            })
+            .catch(error => {
+                sectionTableLoading.classList.add('hidden');
+                console.error('Export error:', error);
+                showToast('Failed to export sections: ' + error.message, 'error');
+            });
+        });
+    });
     
     // Initialize Pagination Component
     const sectionPagination = new PaginationComponent({
@@ -994,49 +1311,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('print-class-list').addEventListener('click', function() {
         const sectionTitle = document.getElementById('view-section-title').textContent;
         const advisor = document.getElementById('view-section-advisor').textContent;
-        const studentList = document.getElementById('view-section-students').innerHTML;
         
-        // Create print window
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Class List - ${sectionTitle}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    h1 { text-align: center; font-size: 18px; margin-bottom: 5px; }
-                    h2 { text-align: center; font-size: 16px; margin-bottom: 20px; color: #666; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th { background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }
-                    td { padding: 8px; border: 1px solid #ddd; }
-                    .print-header { margin-bottom: 30px; text-align: center; }
-                    .school-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-                    .school-address { font-size: 14px; margin-bottom: 20px; }
-                    .info { text-align: left; margin-bottom: 20px; }
-                    .info p { margin: 5px 0; }
-                    @media print {
-                        button { display: none; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="print-header">
-                    <div class="school-name">PROTECH: THE TECH TO PROTECT</div>
-                    <div class="school-address">Face Recognition Attendance Monitoring System</div>
+        // Create print content
+        const printContent = `
+            <div style="font-family: Arial, sans-serif; margin: 20px;">
+                <div style="margin-bottom: 30px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">PROTECH: THE TECH TO PROTECT</div>
+                    <div style="font-size: 14px; margin-bottom: 20px;">Face Recognition Attendance Monitoring System</div>
                 </div>
-                <div class="info">
-                    <p><strong>Section:</strong> ${sectionTitle}</p>
-                    <p><strong>Advisory Teacher:</strong> ${advisor}</p>
-                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <div style="text-align: left; margin-bottom: 20px;">
+                    <p style="margin: 5px 0;"><strong>Section:</strong> ${sectionTitle}</p>
+                    <p style="margin: 5px 0;"><strong>Advisory Teacher:</strong> ${advisor}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
                 </div>
-                <h1>CLASS LIST</h1>
-                <table>
+                <h1 style="text-align: center; font-size: 18px; margin-bottom: 20px;">CLASS LIST</h1>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">#</th>
-                            <th style="width: 30%;">LRN</th>
-                            <th style="width: 60%;">Student Name</th>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 10%;">#</th>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 30%;">LRN</th>
+                            <th style="background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; width: 60%;">Student Name</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1045,25 +1339,223 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const columns = row.querySelectorAll('div[class^="col-span"]');
                                 if (columns.length >= 3) {
                                     return `<tr>
-                                        <td>${index + 1}</td>
-                                        <td>${columns[1].textContent}</td>
-                                        <td>${columns[2].textContent}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${columns[1].textContent}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${columns[2].textContent}</td>
                                     </tr>`;
                                 }
                                 return '';
                             }).join('') : 
-                            '<tr><td colspan="3" style="text-align: center;">No students in this section</td></tr>'
+                            '<tr><td colspan="3" style="text-align: center; padding: 8px; border: 1px solid #ddd;">No students in this section</td></tr>'
                         }
                     </tbody>
                 </table>
-                <div style="margin-top: 30px; text-align: center;">
-                    <button onclick="window.print()" style="padding: 10px 20px; background-color: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer;">Print</button>
+            </div>
+        `;
+        
+        // Store original content
+        const originalContent = document.body.innerHTML;
+        
+        // Replace body content with print content
+        document.body.innerHTML = printContent;
+        
+        // Print
+        window.print();
+        
+        // Restore original content
+        document.body.innerHTML = originalContent;
+        
+        // Re-initialize page since we replaced the DOM
+        location.reload();
+    });
+    
+    // Print Sections Button Handler
+    const printSectionsBtn = document.getElementById('print-sections-btn');
+    
+    if (printSectionsBtn) {
+        printSectionsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateSectionPrintDocument();
+        });
+    }
+    
+    // Generate print document for sections
+    function generateSectionPrintDocument() {
+        // Get current filter values
+        const searchQuery = sectionSearch ? sectionSearch.value.trim() : '';
+        const gradeValue = gradeFilter ? gradeFilter.value : '';
+        const advisorValue = advisorFilter ? advisorFilter.value : '';
+        
+        // Build filter info string
+        let filterInfo = '';
+        const filters = [];
+        if (searchQuery) filters.push(`Search: ${searchQuery}`);
+        if (gradeValue) {
+            const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
+            filters.push(`Grade: ${gradeText}`);
+        }
+        if (advisorValue) filters.push(`Advisor: ${advisorValue}`);
+        if (filters.length > 0) {
+            filterInfo = filters.join(', ');
+        }
+        
+        // Get table rows and clean them for printing
+        const tableBody = sectionsTable ? sectionsTable.querySelector('tbody') : null;
+        if (!tableBody) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        const rows = tableBody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+        
+        let printRows = '';
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                // Extract data from cells (skip action buttons column)
+                const sectionName = cells[0] ? cells[0].textContent.trim() : '';
+                const grade = cells[1] ? cells[1].textContent.trim() : '';
+                const students = cells[2] ? cells[2].textContent.trim() : '';
+                const advisor = cells[3] ? cells[3].textContent.trim() : '';
+                const created = cells[4] ? cells[4].textContent.trim() : '';
+                
+                printRows += `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${sectionName}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${students}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${advisor}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${created}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        // Create hidden iframe for printing
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+        
+        const printDocument = printFrame.contentWindow.document;
+        printDocument.open();
+        printDocument.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Sections Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        color: #333;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 10px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        color: #1a202c;
+                    }
+                    .header h2 {
+                        margin: 5px 0 0 0;
+                        font-size: 16px;
+                        color: #4a5568;
+                        font-weight: normal;
+                    }
+                    .info {
+                        margin-bottom: 20px;
+                    }
+                    .info p {
+                        margin: 5px 0;
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #f7fafc;
+                        padding: 12px;
+                        text-align: left;
+                        border: 1px solid #ddd;
+                        font-weight: bold;
+                        color: #2d3748;
+                    }
+                    td {
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9fafb;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #718096;
+                    }
+                    @media print {
+                        body { margin: 15px; }
+                        .header { margin-bottom: 20px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>PROTECH: THE TECH TO PROTECT</h1>
+                    <h2>Face Recognition Attendance Monitoring System</h2>
+                </div>
+                <div class="info">
+                    <p><strong>Report:</strong> Sections List</p>
+                    <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                    ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Section Name</th>
+                            <th>Grade</th>
+                            <th>Students</th>
+                            <th>Advisor</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${printRows}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
                 </div>
             </body>
             </html>
         `);
-        printWindow.document.close();
-    });
+        printDocument.close();
+        
+        // Wait for content to load, then print
+        printFrame.contentWindow.focus();
+        setTimeout(() => {
+            printFrame.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(printFrame);
+            }, 1000);
+        }, 250);
+    }
     
     // Initialize grade filter and fetch sections on page load
     initializeGradeFilter();
@@ -1078,6 +1570,282 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPage = parseInt(urlParams.get('page'));
         if (isNaN(currentPage) || currentPage < 1) currentPage = 1;
     }
+
+    // Import Sections Modal
+    const importSectionsModal = document.getElementById('import-sections-modal');
+    const importSectionsBtn = document.getElementById('import-sections-btn');
+    const closeImportSectionsModal = document.getElementById('close-import-sections-modal');
+    const cancelImportSections = document.getElementById('cancel-import-sections');
+    const submitImportSections = document.getElementById('submit-import-sections');
+    const importSectionsForm = document.getElementById('import-sections-form');
+    const importSectionsFile = document.getElementById('import-sections-file');
+    const importSectionsProgress = document.getElementById('import-sections-progress');
+    const importSectionsProgressBar = document.getElementById('import-sections-progress-bar');
+    const importSectionsProgressPercent = document.getElementById('import-sections-progress-percent');
+    const importSectionsResults = document.getElementById('import-sections-results');
+
+    function openImportSectionsModal() {
+        if (importSectionsModal) {
+            importSectionsModal.classList.remove('hidden');
+            importSectionsModal.classList.add('flex');
+            setTimeout(() => {
+                if (importSectionsModal) {
+                    importSectionsModal.classList.remove('opacity-0');
+                    const inner = importSectionsModal.querySelector('.bg-white');
+                    if (inner) inner.classList.remove('scale-95');
+                }
+            }, 10);
+        }
+
+        // Reset form and file display
+        if (importSectionsForm) importSectionsForm.reset();
+        // Insert a short required-columns summary into the form for clarity
+        try {
+            let req = document.getElementById('import-sections-required-columns');
+            if (!req && importSectionsForm) {
+                req = document.createElement('div');
+                req.id = 'import-sections-required-columns';
+                req.className = 'mb-4 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200';
+                req.innerHTML = `<strong>Required columns:</strong> <code>ID</code> (optional), <code>Section Name</code> (required), <code>Grade</code> (required). Optional: <code>Room Number</code>, <code>Capacity</code>.<br><span class="text-xs text-gray-600 dark:text-gray-400">Leave <code>ID</code> blank for new sections. Supported formats: .csv, .xlsx, .xls. Max size: 10MB.</span>`;
+                importSectionsForm.insertBefore(req, importSectionsForm.firstChild);
+            }
+        } catch (err) {
+            // Non-fatal
+            console.warn('Could not add required-columns summary:', err);
+        }
+        const importSectionsFileName = document.getElementById('import-sections-file-name');
+        if (importSectionsFileName) importSectionsFileName.classList.add('hidden');
+        if (submitImportSections) submitImportSections.disabled = true;
+        if (importSectionsProgress) importSectionsProgress.classList.add('hidden');
+        if (importSectionsResults) importSectionsResults.classList.add('hidden');
+    }
+
+    function closeImportSectionsModalFunc() {
+        if (importSectionsModal) {
+            importSectionsModal.classList.add('opacity-0');
+            const inner = importSectionsModal.querySelector('.bg-white');
+            if (inner) inner.classList.add('scale-95');
+        }
+        setTimeout(() => {
+            if (importSectionsModal) {
+                importSectionsModal.classList.add('hidden');
+                importSectionsModal.classList.remove('flex');
+            }
+            if (importSectionsForm) importSectionsForm.reset();
+            if (importSectionsProgress) importSectionsProgress.classList.add('hidden');
+            if (importSectionsResults) importSectionsResults.classList.add('hidden');
+            if (importSectionsProgressBar) importSectionsProgressBar.style.width = '0%';
+        }, 300);
+    }
+
+    if (importSectionsBtn) {
+        importSectionsBtn.addEventListener('click', openImportSectionsModal);
+    }
+    if (closeImportSectionsModal) closeImportSectionsModal.addEventListener('click', closeImportSectionsModalFunc);
+    if (cancelImportSections) cancelImportSections.addEventListener('click', closeImportSectionsModalFunc);
+
+    // Handle file selection for sections import
+    const importSectionsFileName = document.getElementById('import-sections-file-name');
+    if (importSectionsFile && submitImportSections) {
+        // Initially disable submit button
+        submitImportSections.disabled = true;
+        
+        // File change handler
+        importSectionsFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                    e.target.value = '';
+                    if (importSectionsFileName) importSectionsFileName.classList.add('hidden');
+                    submitImportSections.disabled = true;
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('File too large. Maximum file size is 10MB.', 'error');
+                    e.target.value = '';
+                    if (importSectionsFileName) importSectionsFileName.classList.add('hidden');
+                    submitImportSections.disabled = true;
+                    return;
+                }
+
+                // If CSV, pre-validate header row to ensure required columns exist (quick client-side check)
+                if (/\.csv$/i.test(file.name)) {
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            const text = evt.target.result || '';
+                            const firstLine = (text.split(/\r?\n/)[0] || '').trim();
+                            const headers = firstLine.split(/,|\t/).map(h => h.replace(/['"]/g, '').trim().toLowerCase());
+                            const required = ['section name', 'grade'];
+                            const missing = required.filter(r => !headers.some(h => h.indexOf(r) !== -1));
+                            if (missing.length > 0) {
+                                showToast('CSV missing required columns: Section Name, Grade. Please update the file and try again.', 'error');
+                                e.target.value = '';
+                                if (importSectionsFileName) importSectionsFileName.classList.add('hidden');
+                                submitImportSections.disabled = true;
+                                return;
+                            }
+                            // headers look OK — enable submit and show filename (handled below)
+                            if (importSectionsFileName) {
+                                importSectionsFileName.textContent = `Selected: ${file.name}`;
+                                importSectionsFileName.classList.remove('hidden');
+                            }
+                            submitImportSections.disabled = false;
+                        };
+                        // Read first 64KB only for header parsing
+                        const blob = file.slice(0, 65536);
+                        reader.readAsText(blob);
+                        return; // wait for FileReader to enable submit
+                    } catch (err) {
+                        // If FileReader fails, fall back to server-side validation
+                        console.warn('CSV header pre-check failed:', err);
+                    }
+                }
+                
+                if (importSectionsFileName) {
+                    importSectionsFileName.textContent = `Selected: ${file.name}`;
+                    importSectionsFileName.classList.remove('hidden');
+                }
+                submitImportSections.disabled = false;
+            } else {
+                if (importSectionsFileName) importSectionsFileName.classList.add('hidden');
+                submitImportSections.disabled = true;
+            }
+        });
+    }
+
+    submitImportSections.addEventListener('click', async function() {
+        if (!importSectionsFile.files[0]) {
+            showToast('Please select a file', 'error');
+            return;
+        }
+
+        const formData = new FormData(importSectionsForm);
+        if (importSectionsProgress) importSectionsProgress.classList.remove('hidden');
+        if (importSectionsResults) importSectionsResults.classList.add('hidden');
+        submitImportSections.disabled = true;
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += 10;
+                if (importSectionsProgressBar) importSectionsProgressBar.style.width = progress + '%';
+                if (importSectionsProgressPercent) importSectionsProgressPercent.textContent = progress + '%';
+            }
+        }, 100);
+
+        try {
+            // Use XMLHttpRequest to get upload progress events (fetch doesn't provide upload progress)
+            const result = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/admin/sections/import/');
+                // Add CSRF and X-Requested-With headers
+                const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (csrfEl && csrfEl.value) xhr.setRequestHeader('X-CSRFToken', csrfEl.value);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+                xhr.upload.onprogress = function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        if (importSectionsProgressBar) importSectionsProgressBar.style.width = percent + '%';
+                        if (importSectionsProgressPercent) importSectionsProgressPercent.textContent = percent + '%';
+                    } else {
+                        // Fallback visual progress
+                        progress = Math.min(progress + 10, 90);
+                        if (importSectionsProgressBar) importSectionsProgressBar.style.width = progress + '%';
+                        if (importSectionsProgressPercent) importSectionsProgressPercent.textContent = progress + '%';
+                    }
+                };
+
+                xhr.onload = function() {
+                    // Treat 2xx as success
+                    const status = xhr.status || 0;
+                    const raw = xhr.responseText || '';
+                    if (status >= 200 && status < 300) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            resolve(parsed);
+                        } catch (e) {
+                            // Not JSON — return plain text as message
+                            resolve({ success: true, message: raw.replace(/<[^>]+>/g, '').trim() });
+                        }
+                    } else {
+                        const plain = raw.replace(/<[^>]+>/g, '').trim();
+                        reject({ status: status, message: plain || xhr.statusText });
+                    }
+                };
+
+                xhr.onerror = function() {
+                    reject({ status: xhr.status, message: 'Network error during upload' });
+                };
+
+                xhr.onabort = function() {
+                    reject({ status: xhr.status, message: 'Upload aborted' });
+                };
+
+                xhr.send(formData);
+            });
+
+            // Completed upload - set UI to 100%
+            if (importSectionsProgressBar) importSectionsProgressBar.style.width = '100%';
+            if (importSectionsProgressPercent) importSectionsProgressPercent.textContent = '100%';
+
+            if (importSectionsResults) importSectionsResults.classList.remove('hidden');
+
+            // Accept both { success: true } and { status: 'success' } response shapes
+            const isSuccess = result && (result.success === true || result.status === 'success' || result.status === true);
+            if (isSuccess) {
+                const created = result.created !== undefined ? result.created : (result.created_count || 0);
+                const updated = result.updated !== undefined ? result.updated : (result.updated_count || 0);
+                const msg = result.message || result.msg || 'Import completed';
+
+                // Build skipped rows display if present
+                let skippedHtml = '';
+                const skipped = result.skipped_rows || result.skipped || [];
+                if (Array.isArray(skipped) && skipped.length > 0) {
+                    const preview = skipped.slice(0, 20);
+                    let rowsHtml = preview.map(r => {
+                        const reason = r.reason || r.message || '';
+                        const rowNum = r.row || '';
+                        const name = r.name ? ' - ' + r.name : '';
+                        return '<li class="text-sm">Row ' + rowNum + name + ': ' + reason + '</li>';
+                    }).join('');
+                    skippedHtml = '<div class="mt-2 text-sm text-gray-700"><strong>Skipped rows:</strong><ul class="list-disc list-inside mt-1">' + rowsHtml + '</ul>';
+                    if (skipped.length > preview.length) {
+                        skippedHtml += '<div class="text-xs text-gray-500 mt-1">...and ' + (skipped.length - preview.length) + ' more</div>';
+                    }
+                    skippedHtml += '</div>';
+                }
+
+                if (importSectionsResults) importSectionsResults.innerHTML = `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"><strong>Success!</strong> ${msg}<br><strong>Created:</strong> ${created}<br><strong>Updated:</strong> ${updated}${skippedHtml}</div>`;
+                showToast(msg, 'success');
+                fetchSections(currentPage);
+            } else {
+                const errMsg = (result && (result.message || result.error || result.msg)) || JSON.stringify(result) || 'Import completed with unknown status';
+                if (importSectionsResults) importSectionsResults.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><strong>Error!</strong> ${errMsg}</div>`;
+                showToast('Import failed', 'error');
+            }
+        } catch (error) {
+            if (importSectionsProgressBar) importSectionsProgressBar.style.width = '0%';
+            if (importSectionsProgressPercent) importSectionsProgressPercent.textContent = '0%';
+            if (importSectionsResults) {
+                importSectionsResults.classList.remove('hidden');
+                const msg = (error && (error.message || error.msg)) || (error && error.status ? `HTTP ${error.status}` : 'Unknown error');
+                importSectionsResults.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><strong>Error!</strong> ${msg}</div>`;
+            }
+            showToast('Import failed', 'error');
+        } finally {
+            if (submitImportSections) submitImportSections.disabled = false;
+        }
+    });
 });
 </script>
 {% endblock %}
