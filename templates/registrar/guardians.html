@@ -147,19 +147,46 @@
 
 <!-- Action buttons -->
         <div class="flex flex-wrap md:flex-nowrap gap-2">
-            <button id="import-students-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <button id="import-guardians-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
-            <button id="print-students-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-guardians-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
+            <button id="print-guardians-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
@@ -553,6 +580,165 @@
 <!-- Toast Container -->
 <div id="guardian-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+<!-- Import Guardians Modal -->
+<div id="import-guardians-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-3xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col modal-content">
+        <!-- Header -->
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Import Guardians</h3>
+                        <p class="text-white/80 text-sm">Upload an Excel or CSV file to import guardians</p>
+                    </div>
+                </div>
+                <button id="close-import-guardians-modal" type="button" class="text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 p-2 rounded-full">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="absolute -bottom-1 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="/registrar/guardians/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Guardian ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new guardians</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">First Name</td>
+                                    <td class="p-2">Guardian first name (required)</td>
+                                    <td class="p-2">John</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Middle Name</td>
+                                    <td class="p-2">Guardian middle name (optional)</td>
+                                    <td class="p-2">Smith</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Last Name</td>
+                                    <td class="p-2">Guardian last name (required)</td>
+                                    <td class="p-2">Doe</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Relationship</td>
+                                    <td class="p-2">Relationship to student (required)</td>
+                                    <td class="p-2">FATHER, MOTHER, GUARDIAN</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Contact Number</td>
+                                    <td class="p-2">Phone number (required)</td>
+                                    <td class="p-2">09123456789</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Email</td>
+                                    <td class="p-2">Email address (optional)</td>
+                                    <td class="p-2">john.doe@email.com</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">Student Name</td>
+                                    <td class="p-2">Student full name (required)</td>
+                                    <td class="p-2">Jane Doe</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new guardians.</strong> Rows with existing IDs will be SKIPPED</li>
+                        <li>• Valid relationships: FATHER, MOTHER, GUARDIAN, GRANDMOTHER, GRANDFATHER, AUNT, UNCLE, SIBLING, OTHER</li>
+                        <li>• Contact number must be in valid format (e.g., 09123456789)</li>
+                        <li>• Student must exist in the system</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-guardians-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-guardians-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-guardians-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-guardians-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-guardians-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing guardians...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-guardians-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-guardians-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Import Results -->
+                    <div id="import-guardians-results" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-guardians" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
+                <button type="button" id="submit-import-guardians" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"><i class="fas fa-upload mr-2"></i>Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Global variables
@@ -739,6 +925,10 @@ function initializeEventListeners() {
     guardianChildrenModal.addEventListener('click', (e) => {
         if (e.target === guardianChildrenModal) closeChildrenModal();
     });
+    
+    // Initialize export dropdown and print button
+    initializeExportDropdown();
+    initializePrintButton();
 }
 
 // Search with debounce
@@ -872,65 +1062,74 @@ function renderGuardiansTable(guardians) {
 
 // Populate the guardian form with data for editing
 function populateGuardianForm(guardian) {
-    // Basic fields
-    document.getElementById('guardian-first-name').value = guardian.first_name || '';
-    document.getElementById('guardian-middle-name').value = guardian.middle_name || '';
-    document.getElementById('guardian-last-name').value = guardian.last_name || '';
-    document.getElementById('guardian-email').value = guardian.email || '';
-    document.getElementById('guardian-phone').value = guardian.phone_number || '';
-    document.getElementById('guardian-relationship').value = guardian.relationship || '';
+    console.log('Populating form with guardian data:', guardian);
+    
+    try {
+        // Basic fields
+        document.getElementById('guardian-first-name').value = guardian.first_name || '';
+        document.getElementById('guardian-middle-name').value = guardian.middle_name || '';
+        document.getElementById('guardian-last-name').value = guardian.last_name || '';
+        document.getElementById('guardian-email').value = guardian.email || '';
+        document.getElementById('guardian-phone').value = guardian.phone_number || guardian.phone || '';
+        document.getElementById('guardian-relationship').value = guardian.relationship || '';
 
-    // Student selection (cascading dropdowns)
-    // guardian.children is assumed to be a list of student objects or a single student object
-    // For this UI, we assume only one child can be selected per guardian (as per the form)
-    const child = guardian.children && guardian.children.length ? guardian.children[0] : null;
-    const gradeDropdown = document.getElementById('guardian-grade');
-    const sectionDropdown = document.getElementById('guardian-section');
-    const studentDropdown = document.getElementById('guardian-student');
-    const hiddenInput = document.getElementById('guardian-children');
+        // Student selection dropdowns
+        const gradeDropdown = document.getElementById('guardian-grade');
+        const sectionDropdown = document.getElementById('guardian-section');
+        const studentDropdown = document.getElementById('guardian-student');
+        const hiddenInput = document.getElementById('guardian-children');
 
-    // Reset dropdowns
-    gradeDropdown.value = '';
-    sectionDropdown.innerHTML = '<option value="">Select section</option>';
-    sectionDropdown.disabled = true;
-    studentDropdown.innerHTML = '<option value="">Select student</option>';
-    studentDropdown.disabled = true;
-    hiddenInput.value = '';
+        // Reset dropdowns
+        gradeDropdown.value = '';
+        sectionDropdown.innerHTML = '<option value="">Select section</option>';
+        sectionDropdown.disabled = true;
+        studentDropdown.innerHTML = '<option value="">Select student</option>';
+        studentDropdown.disabled = true;
+        hiddenInput.value = '';
 
-    if (child) {
-        // Set grade
-        gradeDropdown.value = child.grade_id || child.grade || '';
-        // Trigger change to load sections
-        const triggerSection = () => {
-            // Set section
-            sectionDropdown.value = child.section_id || child.section || '';
-            sectionDropdown.disabled = false;
-            // Trigger change to load students
-            const triggerStudent = () => {
-                studentDropdown.value = child.id || '';
-                studentDropdown.disabled = false;
-                hiddenInput.value = child.id || '';
-            };
-            // If students are already loaded for this section
-            if (studentDropdown.options.length > 1) {
-                triggerStudent();
-            } else {
-                // Wait for students to load
-                setTimeout(triggerStudent, 200);
-            }
-        };
-        // If sections are already loaded for this grade
-        if (sectionDropdown.options.length > 1) {
-            triggerSection();
-        } else {
-            // Wait for sections to load
-            setTimeout(triggerSection, 200);
+        // If guardian has a student assigned, populate the cascading dropdowns
+        if (guardian.student_id && guardian.grade_id) {
+            console.log('Loading student data:', {
+                student_id: guardian.student_id,
+                grade_id: guardian.grade_id,
+                section_id: guardian.section_id
+            });
+            
+            // Set grade first
+            gradeDropdown.value = guardian.grade_id;
+            
+            // Trigger grade change to load sections
+            const changeEvent = new Event('change', { bubbles: true });
+            gradeDropdown.dispatchEvent(changeEvent);
+            
+            // Wait for sections to load, then set section
+            setTimeout(() => {
+                if (guardian.section_id && sectionDropdown.options.length > 1) {
+                    sectionDropdown.value = guardian.section_id;
+                    sectionDropdown.disabled = false;
+                    
+                    // Trigger section change to load students
+                    sectionDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // Wait for students to load, then set student
+                    setTimeout(() => {
+                        if (guardian.student_id && studentDropdown.options.length > 1) {
+                            studentDropdown.value = guardian.student_id;
+                            studentDropdown.disabled = false;
+                            hiddenInput.value = guardian.student_id;
+                            console.log('Student set successfully:', guardian.student_id);
+                        } else {
+                            console.warn('Student dropdown not loaded or student ID missing');
+                        }
+                    }, 500);
+                } else {
+                    console.warn('Section dropdown not loaded or section ID missing');
+                }
+            }, 500);
         }
-        // Manually trigger change events to load sections/students
-        gradeDropdown.dispatchEvent(new Event('change'));
-        setTimeout(() => {
-            sectionDropdown.dispatchEvent(new Event('change'));
-        }, 250);
+    } catch (error) {
+        console.error('Error populating guardian form:', error);
+        showToast('Error loading guardian data into form', 'error');
     }
 }
 
@@ -1125,20 +1324,28 @@ function editGuardian(guardianId) {
     // Show loading state
     showLoading();
     
-    fetch(`{% url 'registrar_get_guardian_details' 0 %}`.replace('0', guardianId))
-        .then(response => response.json())
+    const url = `{% url 'registrar_get_guardian_details' 0 %}`.replace('0', guardianId);
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             hideLoading();
-            if (data.status === 'success') {
+            if ((data.success || data.status === 'success') && data.guardian) {
                 openGuardianModal(data.guardian);
             } else {
-                showToast(data.message || 'Failed to load guardian details', 'error');
+                console.error('API Error:', data);
+                showToast(data.message || data.error || 'Failed to load guardian details', 'error');
             }
         })
         .catch(error => {
             hideLoading();
-            console.error('Error:', error);
-            showToast('An error occurred while fetching guardian details', 'error');
+            console.error('Fetch Error:', error);
+            showToast(`Error: ${error.message}`, 'error');
         });
 }
 
@@ -1437,6 +1644,497 @@ function showToast(message, type = 'success', duration = 5000) {
         }, 300);
     }
 }
+
+// Backwards-compatible alias used by some import handlers
+function showGuardianToast(message, type = 'info', duration = 5000) {
+    showToast(message, type, duration);
+}
+
+// Export dropdown functionality
+function initializeExportDropdown() {
+    const exportBtn = document.getElementById('export-guardians-btn');
+    const dropdown = document.getElementById('export-dropdown');
+    const exportOptions = document.querySelectorAll('.export-option');
+
+    if (!exportBtn || !dropdown) return;
+
+    // Toggle dropdown
+    exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Handle export option clicks
+    exportOptions.forEach(option => {
+        option.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const format = option.dataset.format;
+            dropdown.classList.add('hidden');
+
+            // Get current filter values
+            const searchValue = document.getElementById('search-input')?.value || '';
+            const relationshipValue = document.getElementById('relationship-filter')?.value || '';
+            const gradeValue = document.getElementById('grade-filter')?.value || '';
+            const sectionValue = document.getElementById('section-filter')?.value || '';
+
+            // Build URL with filters
+            const params = new URLSearchParams({
+                format: format,
+                search: searchValue,
+                relationship: relationshipValue,
+                grade: gradeValue,
+                section: sectionValue
+            });
+
+            try {
+                showToast(`Generating ${format.toUpperCase()} export...`, 'info', 3000);
+                
+                const response = await fetch(`/registrar/guardians/export/?${params.toString()}`);
+                
+                // Check if response is JSON (error) or blob (file)
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    showToast(data.error || 'Export failed', 'error');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Set filename based on format
+                let filename = 'guardians_list';
+                if (format === 'excel') filename += '.xlsx';
+                else if (format === 'pdf') filename += '.pdf';
+                else if (format === 'word') filename += '.docx';
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast(`${format.toUpperCase()} file downloaded successfully!`, 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Failed to export file', 'error');
+            }
+        });
+    });
+}
+
+// Print button functionality
+function initializePrintButton() {
+    const printBtn = document.getElementById('print-guardians-btn');
+    if (!printBtn) return;
+
+    printBtn.addEventListener('click', () => {
+        const printContent = generateGuardianPrintDocument();
+        
+        // Create hidden iframe for printing
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(printContent);
+        doc.close();
+        
+        // Wait for content to load before printing
+        iframe.contentWindow.focus();
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 250);
+    });
+}
+
+function generateGuardianPrintDocument() {
+    // Get filter values to display in header
+    const searchValue = document.getElementById('search-input')?.value || '';
+    const relationshipFilter = document.getElementById('relationship-filter');
+    const gradeFilter = document.getElementById('grade-filter');
+    const sectionFilter = document.getElementById('section-filter');
+    
+    const relationshipText = relationshipFilter?.options[relationshipFilter.selectedIndex]?.text || 'All';
+    const gradeText = gradeFilter?.options[gradeFilter.selectedIndex]?.text || 'All';
+    const sectionText = sectionFilter?.options[sectionFilter.selectedIndex]?.text || 'All';
+
+    // Get the visible table rows
+    const tableRows = document.querySelectorAll('#guardians-table tbody tr');
+    let tableRowsHtml = '';
+    let rowCount = 0;
+    
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 5) {
+            rowCount++;
+            
+            // Extract Name (cell 0) - get the main name text
+            const nameCell = cells[0].querySelector('.text-lg.font-medium');
+            const name = nameCell ? nameCell.textContent.trim() : cells[0].textContent.trim();
+            
+            // Extract Contact (cell 1) - email and phone
+            const emailCell = cells[1].querySelector('.text-lg.text-gray-900');
+            const phoneCell = cells[1].querySelector('.text-lg.text-gray-600');
+            const email = emailCell ? emailCell.textContent.trim() : '';
+            const phone = phoneCell ? phoneCell.textContent.trim() : '';
+            const contact = `${email}\n${phone}`;
+            
+            // Extract Relationship (cell 2) - get badge text
+            const relationshipBadge = cells[2].querySelector('span');
+            const relationship = relationshipBadge ? relationshipBadge.textContent.trim() : cells[2].textContent.trim();
+            
+            // Extract Children (cell 3) - get count and names
+            const childrenCell = cells[3];
+            const childCountEl = childrenCell.querySelector('.text-lg.font-medium');
+            const childPreviewBtn = childrenCell.querySelector('button');
+            const childPreview = childPreviewBtn ? childPreviewBtn.textContent.trim() : '';
+            const children = childCountEl ? `${childCountEl.textContent.trim()}${childPreview ? '\n' + childPreview : ''}` : childrenCell.textContent.trim();
+            
+            tableRowsHtml += `
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">${name}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; white-space: pre-line;">${contact}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">${relationship}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; white-space: pre-line;">${children}</td>
+                </tr>
+            `;
+        }
+    });
+
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Guardians List - PROTECH</title>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 20px; }
+                    @page { margin: 1cm; }
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 20px;
+                }
+                .header h1 {
+                    color: #1e40af;
+                    margin: 0 0 10px 0;
+                    font-size: 28px;
+                }
+                .header h2 {
+                    color: #374151;
+                    margin: 0;
+                    font-size: 20px;
+                    font-weight: normal;
+                }
+                .filters {
+                    margin-bottom: 20px;
+                    padding: 15px;
+                    background-color: #f3f4f6;
+                    border-radius: 8px;
+                }
+                .filters p {
+                    margin: 5px 0;
+                    color: #4b5563;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background-color: #2563eb;
+                    color: white;
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: 600;
+                }
+                td {
+                    padding: 12px;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9fafb;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    color: #6b7280;
+                    font-size: 14px;
+                    border-top: 1px solid #e5e7eb;
+                    padding-top: 15px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>PROTECH Attendance System</h1>
+                <h2>Guardians List</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Relationship</th>
+                        <th>Children</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRowsHtml || '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">No guardians found</td></tr>'}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated on ${currentDate}</p>
+                <p>PROTECH Attendance System</p>
+            </div>
+        </body>
+        </html>
+    `;
+}
+
+// Import Guardians Modal
+const importGuardiansModal = document.getElementById('import-guardians-modal');
+const importGuardiansBtn = document.getElementById('import-guardians-btn');
+const closeImportGuardiansModal = document.getElementById('close-import-guardians-modal');
+const cancelImportGuardians = document.getElementById('cancel-import-guardians');
+const submitImportGuardians = document.getElementById('submit-import-guardians');
+const importGuardiansForm = document.getElementById('import-guardians-form');
+const importGuardiansFile = document.getElementById('import-guardians-file');
+const importGuardiansFileName = document.getElementById('import-guardians-file-name');
+const importGuardiansProgress = document.getElementById('import-guardians-progress');
+const importGuardiansProgressBar = document.getElementById('import-guardians-progress-bar');
+const importGuardiansResults = document.getElementById('import-guardians-results');
+
+function openImportGuardiansModal() {
+    importGuardiansModal.classList.remove('hidden');
+    importGuardiansModal.classList.add('flex');
+    // Ensure wrapper fades in (match other modals behavior)
+    importGuardiansModal.classList.add('opacity-100');
+    setTimeout(() => {
+        const modalContent = importGuardiansModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }
+    }, 10);
+    
+    // Reset form and file display
+    importGuardiansForm.reset();
+    if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+    // prevent background scrolling while modal is open
+    document.body.classList.add('overflow-hidden');
+    // clear previous results
+    if (importGuardiansResults) {
+        importGuardiansResults.classList.add('hidden');
+        importGuardiansResults.innerHTML = '';
+    }
+    if (submitImportGuardians) submitImportGuardians.disabled = true;
+    importGuardiansProgress.classList.add('hidden');
+    importGuardiansResults.classList.add('hidden');
+}
+
+function closeImportGuardiansModalFunc() {
+    // Fade the wrapper out first so backdrop transitions smoothly
+    importGuardiansModal.classList.remove('opacity-100');
+    importGuardiansModal.classList.add('opacity-0');
+    const modalContent = importGuardiansModal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+    }
+    setTimeout(() => {
+        importGuardiansModal.classList.add('hidden');
+        importGuardiansModal.classList.remove('flex');
+        importGuardiansForm.reset();
+        importGuardiansProgress.classList.add('hidden');
+        importGuardiansResults.classList.add('hidden');
+        importGuardiansResults.innerHTML = '';
+        importGuardiansProgressBar.style.width = '0%';
+        // restore background scrolling
+        document.body.classList.remove('overflow-hidden');
+    }, 300);
+}
+
+if (importGuardiansBtn) {
+    importGuardiansBtn.addEventListener('click', openImportGuardiansModal);
+}
+closeImportGuardiansModal.addEventListener('click', closeImportGuardiansModalFunc);
+cancelImportGuardians.addEventListener('click', closeImportGuardiansModalFunc);
+
+// Handle file selection for guardians import
+if (importGuardiansFile && submitImportGuardians) {
+    // Initially disable submit button
+    submitImportGuardians.disabled = true;
+    
+    // File change handler
+    importGuardiansFile.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+                'text/csv'
+            ];
+            
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                showGuardianToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                e.target.value = '';
+                if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+                submitImportGuardians.disabled = true;
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showGuardianToast('File too large. Maximum file size is 10MB.', 'error');
+                e.target.value = '';
+                if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+                submitImportGuardians.disabled = true;
+                return;
+            }
+            
+            if (importGuardiansFileName) {
+                importGuardiansFileName.textContent = `Selected: ${file.name}`;
+                importGuardiansFileName.classList.remove('hidden');
+            }
+            submitImportGuardians.disabled = false;
+        } else {
+            if (importGuardiansFileName) importGuardiansFileName.classList.add('hidden');
+            submitImportGuardians.disabled = true;
+        }
+    });
+}
+
+submitImportGuardians.addEventListener('click', async function() {
+    if (!importGuardiansFile.files[0]) {
+        showGuardianToast('Please select a file', 'error');
+        return;
+    }
+
+    const formData = new FormData(importGuardiansForm);
+    importGuardiansProgress.classList.remove('hidden');
+    importGuardiansResults.classList.add('hidden');
+    submitImportGuardians.disabled = true;
+
+    let progress = 0;
+    const progressPercent = document.getElementById('import-guardians-progress-percent');
+    const progressInterval = setInterval(() => {
+        progress += 10;
+        if (progress <= 90) {
+            importGuardiansProgressBar.style.width = progress + '%';
+            if (progressPercent) progressPercent.textContent = progress + '%';
+        }
+    }, 200);
+
+    try {
+        const response = await fetch('/registrar/guardians/import/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        clearInterval(progressInterval);
+        importGuardiansProgressBar.style.width = '100%';
+
+        const result = await response.json();
+        
+        setTimeout(() => {
+            importGuardiansProgress.classList.add('hidden');
+            importGuardiansResults.classList.remove('hidden');
+
+            if (result.success || result.status === 'success') {
+                importGuardiansResults.innerHTML = `
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
+                            <div>
+                                <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${result.message}</h5>
+                                <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                    ${result.created > 0 ? `<li>• Created: ${result.created}</li>` : ''}
+                                    ${result.updated > 0 ? `<li>• Updated: ${result.updated}</li>` : ''}
+                                    ${result.skipped > 0 ? `<li>• Skipped: ${result.skipped}</li>` : ''}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                showGuardianToast('Guardians imported successfully!', 'success');
+                setTimeout(() => {
+                    loadGuardians(1);
+                }, 2000);
+            } else {
+                let errorHtml = `
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                            <div class="flex-1">
+                                <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                <p class="text-sm text-red-700 dark:text-red-300">${result.error || result.message}</p>
+                `;
+                
+                if (result.errors && result.errors.length > 0) {
+                    errorHtml += '<ul class="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">';
+                    result.errors.forEach(error => {
+                        errorHtml += `<li>• ${error}</li>`;
+                    });
+                    errorHtml += '</ul>';
+                }
+                
+                errorHtml += '</div></div></div>';
+                importGuardiansResults.innerHTML = errorHtml;
+                showGuardianToast('Import failed. Please check the errors.', 'error');
+            }
+        }, 500);
+    } catch (error) {
+        clearInterval(progressInterval);
+        importGuardiansProgress.classList.add('hidden');
+        importGuardiansResults.classList.remove('hidden');
+        importGuardiansResults.innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                    <div>
+                        <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Network Error</h5>
+                        <p class="text-sm text-red-700 dark:text-red-300">${error.message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        showGuardianToast('Failed to import guardians. Please try again.', 'error');
+    } finally {
+        submitImportGuardians.disabled = false;
+    }
+});
 </script>
 
 <style>
