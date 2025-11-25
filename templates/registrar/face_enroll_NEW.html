@@ -1,0 +1,519 @@
+{% extends 'components/base_component.html' %}
+{% load static %}
+
+{% block title %}PROTECH - Face Enrollment{% endblock %}
+{% block page_title %}Face Enrollment{% endblock %}
+
+{% block sidebar %}
+    {% include 'components/sidebar/registrar_sidebar.html' with active='face_enroll' %}
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<!-- Dashboard Cards - EXACTLY THE SAME AS STUDENTS PAGE -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Total Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_students }}</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Active Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ active_students }}</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Inactive Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Inactive Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ inactive_students }}</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Students with Face Enrolled -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-primary dark:border-tertiary transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-primary/10 dark:bg-tertiary/20 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Face Enrolled</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ face_enrolled_count }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEARCH AND FILTERS - EXACTLY THE SAME AS STUDENTS PAGE -->
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="student-search" placeholder="Search by name, LRN, or email..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div id="student-search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="student-search-results-count" class="hidden absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span></span>
+                </div>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <!-- Grade filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="grade-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Grades</option>
+                        {% for grade in grades %}
+                            <option value="{{ grade.id }}" {% if grade_filter == grade.id|stringformat:"s" %}selected{% endif %}>{{ grade.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Section filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="section-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Sections</option>
+                        {% for section in sections %}
+                            <option value="{{ section.id }}" {% if section_filter == section.id|stringformat:"s" %}selected{% endif %}>{{ section.grade.name }} - {{ section.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Status filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="status-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+                        <option value="INACTIVE" {% if status_filter == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- NO ACTION BUTTONS (EMPTY FOR NOW) -->
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <!-- Empty space for action buttons - will be added later -->
+        </div>
+    </div>
+</div>
+
+<!-- Student table container - EXACTLY THE SAME AS STUDENTS PAGE -->
+<div id="student-table-container" class="relative">
+    <div id="student-table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-12 w-12 text-primary dark:text-tertiary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading students...</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+        <div class="overflow-x-auto">
+            <table id="students-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LRN</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- Table content will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        {% include 'components/pagination.html' with pagination_id='student-pagination-container' items_per_page=10 %}
+    </div>
+    <div id="student-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No students found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="student-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<!-- JavaScript - COPIED FROM STUDENTS PAGE -->
+<script src="{% static 'js/pagination-component.js' %}"></script>
+<script>
+// Global variables
+let currentStudentData = null;
+let currentPage = 1;
+let isLoading = false;
+let searchTimeout = null;
+
+// Store grades and sections data globally for dependent dropdowns
+let allGrades = [];
+let allSections = [];
+
+// Global pagination component
+let studentPagination;
+
+// Update the getProfilePicUrl function to correctly handle URLs
+function getProfilePicUrl(filename) {
+    if (!filename) {
+        return "{% url 'serve_profile_pic_default' %}";
+    }
+    // Use the media URL pattern with the filename for proper path resolution
+    return "{% url 'serve_profile_pic' 'placeholder' %}".replace('placeholder', filename);
+}
+
+// DOM Elements
+const studentTableContainer = document.getElementById('student-table-container');
+const studentTableBody = document.querySelector('#students-table tbody');
+const studentTableLoading = document.getElementById('student-table-loading');
+const searchInput = document.getElementById('student-search');
+const gradeFilter = document.getElementById('grade-filter');
+const sectionFilter = document.getElementById('section-filter');
+const statusFilter = document.getElementById('status-filter');
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEventListeners();
+    
+    // Initialize Pagination Component
+    studentPagination = new PaginationComponent({
+        containerId: 'student-pagination-container',
+        fetchFunction: loadStudents,
+        itemsPerPage: 10
+    });
+    
+    loadStudents();
+});
+
+// Utility functions
+function showLoading() {
+    studentTableLoading.classList.remove('hidden');
+}
+
+function hideLoading() {
+    studentTableLoading.classList.add('hidden');
+}
+
+function updateResultsCount(count) {
+    const searchQuery = searchInput.value;
+    if (searchQuery) {
+        const countElement = document.getElementById('student-search-results-count');
+        const spanElement = countElement.querySelector('span');
+        spanElement.textContent = `${count} result${count !== 1 ? 's' : ''}`;
+        countElement.classList.remove('hidden');
+    } else {
+        document.getElementById('student-search-results-count').classList.add('hidden');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-4 opacity-0';
+    
+    let iconHTML = '';
+    switch (type) {
+        case 'success':
+            toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
+            iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'error':
+            toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
+            iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'warning':
+            toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
+            iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+        case 'info':
+        default:
+            toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
+            iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>`;
+            break;
+    }
+    
+    toast.innerHTML = `
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center">
+                ${iconHTML}
+                <span class="font-medium">${message}</span>
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    const toastContainer = document.getElementById('student-toast-container');
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+    }, 10);
+    
+    const closeButton = toast.querySelector('button');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            removeToast(toast);
+        });
+    }
+    
+    setTimeout(() => {
+        removeToast(toast);
+    }, 5000);
+}
+
+function removeToast(toast) {
+    toast.classList.add('opacity-0', 'translate-y-4');
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
+}
+
+// Event Listeners
+function initializeEventListeners() {
+    searchInput.addEventListener('input', debounceSearch);
+    gradeFilter.addEventListener('change', handleFilterChange);
+    sectionFilter.addEventListener('change', handleFilterChange);
+    statusFilter.addEventListener('change', handleFilterChange);
+}
+
+// Search with debounce
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadStudents();
+    }, 300);
+}
+
+// Handle filter changes
+function handleFilterChange() {
+    currentPage = 1;
+    loadStudents();
+}
+
+// Load students with AJAX
+function loadStudents(page = 1, itemsPerPage = null) {
+    if (isLoading) return;
+    
+    isLoading = true;
+    showLoading();
+    
+    const params = new URLSearchParams({
+        search: searchInput.value,
+        grade: gradeFilter.value,
+        section: sectionFilter.value,
+        status: statusFilter.value,
+        page: page,
+        items_per_page: itemsPerPage || 10
+    });
+
+    fetch(`{% url 'registrar_search_students_for_face_enroll' %}?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const studentTableContainer = document.getElementById('student-table-container');
+                const studentNoResults = document.getElementById('student-no-results');
+                
+                if (data.total_count === 0) {
+                    if (studentTableContainer) studentTableContainer.classList.add('hidden');
+                    if (studentNoResults) studentNoResults.classList.remove('hidden');
+                } else {
+                    if (studentTableContainer) studentTableContainer.classList.remove('hidden');
+                    if (studentNoResults) studentNoResults.classList.add('hidden');
+                    
+                    renderStudentsTable(data.students);
+                    
+                    // Update pagination component
+                    studentPagination.update(data.pagination);
+                }
+                
+                updateResultsCount(data.total_count);
+                currentPage = page;
+            } else {
+                showToast('Error loading students', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error loading students', 'error');
+        })
+        .finally(() => {
+            isLoading = false;
+            hideLoading();
+        });
+}
+
+// Render students table - WITH EMPTY ACTION BUTTONS
+function renderStudentsTable(students) {
+    if (students.length === 0) {
+        document.getElementById('student-no-results').classList.remove('hidden');
+        studentTableContainer.querySelector('.bg-white').classList.add('hidden');
+        return;
+    }
+
+    document.getElementById('student-no-results').classList.add('hidden');
+    studentTableContainer.querySelector('.bg-white').classList.remove('hidden');
+
+    studentTableBody.innerHTML = students.map(student => `
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                        ${student.profile_pic ? 
+                            `<img src="${getProfilePicUrl(student.profile_pic)}" alt="${student.full_name}" class="h-10 w-10 rounded-full object-cover">` :
+                            `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>`
+                        }
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-lg font-medium text-gray-900 dark:text-white">${student.lrn}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-lg font-medium text-gray-900 dark:text-white">${student.full_name}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-lg text-gray-900 dark:text-white">${student.grade || 'N/A'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-lg text-gray-900 dark:text-white">${student.section || 'N/A'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    student.status === 'ACTIVE' ? 
+                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                }">
+                    ${student.status}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- EMPTY ACTION BUTTONS COLUMN - WILL BE ADDED LATER -->
+                <div class="flex items-center justify-center space-x-3">
+                    <!-- Empty for now -->
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+</script>
+
+<style>
+/* Custom scrollbar for modal */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+</style>
+{% endblock %}
