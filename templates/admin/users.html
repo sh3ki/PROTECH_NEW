@@ -150,13 +150,40 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
-            <button id="print-users-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-users-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
+            <button id="print-users-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold" title="Print users list">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
@@ -374,7 +401,7 @@
 <div id="user-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
     <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
         <!-- Modal Header -->
-        <div class="relative bg-gradient-to-r from-primary to-secondary dark:from-tertiary dark:to-primary px-8 py-6">
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -644,55 +671,20 @@
                     </div>
                 </div>
 
-                <!-- Password Fields (shown only for new users) -->
-                <div class="password-fields">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                               <!-- Password -->
-                        <div class="group">
-                            <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor"></svg>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Password
-                                <span class="text-red-500 ml-1">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                </div>
-                                <input type="password" id="password" name="password" required 
-                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
-                                    placeholder="Enter password">
-                            </div>
+                <!-- Password Information -->
+                <div class="password-info bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Auto-Generated Password</h4>
+                            <p class="text-sm text-blue-700 dark:text-blue-400">A secure password will be automatically generated and sent to the user's email address.</p>
                         </div>
-
-                        <!-- Confirm Password -->
-                        <div class="group">
-                            <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                                Confirm Password
-                                <span class="text-red-500 ml-1">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <input type="password" id="password_confirmation" name="password_confirmation" required 
-                                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
-                                placeholder="Confirm password">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Password must be at least 8 characters long
                     </div>
                 </div>
+
+
             </form>
         </div>
 
@@ -855,11 +847,14 @@
     </div>
 </div>
 
+<!-- Print Users Modal -->
+
+
 <!-- Import Users Modal -->
 <div id="import-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
         <!-- Modal Header -->
-        <div class="relative bg-gradient-to-r from-green-600 to-green-700 dark:from-green-700 dark:to-green-800 px-8 py-6">
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
@@ -877,14 +872,23 @@
         </div>
 
         <!-- Modal Body -->
-        <div class="p-8 max-h-[calc(95vh-140px)] overflow-y-auto custom-scrollbar">
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
             <!-- Instructions Section -->
             <div class="mb-6">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">File Format Instructions</h4>
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <div class="flex gap-2">
+                        <a href="/admin/users/import/template/" 
+                           class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                            <i class="fas fa-file-excel mr-2"></i>
+                            Download Template
+                        </a>
+                    </div>
+                </div>
                 
                 <!-- CSV Format Example -->
                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required CSV/Excel Columns:</h5>
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required CSV/Excel Columns (matches export format):</h5>
                     <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
@@ -896,57 +900,148 @@
                             </thead>
                             <tbody>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">username</td>
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">User ID (optional, for reference only)</td>
+                                    <td class="p-2">1</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Username</td>
                                     <td class="p-2">Unique username (required)</td>
                                     <td class="p-2">john.doe</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">email</td>
+                                    <td class="p-2 font-medium">Email</td>
                                     <td class="p-2">Email address (required)</td>
                                     <td class="p-2">john.doe@school.edu</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">first_name</td>
+                                    <td class="p-2 font-medium">First Name</td>
                                     <td class="p-2">First name (required)</td>
                                     <td class="p-2">John</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">last_name</td>
+                                    <td class="p-2 font-medium">Last Name</td>
                                     <td class="p-2">Last name (required)</td>
                                     <td class="p-2">Doe</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">middle_name</td>
+                                    <td class="p-2 font-medium">Middle Name</td>
                                     <td class="p-2">Middle name (optional)</td>
                                     <td class="p-2">Smith</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">role</td>
+                                    <td class="p-2 font-medium">Role</td>
                                     <td class="p-2">User role (required)</td>
-                                    <td class="p-2">TEACHER, ADMIN, PRINCIPAL, REGISTRAR</td>
+                                    <td class="p-2">Teacher, Admin, Principal, Registrar</td>
                                 </tr>
                                 <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">password</td>
+                                    <td class="p-2 font-medium">Status</td>
+                                    <td class="p-2">Active status (optional)</td>
+                                    <td class="p-2">Active, Inactive</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Password</td>
                                     <td class="p-2">Initial password (required)</td>
                                     <td class="p-2">temp123456</td>
                                 </tr>
                                 <tr>
-                                    <td class="p-2 font-medium">is_active</td>
-                                    <td class="p-2">Active status (optional)</td>
-                                    <td class="p-2">TRUE, FALSE</td>
+                                    <td class="p-2 font-medium">Created Date</td>
+                                    <td class="p-2">Creation date (optional, ignored on import)</td>
+                                    <td class="p-2">2025-11-23 10:30:00</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Sample CSV Content -->
+                <!-- Excel Format Preview -->
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-2">Sample CSV Content:</h5>
-                    <pre class="text-sm text-blue-800 dark:text-blue-200 bg-white dark:bg-gray-800 p-3 rounded border overflow-x-auto">username,email,first_name,last_name,middle_name,role,password,is_active
-john.doe,john.doe@school.edu,John,Doe,Smith,TEACHER,temp123456,TRUE
-jane.smith,jane.smith@school.edu,Jane,Smith,,TEACHER,temp123456,TRUE
-admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
+                    <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                        <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                        Excel/CSV Format Preview (Matches Export Format):
+                    </h5>
+                    
+                    <!-- Excel-style table preview -->
+                    <div class="bg-white dark:bg-gray-800 rounded border overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr style="background-color: #1F4E78;">
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 40px;">ID</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Username</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 150px;">Email</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">First Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Last Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Middle Name</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 80px;">Role</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 60px;">Status</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Password</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 120px;">Created Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-800 dark:text-gray-200">
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">1</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">john.doe</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">john.doe@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">John</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Doe</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Teacher</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">Active</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 font-mono">temp123456</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400">2025-11-23 10:30:00</td>
+                                </tr>
+                                <tr class="bg-gray-50 dark:bg-gray-750">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">2</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">jane.smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">jane.smith@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Jane</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Smith</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Principal</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">Active</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 font-mono">temp123456</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400">2025-11-23 10:35:00</td>
+                                </tr>
+                                <tr class="bg-white dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">3</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">admin.user</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">admin@school.edu</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Admin</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">User</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Admin</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center">Active</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 font-mono">admin123456</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-gray-400">2025-11-20 09:00:00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3 flex items-start space-x-2">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="font-semibold mb-1">✨ Password Column Handling:</p>
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded p-2 mb-2">
+                                <p class="text-blue-800 dark:text-blue-200 font-medium">
+                                    <strong>Exported files:</strong> Include <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">[UNCHANGED]</code> in password column - passwords remain intact when re-imported!<br>
+                                    <strong>New passwords:</strong> Replace <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">[UNCHANGED]</code> with actual password to update<br>
+                                    <strong>New users:</strong> Password is <span class="text-red-600 dark:text-red-400 font-bold">required</span> (minimum 8 characters)
+                                </p>
+                            </div>
+                            <p class="font-semibold mb-1">Pro Tips:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                <li><strong>Backup/Restore:</strong> Export with <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">[UNCHANGED]</code>, re-import safely - passwords preserved!</li>
+                                <li><strong>Update info only:</strong> Keep <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">[UNCHANGED]</code> in password column</li>
+                                <li><strong>Reset passwords:</strong> Replace <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">[UNCHANGED]</code> with new password</li>
+                                <li><strong>Add new users:</strong> Provide actual password (min 8 chars)</li>
+                                <li>ID and Created Date are <span class="text-gray-500">optional</span> (ignored on import)</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Important Notes -->
@@ -955,49 +1050,57 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
                         <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
                     </h5>
                     <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                        <li>• The first row must contain column headers exactly as shown above</li>
-                        <li>• Username and email must be unique across all users</li>
-                        <li>• Valid roles are: ADMIN, TEACHER, PRINCIPAL, REGISTRAR</li>
-                        <li>• Password should be at least 8 characters long</li>
-                        <li>• is_active column accepts TRUE/FALSE (defaults to TRUE if not specified)</li>
+                        <li>• <strong>✅ Perfect for backup/restore!</strong> Exported files include <code class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">[UNCHANGED]</code> - keeps passwords safe</li>
+                        <li>• <strong>Password placeholder:</strong> <code class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">[UNCHANGED]</code> = skip password update (keeps existing password)</li>
+                        <li>• <strong>New users:</strong> Must provide actual password (minimum 8 characters)</li>
+                        <li>• <strong>Reset password:</strong> Replace <code class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">[UNCHANGED]</code> with new password in export file</li>
+                        <li>• The first row must contain column headers (case-insensitive)</li>
+                        <li>• Username identifies the user - existing usernames are updated, new ones are created</li>
+                        <li>• Email must be unique across all users</li>
+                        <li>• Valid roles: ADMIN, TEACHER, PRINCIPAL, REGISTRAR (or: Administrator, Teacher, Principal, Registrar)</li>
+                        <li>• Status accepts: Active/Inactive, TRUE/FALSE, or leave blank (defaults to Active)</li>
+                        <li>• ID and Created Date columns are optional and ignored during import</li>
                         <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
                     </ul>
                 </div>
             </div>
 
             <!-- File Upload Section -->
-            <div class="border-t dark:border-gray-700 pt-6">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload File</h4>
-                
-                <form id="import-form" enctype="multipart/form-data">
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-form" class="space-y-4">
                     {% csrf_token %}
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Select CSV or Excel File
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
                         </label>
-                        <div class="relative">
-                            <input type="file" id="import-file" name="import_file" accept=".csv,.xlsx,.xls" 
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-300">
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Maximum file size: 10MB. Supported formats: CSV, Excel (.xlsx, .xls)
-                        </p>
                     </div>
 
-                    <!-- Progress Bar (hidden initially) -->
-                    <div id="import-progress" class="hidden mb-4">
+                    <!-- Progress Bar -->
+                    <div id="import-progress" class="hidden">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing users...</span>
-                            <span id="import-progress-text" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-progress-percent">0%</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                            <div id="import-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
                         </div>
                     </div>
 
-                    <!-- Import Results (hidden initially) -->
-                    <div id="import-results" class="hidden mt-4 p-4 rounded-lg">
-                        <h5 class="font-medium mb-2">Import Results:</h5>
+                    <!-- Import Results -->
+                    <div id="import-results" class="hidden mt-4">
                         <div id="import-results-content"></div>
                     </div>
                 </form>
@@ -1005,16 +1108,120 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
         </div>
 
         <!-- Modal Footer -->
-        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div class="flex justify-end space-x-3">
-                <button id="close-import-modal" class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <button id="close-import-modal" class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
                     Cancel
                 </button>
-                <button id="confirm-import" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                <button id="confirm-import" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center font-medium shadow-sm">
                     <i class="fas fa-upload mr-2"></i>
                     Import Users
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Modal -->
+<div id="print-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 scale-95">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-purple-500 to-purple-400 px-8 py-6 rounded-t-3xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Print Users Report</h3>
+                        <p class="text-white/80 text-sm">Select paper size</p>
+                    </div>
+                </div>
+                <button id="close-print-modal" type="button" class="text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 p-2 rounded-full">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8">
+            <div class="space-y-4">
+                <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Choose the paper size for printing:</p>
+                
+                <!-- Paper Size Options -->
+                <div class="space-y-3">
+                    <button class="print-size-option w-full text-left px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex items-center justify-between group" data-size="A4">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">A4</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">210 × 297 mm (8.27 × 11.69 in)</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <button class="print-size-option w-full text-left px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex items-center justify-between group" data-size="Letter">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Letter</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">8.5 × 11 in (215.9 × 279.4 mm)</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <button class="print-size-option w-full text-left px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex items-center justify-between group" data-size="Legal">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Legal</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">8.5 × 14 in (215.9 × 355.6 mm)</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <button class="print-size-option w-full text-left px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex items-center justify-between group" data-size="A3">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">A3</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">297 × 420 mm (11.69 × 16.54 in)</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700 rounded-b-3xl">
+            <button id="cancel-print" class="w-full px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-semibold">
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -1160,7 +1367,7 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
         const confirmImportBtn = document.getElementById('confirm-import');
         const importProgress = document.getElementById('import-progress');
         const importProgressBar = document.getElementById('import-progress-bar');
-        const importProgressText = document.getElementById('import-progress-text');
+        const importProgressPercent = document.getElementById('import-progress-percent');
         const importResults = document.getElementById('import-results');
         const importResultsContent = document.getElementById('import-results-content');
         
@@ -1671,13 +1878,6 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
             resetUserModalForm(); // Reset form before populating
             currentUserId = userId;
             
-            // Update form mode and hide password fields
-            document.querySelector('.password-fields').style.display = 'none';
-            
-            // Remove required attribute from password fields in edit mode
-            document.getElementById('password').removeAttribute('required');
-            document.getElementById('password_confirmation').removeAttribute('required');
-            
             // Fetch user data to populate the form
             fetch(`/admin/users/${userId}/`, {
                 headers: {
@@ -1896,16 +2096,6 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
                 resetUserModalForm(); // Use the reset function
                 currentUserId = null;
                 
-                // Show password fields for new users and make them required
-                const passwordFields = document.querySelector('.password-fields');
-                if (passwordFields) {
-                    passwordFields.style.display = 'block';
-                }
-                
-                // Set password fields as required for new users
-                document.getElementById('password').setAttribute('required', 'required');
-                document.getElementById('password_confirmation').setAttribute('required', 'required');
-                
                 // Show the modal
                 showModalWithAnimation(userModal);
             });
@@ -1937,32 +2127,10 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
                         return;
                     }
                     
-                    // For new users, validate password
-                    if (!currentUserId) {
-                        if (!userData.password) {
-                            showError("Password is required for new users");
-                            return;
-                        }
-                        
-                        if (userData.password !== userData.password_confirmation) {
-                            showError("Passwords don't match");
-                            return;
-                        }
-                        
-                        if (userData.password.length < 8) {
-                            showError("Password must be at least 8 characters long");
-                            return;
-                        }
-                    }
-                    
-                    // Remove password_confirmation field
+                    // No password validation needed - passwords are auto-generated for new users
+                    // Remove password fields from data since they're handled server-side
+                    delete userData.password;
                     delete userData.password_confirmation;
-                    
-                    // For edit mode, only include password if it's not empty
-                    if (currentUserId && (!userData.password || userData.password.trim() === '')) {
-                        console.log("Removing empty password field for edit mode");
-                        delete userData.password;
-                    }
                     
                     // Handle teacher section assignment
                     if (userData.role === 'TEACHER') {
@@ -2097,7 +2265,16 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
                                     fetchUsers(currentPage);
                                 });
                             } else {
-                                showSuccess(data.message);
+                                // Show success with email status
+                                if (data.email_sent === false && data.generated_password) {
+                                    // Email failed - show password in a prominent alert
+                                    showWarning(data.message, 20000); // Show for 20 seconds
+                                    
+                                    // Also show a modal with the password
+                                    alert(`IMPORTANT: Email failed to send!\n\nPlease note these credentials:\n\nUsername: ${userData.username}\nPassword: ${data.generated_password}\n\nProvide these credentials to the user manually.`);
+                                } else {
+                                    showSuccess(data.message);
+                                }
                                 // Refresh the table instead of the whole page
                                 fetchUsers(currentPage);
                             }
@@ -2508,6 +2685,510 @@ admin.user,admin@school.edu,Admin,User,,ADMIN,admin123456,TRUE</pre>
             }
             // ...existing code for other modals...
         });
+        
+        // Export users button dropdown handler
+        const exportUsersBtn = document.getElementById('export-users-btn');
+        const exportDropdown = document.getElementById('export-dropdown');
+        const exportOptions = document.querySelectorAll('.export-option');
+        
+        // Toggle dropdown on button click
+        if (exportUsersBtn && exportDropdown) {
+            exportUsersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                exportDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!exportUsersBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+                    exportDropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle export format selection
+        exportOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const format = this.getAttribute('data-format');
+                exportDropdown.classList.add('hidden');
+                
+                // Show loading state
+                showLoading();
+                
+                // Get current filter parameters
+                const searchQuery = userSearch ? userSearch.value : '';
+                const roleFilterValue = roleFilter ? roleFilter.value : '';
+                const statusFilterValue = activeFilter ? activeFilter.value : '';
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (searchQuery) params.append('search', searchQuery);
+                if (roleFilterValue) params.append('role', roleFilterValue);
+                if (statusFilterValue) params.append('status', statusFilterValue);
+                params.append('format', format); // Add format parameter
+                
+                // Make the export request
+                const exportUrl = `/admin/users/export/?${params.toString()}`;
+                
+                fetch(exportUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    hideLoading();
+                    
+                    if (!response.ok) {
+                        throw new Error(`Export failed with status ${response.status}`);
+                    }
+                    
+                    // Get the filename from the response headers
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = `users_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                        if (filenameMatch) filename = filenameMatch[1];
+                    }
+                    
+                    // Convert response to blob and download
+                    return response.blob().then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        
+                        // Clean up
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(link);
+                        
+                        showSuccess(`Users exported successfully as ${format.toUpperCase()}!`);
+                    });
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Export error:', error);
+                    showError('Failed to export users: ' + error.message);
+                });
+            });
+        });
+        
+        // Import users functionality
+        if (importUsersBtn) {
+            importUsersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showModalWithAnimation(importModal);
+                // Reset form and results
+                if (importFile) importFile.value = '';
+                const importFileName = document.getElementById('import-file-name');
+                if (importFileName) importFileName.classList.add('hidden');
+                if (confirmImportBtn) confirmImportBtn.disabled = true;
+                if (importProgress) importProgress.classList.add('hidden');
+                if (importResults) importResults.classList.add('hidden');
+            });
+        }
+        
+        if (closeImportModalBtn) {
+            closeImportModalBtn.addEventListener('click', function() {
+                hideModalWithAnimation(importModal);
+            });
+        }
+        
+        if (closeImportModalXBtn) {
+            closeImportModalXBtn.addEventListener('click', function() {
+                hideModalWithAnimation(importModal);
+            });
+        }
+        
+        // Handle file selection
+        if (importFile && confirmImportBtn) {
+            const importFileName = document.getElementById('import-file-name');
+            
+            // Initially disable import button
+            confirmImportBtn.disabled = true;
+            
+            importFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file type
+                    const validExtensions = ['csv', 'xlsx', 'xls'];
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (!validExtensions.includes(fileExtension)) {
+                        showToast('Invalid file type. Please upload a CSV or Excel file.', 'error');
+                        importFile.value = '';
+                        if (importFileName) importFileName.classList.add('hidden');
+                        confirmImportBtn.disabled = true;
+                        return;
+                    }
+                    
+                    // Validate file size (10MB max)
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        showToast('File is too large. Maximum size is 10MB.', 'error');
+                        importFile.value = '';
+                        if (importFileName) importFileName.classList.add('hidden');
+                        confirmImportBtn.disabled = true;
+                        return;
+                    }
+                    
+                    // Show selected filename and enable button
+                    if (importFileName) {
+                        importFileName.textContent = `Selected: ${file.name}`;
+                        importFileName.classList.remove('hidden');
+                    }
+                    confirmImportBtn.disabled = false;
+                } else {
+                    if (importFileName) importFileName.classList.add('hidden');
+                    confirmImportBtn.disabled = true;
+                }
+            });
+        }
+        
+        // Handle import confirmation
+        if (confirmImportBtn) {
+            confirmImportBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate file selection
+                if (!importFile || !importFile.files || importFile.files.length === 0) {
+                    showToast('Please select a file to import.', 'warning');
+                    return;
+                }
+                
+                const file = importFile.files[0];
+                const formData = new FormData(importForm);
+                
+                // Ensure file is in the FormData (it should be from the form, but double-check)
+                if (!formData.has('file')) {
+                    formData.append('file', file);
+                }
+                
+                // Show progress
+                if (importProgress) importProgress.classList.remove('hidden');
+                if (importResults) importResults.classList.add('hidden');
+                if (importProgressBar) importProgressBar.style.width = '0%';
+                if (importProgressPercent) importProgressPercent.textContent = '0%';
+                
+                // Disable button during upload
+                confirmImportBtn.disabled = true;
+                confirmImportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+                
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 90) {
+                        if (importProgressBar) importProgressBar.style.width = progress + '%';
+                        if (importProgressPercent) importProgressPercent.textContent = progress + '%';
+                    }
+                }, 200);
+                
+                // Upload file
+                fetch('{% url "import_users" %}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || `HTTP ${response.status}: ${response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    clearInterval(progressInterval);
+                    
+                    // Complete progress
+                    if (importProgressBar) importProgressBar.style.width = '100%';
+                    if (importProgressPercent) importProgressPercent.textContent = '100%';
+                    
+                    setTimeout(() => {
+                        if (importProgress) importProgress.classList.add('hidden');
+                        
+                        // Show results
+                        if (importResults && importResultsContent) {
+                            importResults.classList.remove('hidden');
+                            
+                            if (data.status === 'success') {
+                                importResults.className = 'mt-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800';
+                                
+                                let resultsHTML = `
+                                    <div class="flex items-start">
+                                        <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
+                                        <div>
+                                            <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${data.message}</h5>
+                                            <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                                ${data.created_count > 0 ? `<li>• Created: ${data.created_count} user(s)</li>` : ''}
+                                                ${data.updated_count > 0 ? `<li>• Updated: ${data.updated_count} user(s)</li>` : ''}
+                                                ${data.skipped_count > 0 ? `<li>• Skipped: ${data.skipped_count} user(s)</li>` : ''}
+                                            </ul>
+                                `;
+                                
+                                if (data.errors && data.errors.length > 0) {
+                                    resultsHTML += `
+                                        <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                                            <h6 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Errors:</h6>
+                                            <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                                ${data.errors.map(err => `<li>• ${err}</li>`).join('')}
+                                            </ul>
+                                            ${data.additional_errors ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2">...and ${data.additional_errors} more error(s)</p>` : ''}
+                                        </div>
+                                    `;
+                                }
+                                
+                                resultsHTML += `
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                importResultsContent.innerHTML = resultsHTML;
+                                
+                                showToast(data.message, 'success');
+                                
+                                // Refresh the table
+                                fetchUsers(currentPage);
+                            } else {
+                                importResults.className = 'mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800';
+                                
+                                let errorHTML = `
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                                        <div>
+                                            <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                            <p class="text-sm text-red-700 dark:text-red-300">${data.message}</p>
+                                `;
+                                
+                                if (data.errors && data.errors.length > 0) {
+                                    errorHTML += `
+                                        <ul class="text-sm text-red-700 dark:text-red-300 space-y-1 mt-2">
+                                            ${data.errors.map(err => `<li>• ${err}</li>`).join('')}
+                                        </ul>
+                                    `;
+                                }
+                                
+                                errorHTML += `
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                importResultsContent.innerHTML = errorHTML;
+                                showToast(data.message, 'error');
+                            }
+                        }
+                        
+                        // Re-enable button
+                        confirmImportBtn.disabled = false;
+                        confirmImportBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Import Users';
+                    }, 500);
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    console.error('Import error:', error);
+                    
+                    if (importProgress) importProgress.classList.add('hidden');
+                    
+                    // Show error
+                    if (importResults && importResultsContent) {
+                        importResults.classList.remove('hidden');
+                        importResults.className = 'mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800';
+                        importResultsContent.innerHTML = `
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                                <div>
+                                    <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                    <p class="text-sm text-red-700 dark:text-red-300">${error.message || 'An error occurred while importing users. Please try again.'}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    showToast(error.message || 'Failed to import users. Please try again.', 'error');
+                    
+                    // Re-enable button
+                    confirmImportBtn.disabled = false;
+                    confirmImportBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Import Users';
+                });
+            });
+        }
+        
+        // Print users button handler - Print directly
+        const printUsersBtn = document.getElementById('print-users-btn');
+        
+        if (printUsersBtn) {
+            printUsersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                generatePrintDocument();
+            });
+        }
+        
+        // Generate print document
+        function generatePrintDocument() {
+            // Get current data from table
+            const tableRows = document.querySelectorAll('#users-table tbody tr');
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px;">
+                    <thead>
+                        <tr style="background-color: #1F4E78; color: white; font-weight: bold;">
+                            <th style="border: 1px solid #000; padding: 8px; text-align: left;">User</th>
+                            <th style="border: 1px solid #000; padding: 8px; text-align: left;">Email</th>
+                            <th style="border: 1px solid #000; padding: 8px; text-align: center;">Role</th>
+                            <th style="border: 1px solid #000; padding: 8px; text-align: center;">Status</th>
+                            <th style="border: 1px solid #000; padding: 8px; text-align: left;">Date Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            tableRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 0) {
+                    const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5';
+                    const userName = cells[0]?.innerText || '';
+                    const email = cells[1]?.innerText || '';
+                    const role = cells[2]?.innerText || '';
+                    const status = cells[3]?.innerText || '';
+                    const dateCreated = cells[4]?.innerText || '';
+                    
+                    tableHTML += `
+                        <tr style="background-color: ${bgColor};">
+                            <td style="border: 1px solid #DDD; padding: 6px;">${userName}</td>
+                            <td style="border: 1px solid #DDD; padding: 6px;">${email}</td>
+                            <td style="border: 1px solid #DDD; padding: 6px; text-align: center;">${role}</td>
+                            <td style="border: 1px solid #DDD; padding: 6px; text-align: center;">${status}</td>
+                            <td style="border: 1px solid #DDD; padding: 6px;">${dateCreated}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Create hidden iframe for printing
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Users Report - ${new Date().toLocaleString()}</title>
+                    <style>
+                        @page {
+                            size: A4 portrait;
+                            margin: 0.5in;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #1F4E78;
+                            padding-bottom: 10px;
+                        }
+                        .header h1 {
+                            color: #1F4E78;
+                            margin: 0 0 5px 0;
+                            font-size: 18px;
+                        }
+                        .header p {
+                            color: #666;
+                            margin: 0;
+                            font-size: 12px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10px;
+                        }
+                        thead {
+                            background-color: #1F4E78;
+                            color: white;
+                        }
+                        th {
+                            border: 1px solid #000;
+                            padding: 8px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 11px;
+                        }
+                        td {
+                            border: 1px solid #DDD;
+                            padding: 6px;
+                            font-size: 10px;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #F5F5F5;
+                        }
+                        .footer {
+                            margin-top: 20px;
+                            text-align: center;
+                            font-size: 10px;
+                            color: #666;
+                            border-top: 1px solid #DDD;
+                            padding-top: 10px;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 10px;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Users Report</h1>
+                        <p>Generated on ${new Date().toLocaleString()}</p>
+                    </div>
+                    ${tableHTML}
+                    <div class="footer">
+                        <p>Total Users: ${tableRows.length}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create or reuse hidden iframe
+            let printFrame = document.getElementById('print-frame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'print-frame';
+                printFrame.style.position = 'fixed';
+                printFrame.style.right = '0';
+                printFrame.style.bottom = '0';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+            }
+            
+            // Write content to iframe and print
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+            
+            // Wait for content to load then print
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        }
         
         // Initialize the table on page load
         fetchUsers();
