@@ -160,12 +160,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="export-students-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <button class="export-students-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Export as PDF
+                    </button>
+                    <button class="export-students-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Export as Excel
+                    </button>
+                    <button class="export-students-option w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center text-gray-700 dark:text-gray-200" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Word
+                    </button>
+                </div>
+            </div>
             <button id="print-students-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -225,9 +252,9 @@
     </div>
 </div>
 
-<!-- Add/Edit Student Modal -->
+<!-- Add/Edit Student Multi-Step Modal -->
 <div id="student-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
         <!-- Modal Header -->
         <div class="relative bg-gradient-to-r from-primary to-secondary dark:from-tertiary dark:to-primary px-8 py-6">
             <div class="flex items-center justify-between">
@@ -239,7 +266,7 @@
                     </div>
                     <div>
                         <h3 id="student-modal-title" class="text-xl font-bold text-white">Add Student</h3>
-                        <p class="text-white/80 text-sm">Fill in the student information</p>
+                        <p id="student-modal-subtitle" class="text-white/80 text-sm">Step 1: Student Information</p>
                     </div>
                 </div>
                 <button id="close-student-modal" type="button" class="text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 p-2 rounded-full">
@@ -248,13 +275,40 @@
                     </svg>
                 </button>
             </div>
+            
+            <!-- Progress Indicator -->
+            <div class="mt-4 flex items-center justify-between px-4">
+                <div class="flex-1 flex items-center">
+                    <div id="step-1-indicator" class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-white text-primary font-bold flex items-center justify-center text-sm">1</div>
+                        <span class="ml-2 text-white text-sm font-medium">Student</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/30 mx-2"></div>
+                </div>
+                <div class="flex-1 flex items-center">
+                    <div id="step-2-indicator" class="flex items-center opacity-50">
+                        <div class="w-8 h-8 rounded-full bg-white/30 text-white font-bold flex items-center justify-center text-sm">2</div>
+                        <span class="ml-2 text-white text-sm font-medium">Guardian</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/30 mx-2"></div>
+                </div>
+                <div class="flex-1 flex items-center">
+                    <div id="step-3-indicator" class="flex items-center opacity-50">
+                        <div class="w-8 h-8 rounded-full bg-white/30 text-white font-bold flex items-center justify-center text-sm">3</div>
+                        <span class="ml-2 text-white text-sm font-medium">Face Enrollment</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Decorative elements -->
             <div class="absolute -bottom-1 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         </div>
 
         <!-- Modal Body -->
-        <div class="p-8 max-h-[calc(95vh-140px)] overflow-y-auto custom-scrollbar">
-            <form id="student-form" class="space-y-6" enctype="multipart/form-data">
+        <div class="p-8 max-h-[calc(95vh-200px)] overflow-y-auto custom-scrollbar">
+            <!-- Step 1: Student Information -->
+            <div id="step-1-content" class="step-content">
+                <form id="student-form" class="space-y-6" enctype="multipart/form-data">
                 <!-- Profile Picture Upload -->
                 <div class="group">
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-left">
@@ -479,31 +533,411 @@
                         </div>
                     </div>
                 </div>
-            </form>
+                </form>
+            </div>
+            
+            <!-- Step 2: Guardian Information (Optional) -->
+            <div id="step-2-content" class="step-content hidden">
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        This step is optional. You can add guardian information now or skip to continue.
+                    </p>
+                </div>
+                
+                <form id="guardian-form" class="space-y-6">
+                    <!-- Guardian Name Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="group">
+                            <label for="guardian-first-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                First Name
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="guardian-first-name" name="guardian_first_name"
+                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                                    placeholder="Enter first name">
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label for="guardian-middle-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Middle Name
+                                <span class="text-gray-500 text-xs ml-2">(Optional)</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="guardian-middle-name" name="guardian_middle_name"
+                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                                    placeholder="Enter middle name">
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label for="guardian-last-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Last Name
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="guardian-last-name" name="guardian_last_name"
+                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                                    placeholder="Enter last name">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Guardian Contact Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="group">
+                            <label for="guardian-email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                </svg>
+                                Email
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input type="email" id="guardian-email" name="guardian_email"
+                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                                    placeholder="Enter email address">
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label for="guardian-phone" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                Phone Number
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input type="tel" id="guardian-phone" name="guardian_phone"
+                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                                    placeholder="Enter phone number">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Guardian Relationship -->
+                    <div class="group">
+                        <label for="guardian-relationship" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Relationship
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <select id="guardian-relationship" name="guardian_relationship"
+                                class="w-full pl-10 pr-10 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 appearance-none">
+                                <option value="">Select relationship</option>
+                                <option value="MOTHER">Mother</option>
+                                <option value="FATHER">Father</option>
+                                <option value="GUARDIAN">Guardian</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Step 3: Face Enrollment (Optional) -->
+            <div id="step-3-content" class="step-content hidden">
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        This step is optional. Enroll face for attendance tracking or skip to save the student.
+                    </p>
+                </div>
+                
+                <!-- Face Capture Interface -->
+                <div id="face-capture-container" class="space-y-6">
+                    <!-- Camera Preview -->
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden relative" style="min-height: 400px;">
+                        <video id="modal-camera-video" autoplay muted playsinline class="w-full h-auto" style="transform: scaleX(-1); max-height: 400px;"></video>
+                        <canvas id="modal-camera-canvas" class="hidden"></canvas>
+                        
+                        <!-- Camera Overlay -->
+                        <div id="modal-camera-overlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+                            <button type="button" id="modal-start-camera-btn" class="px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-tertiary dark:to-primary text-white rounded-xl font-semibold shadow-lg flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <span>Start Camera</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Face Detection Indicator -->
+                        <div id="modal-face-detection-indicator" class="hidden absolute top-4 left-4 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span>Face Detected</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Capture Instructions -->
+                    <div id="modal-capture-instructions" class="hidden">
+                        <div class="bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-tertiary/20 dark:to-primary/20 rounded-xl p-4 border border-primary/20 dark:border-tertiary/30">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="modal-capture-step-text">Step 1: Look straight at the camera</span>
+                            </h4>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Position your face in the center and click capture when ready.</p>
+                        </div>
+                        
+                        <!-- Progress Indicator -->
+                        <div class="flex items-center justify-center space-x-4 mt-4">
+                            <div id="modal-pose-1-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Front</span>
+                            </div>
+                            <div id="modal-pose-2-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 opacity-50">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Left</span>
+                            </div>
+                            <div id="modal-pose-3-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 opacity-50">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Right</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Captured Images Preview -->
+                    <div id="modal-captured-images" class="hidden grid grid-cols-3 gap-4">
+                        <div class="relative">
+                            <img id="modal-preview-front" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Front">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Front</span>
+                        </div>
+                        <div class="relative">
+                            <img id="modal-preview-left" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Left">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Left</span>
+                        </div>
+                        <div class="relative">
+                            <img id="modal-preview-right" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Right">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Right</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Capture Button -->
+                    <button type="button" id="modal-capture-btn" class="hidden w-full px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-tertiary dark:to-primary text-white rounded-xl font-semibold shadow-lg flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Capture Photo</span>
+                    </button>
+                </div>
+
+                <!-- School Policy Agreement -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-6">
+                    <div class="flex items-start space-x-3">
+                        <input type="checkbox" id="modal-policy-agreement" class="mt-1 w-5 h-5 text-primary dark:text-tertiary border-gray-300 dark:border-gray-600 rounded focus:ring-0 focus:ring-offset-0 dark:bg-gray-700 cursor-pointer">
+                        <label for="modal-policy-agreement" class="text-sm text-amber-900 dark:text-amber-300 cursor-pointer flex-1">
+                            <span class="font-semibold">School Biometric Data Policy Agreement</span>
+                            <p class="mt-1 text-xs text-amber-800 dark:text-amber-400">
+                                I agree to the school's biometric data policy.
+                            </p>
+                            <button type="button" id="modal-view-policy-btn" class="mt-2 inline-flex items-center px-4 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white text-xs font-semibold rounded-lg transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Read Full Policy
+                            </button>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Modal Footer -->
         <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
-            <div class="flex justify-end space-x-4">
-                <button type="button" id="cancel-student-btn" class="group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+            <div class="flex justify-between items-center">
+                <!-- Back Button (hidden on step 1) -->
+                <button type="button" id="back-step-btn" class="hidden group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
-                    Cancel
+                    Back
                 </button>
-                <button type="submit" form="student-form" id="save-student-btn" class="group flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/70 dark:from-tertiary dark:to-primary dark:hover:from-tertiary/90 dark:hover:to-primary/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                    <span id="student-save-text" class="flex items-center">
+                
+                <div class="flex space-x-4 ml-auto">
+                    <!-- Cancel Button -->
+                    <button type="button" id="cancel-student-btn" class="group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Save Student
-                    </span>
-                    <svg id="student-save-spinner" class="hidden animate-spin ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        Cancel
+                    </button>
+                    
+                    <!-- Skip Button (shown on steps 2 & 3) -->
+                    <button type="button" id="skip-step-btn" class="hidden group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Skip
+                    </button>
+                    
+                    <!-- Next/Save Button -->
+                    <button type="button" id="next-step-btn" class="group flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/70 dark:from-tertiary dark:to-primary dark:hover:from-tertiary/90 dark:hover:to-primary/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span id="next-step-text" class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            Next Step
+                        </span>
+                        <svg id="save-spinner" class="hidden animate-spin ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Policy Modal -->
+<div id="modal-policy-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300">
+    <div id="modal-policy-modal-backdrop" class="absolute inset-0"></div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto relative z-10 max-h-[90vh] overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/20 p-3 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold">School Biometric Data Policy</h3>
+                </div>
+                <button type="button" id="modal-close-policy-modal" class="text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto max-h-96 custom-scrollbar">
+            <div class="space-y-6 text-gray-700 dark:text-gray-300">
+                <!-- Introduction -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Introduction</h4>
+                    <p class="text-sm leading-relaxed">This policy outlines how our school collects, uses, stores, and protects biometric data (facial recognition) for student attendance tracking and campus security purposes.</p>
+                </div>
+
+                <!-- Data Collection -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">1. Data Collection</h4>
+                    <p class="text-sm leading-relaxed mb-2">We collect facial biometric data through:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>Three photographs (front, left profile, right profile) during enrollment</li>
+                        <li>Mathematical templates derived from facial features (not the actual photos)</li>
+                        <li>Original photos are not stored after template generation</li>
+                    </ul>
+                </div>
+
+                <!-- Purpose -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">2. Purpose and Use</h4>
+                    <p class="text-sm leading-relaxed mb-2">Your biometric data will be used exclusively for:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>Automated attendance tracking (time-in/time-out)</li>
+                        <li>Campus security and access control</li>
+                        <li>Generating attendance reports for parents and administrators</li>
+                    </ul>
+                </div>
+
+                <!-- Storage -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3. Data Storage and Security</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>All biometric templates are encrypted and stored on secure servers</li>
+                        <li>Access is restricted to authorized personnel only</li>
+                        <li>Regular security audits and backups are performed</li>
+                        <li>Data is not shared with third parties</li>
+                    </ul>
+                </div>
+
+                <!-- Retention -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">4. Data Retention</h4>
+                    <p class="text-sm leading-relaxed">Biometric data will be retained for the duration of student enrollment and will be permanently deleted within 30 days after graduation or withdrawal from the school.</p>
+                </div>
+
+                <!-- Rights -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">5. Your Rights and Choices</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>You may request access to view your biometric data</li>
+                        <li>You may request correction of inaccurate data</li>
+                        <li>You may request deletion of your data (this will affect attendance tracking)</li>
+                        <li>You may withdraw consent at any time</li>
+                    </ul>
+                </div>
+
+                <!-- Legal -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">6. Legal Compliance</h4>
+                    <p class="text-sm leading-relaxed">This policy complies with the Data Privacy Act of 2012 and other applicable Philippine laws regarding the collection and processing of biometric information.</p>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">7. Contact Information</h4>
+                    <p class="text-sm leading-relaxed">For questions or concerns about this policy, please contact our Data Protection Officer at the school administration office.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 flex justify-center">
+            <button type="button" id="modal-close-policy-modal-btn" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors duration-200">
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -584,9 +1018,364 @@
 <!-- Toast Container -->
 <div id="student-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+<!-- Import Students Modal -->
+<div id="import-students-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Students</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with student data</p>
+                </div>
+            </div>
+            <button type="button" id="close-import-students-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)] custom-scrollbar">
+            <!-- Instructions -->
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format with all required columns</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Student Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'download_students_import_template' %}" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- Column Specifications Table -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Required Columns and Format
+                </h4>
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Column</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Format/Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">ID</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Leave blank for new students. If provided and exists, row will be skipped.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">LRN</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Exactly 12 digits. Must be unique.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">First Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Student's first name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Middle Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Student's middle name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Last Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Student's last name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Grade</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Existing grade name (e.g., "Grade 7")</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Section</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Existing section name that belongs to the specified grade</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Status</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Either "ACTIVE" or "INACTIVE"</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian First Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Required if guardian data provided</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian Middle Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Guardian's middle name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian Last Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Required if guardian data provided</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian Email</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Valid email format</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian Phone</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: 09XXXXXXXXX (11 digits starting with 09)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Guardian Relationship</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">FATHER, MOTHER, GUARDIAN, GRANDMOTHER, GRANDFATHER, AUNT, UNCLE, SIBLING, OTHER</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Alignment</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Academic or other alignment information</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Excel Format Preview -->
+            <div class="mb-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h5 class="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                    Excel/CSV Format Preview (Matches Export Format):
+                </h5>
+                
+                <!-- Excel-style table preview -->
+                <div class="bg-white dark:bg-gray-800 rounded border overflow-x-auto">
+                    <table class="w-full text-xs border-collapse">
+                        <thead>
+                            <tr style="background-color: #1F4E78;">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold text-center" style="min-width: 40px;">ID</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">LRN</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">First Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Middle Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Last Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 80px;">Grade</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 80px;">Section</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 70px;">Status</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Guardian First Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Guardian Middle Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Guardian Last Name</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 140px;">Guardian Email</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 110px;">Guardian Phone</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 100px;">Guardian Relationship</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-2 text-white font-bold" style="min-width: 90px;">Alignment</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-800 dark:text-gray-200">
+                            <tr class="bg-white dark:bg-gray-700">
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">1</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">123456789012</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Juan</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Cruz</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Dela Cruz</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 7</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section A</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Active</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Pedro</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Santos</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Dela Cruz</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">pedro.delacruz@email.com</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09123456789</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">FATHER</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                            </tr>
+                            <tr class="bg-gray-50 dark:bg-gray-750">
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">2</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">123456789013</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Maria</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Santos</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 8</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section B</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Active</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Rosa</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Cruz</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Santos</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">rosa.santos@email.com</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09187654321</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">MOTHER</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Academic</td>
+                            </tr>
+                            <tr class="bg-white dark:bg-gray-700">
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-center text-gray-400">3</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">123456789014</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Jose</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Reyes</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Garcia</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Grade 9</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Section A</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Active</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Carmen</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">Reyes</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">09198765432</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5">GRANDMOTHER</td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-2 py-1.5"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3 flex items-start space-x-2">
+                    <div class="flex-shrink-0 mt-1">
+                        <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div class="text-xs text-blue-700 dark:text-blue-300">
+                        <p class="font-semibold mb-1">Pro Tips:</p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><strong>Leave ID blank</strong> for new students (ID is auto-generated)</li>
+                            <li><strong>LRN must be exactly 12 digits</strong> and unique across all students</li>
+                            <li><strong>Grade and Section must exist</strong> in the system and match each other</li>
+                            <li><strong>Status must be either ACTIVE or INACTIVE</strong> (case-sensitive)</li>
+                            <li>Guardian fields are optional, but if provided, first name, last name, phone, and relationship are required</li>
+                            <li>Middle Name and Alignment are optional for both students and guardians</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Important Notes
+                </h4>
+                <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Existing Records:</strong> If the ID column contains an existing student ID, that row will be automatically skipped to prevent duplicates.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>LRN Validation:</strong> LRN must be exactly 12 digits and unique across all students.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Grade-Section Matching:</strong> The section must belong to the specified grade. Mismatched combinations will be rejected.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Guardian Data:</strong> If any guardian field is provided, first name, last name, phone, and relationship become required.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Validation:</strong> All data is validated before import. If errors are found, the entire import will be cancelled and you'll see detailed error messages.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-students-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-students-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-students-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-students-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-students-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing students...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-students-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-students-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                        <!-- Import Errors (populated on server validation failure) -->
+                        <div id="import-students-errors" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <button type="button" id="cancel-import-students" class="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+            <button type="button" id="submit-import-students" class="px-6 py-2.5 bg-gradient-to-r from-primary to-tertiary text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-upload mr-2"></i> Import Students
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Global variables
+let currentModalStep = 1;
+let studentFormData = {};
+let guardianFormData = {};
+let faceEnrollmentData = {
+    images: { front: null, left: null, right: null },
+    captured: { front: false, left: false, right: false },
+    embeddings: []
+};
+let modalVideoStream = null;
+let modalCurrentPose = 1; // 1: front, 2: left, 3: right
+let modalFaceApiLoaded = false;
+let modalDetectorOptions = null;
+
+// Original global variables
 let currentStudentData = null;
 let currentPage = 1;
 let isLoading = false;
@@ -624,6 +1413,8 @@ let studentPagination;
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     initializeDropdownData();
+    initializeExportDropdown();
+    initializePrintButton();
     
     // Initialize Pagination Component
     studentPagination = new PaginationComponent({
@@ -634,6 +1425,299 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadStudents();
 });
+
+// Initialize Print Button Functionality
+function initializePrintButton() {
+    const printBtn = document.getElementById('print-students-btn');
+    
+    if (printBtn) {
+        printBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateStudentPrintDocument();
+        });
+    }
+}
+
+// Generate print document for students
+function generateStudentPrintDocument() {
+    // Get current filter values
+    const searchQuery = searchInput ? searchInput.value.trim() : '';
+    const gradeValue = gradeFilter ? gradeFilter.value : '';
+    const sectionValue = sectionFilter ? sectionFilter.value : '';
+    const statusValue = statusFilter ? statusFilter.value : '';
+    
+    // Build filter info string
+    let filterInfo = '';
+    const filters = [];
+    if (searchQuery) filters.push(`Search: ${searchQuery}`);
+    if (gradeValue) {
+        const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
+        filters.push(`Grade: ${gradeText}`);
+    }
+    if (sectionValue) {
+        const sectionText = sectionFilter.options[sectionFilter.selectedIndex].text;
+        filters.push(`Section: ${sectionText}`);
+    }
+    if (statusValue) filters.push(`Status: ${statusValue}`);
+    if (filters.length > 0) {
+        filterInfo = filters.join(', ');
+    }
+    
+    // Get table rows and clean them for printing
+    const tableBody = studentTableBody;
+    if (!tableBody) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    const rows = tableBody.querySelectorAll('tr');
+    if (rows.length === 0) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    let printRows = '';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            // Extract data from cells (skip profile pic and action buttons columns)
+            const lrn = cells[1] ? cells[1].textContent.trim() : '';
+            const name = cells[2] ? cells[2].querySelector('.font-bold')?.textContent.trim() : '';
+            const grade = cells[3] ? cells[3].textContent.trim() : '';
+            const section = cells[4] ? cells[4].textContent.trim() : '';
+            const status = cells[5] ? cells[5].textContent.trim() : '';
+            
+            printRows += `
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${lrn}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${name}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${section}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${status}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    // Create hidden iframe for printing
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+    
+    const printDocument = printFrame.contentWindow.document;
+    printDocument.open();
+    printDocument.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Students Report</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #333;
+                    padding-bottom: 10px;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #1a202c;
+                }
+                .header h2 {
+                    margin: 5px 0 0 0;
+                    font-size: 16px;
+                    color: #4a5568;
+                    font-weight: normal;
+                }
+                .info {
+                    margin-bottom: 20px;
+                }
+                .info p {
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background-color: #f7fafc;
+                    padding: 12px;
+                    text-align: left;
+                    border: 1px solid #ddd;
+                    font-weight: bold;
+                    color: #2d3748;
+                }
+                td {
+                    padding: 12px;
+                    border: 1px solid #ddd;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9fafb;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #718096;
+                }
+                @media print {
+                    body { margin: 15px; }
+                    .header { margin-bottom: 20px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>PROTECH: THE TECH TO PROTECT</h1>
+                <h2>Face Recognition Attendance Monitoring System</h2>
+            </div>
+            <div class="info">
+                <p><strong>Report:</strong> Students List</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>LRN</th>
+                        <th>Student Name</th>
+                        <th>Grade</th>
+                        <th>Section</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${printRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+        </body>
+        </html>
+    `);
+    printDocument.close();
+    
+    // Wait for content to load, then print
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+        printFrame.contentWindow.print();
+        // Remove iframe after printing
+        setTimeout(() => {
+            document.body.removeChild(printFrame);
+        }, 1000);
+    }, 250);
+}
+
+// Initialize Export Dropdown Functionality
+function initializeExportDropdown() {
+    const exportBtn = document.getElementById('export-students-btn');
+    const exportDropdown = document.getElementById('export-students-dropdown');
+    const exportOptions = document.querySelectorAll('.export-students-option');
+
+    if (!exportBtn || !exportDropdown) return;
+
+    // Toggle dropdown on button click
+    exportBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        exportDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!exportBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+            exportDropdown.classList.add('hidden');
+        }
+    });
+
+    // Handle export format selection
+    exportOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const format = this.getAttribute('data-format');
+            exportDropdown.classList.add('hidden');
+
+            // Show loading state
+            studentTableLoading.classList.remove('hidden');
+
+            // Get current filter parameters
+            const searchQuery = searchInput ? searchInput.value : '';
+            const gradeValue = gradeFilter ? gradeFilter.value : '';
+            const sectionValue = sectionFilter ? sectionFilter.value : '';
+            const statusValue = statusFilter ? statusFilter.value : '';
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (gradeValue) params.append('grade', gradeValue);
+            if (sectionValue) params.append('section', sectionValue);
+            if (statusValue) params.append('status', statusValue);
+            params.append('format', format);
+
+            // Make the export request
+            const exportUrl = `/admin/students/export/?${params.toString()}`;
+
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                studentTableLoading.classList.add('hidden');
+
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `students_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+
+                    showToast(`Students exported successfully as ${format.toUpperCase()}`, 'success');
+                });
+            })
+            .catch(error => {
+                studentTableLoading.classList.add('hidden');
+                console.error('Export error:', error);
+                showToast(`Failed to export students: ${error.message}`, 'error');
+            });
+        });
+    });
+}
 
 // Initialize dropdown data with natural sorting
 function initializeDropdownData() {
@@ -994,12 +2078,38 @@ function initializeEventListeners() {
     document.getElementById('cancel-delete-student').addEventListener('click', closeDeleteModal);
     document.getElementById('confirm-delete-student').addEventListener('click', confirmDeleteStudent);
 
+    // Import modal
+    document.getElementById('import-students-btn').addEventListener('click', openImportModal);
+    document.getElementById('close-import-students-modal').addEventListener('click', closeImportModal);
+    document.getElementById('cancel-import-students').addEventListener('click', closeImportModal);
+    document.getElementById('submit-import-students').addEventListener('click', submitImport);
+    document.getElementById('import-students-file').addEventListener('change', handleFileSelect);
+    document.getElementById('import-students-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('import-students-modal')) closeImportModal();
+    });
+
+    // Multi-step navigation
+    document.getElementById('next-step-btn').addEventListener('click', handleNextStep);
+    document.getElementById('back-step-btn').addEventListener('click', handleBackStep);
+    document.getElementById('skip-step-btn').addEventListener('click', handleSkipStep);
+
+    // Face enrollment controls
+    document.getElementById('modal-start-camera-btn').addEventListener('click', startModalCamera);
+    document.getElementById('modal-capture-btn').addEventListener('click', captureModalImage);
+
+    // Policy modal controls
+    document.getElementById('modal-view-policy-btn').addEventListener('click', openModalPolicyModal);
+    document.getElementById('modal-close-policy-modal').addEventListener('click', closeModalPolicyModal);
+    document.getElementById('modal-close-policy-modal-btn').addEventListener('click', closeModalPolicyModal);
+    document.getElementById('modal-policy-modal-backdrop').addEventListener('click', closeModalPolicyModal);
+    document.getElementById('modal-policy-agreement').addEventListener('change', updateSaveButtonState);
+
     // Status toggle modal buttons
     document.getElementById('confirm-status-toggle').addEventListener('click', confirmStatusToggle);
     document.getElementById('cancel-status-toggle').addEventListener('click', closeStatusToggleModal);
 
     // Form submission
-    studentForm.addEventListener('submit', handleStudentSubmit);
+    studentForm.addEventListener('submit', (e) => e.preventDefault());
 
     // Modal close on outside click
     studentModal.addEventListener('click', (e) => {
@@ -1182,34 +2292,611 @@ function renderStudentsTable(students) {
     });
 }
 
+// =============================================
+// MULTI-STEP MODAL FUNCTIONS
+// =============================================
+
+// Update step UI
+function updateStepUI(step) {
+    // Hide all steps
+    document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+    
+    // Show current step
+    document.getElementById(`step-${step}-content`).classList.remove('hidden');
+    
+    // Update progress indicators
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step-${i}-indicator`);
+        if (i < step) {
+            // Completed step
+            indicator.classList.remove('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white/30');
+            indicator.querySelector('div').classList.add('bg-green-500');
+        } else if (i === step) {
+            // Current step
+            indicator.classList.remove('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white/30', 'bg-green-500');
+            indicator.querySelector('div').classList.add('bg-white', 'text-primary');
+        } else {
+            // Future step
+            indicator.classList.add('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white', 'bg-green-500');
+            indicator.querySelector('div').classList.add('bg-white/30');
+        }
+    }
+    
+    // Update subtitle
+    const subtitles = {
+        1: 'Step 1: Student Information',
+        2: 'Step 2: Guardian Information (Optional)',
+        3: 'Step 3: Face Enrollment (Optional)'
+    };
+    document.getElementById('student-modal-subtitle').textContent = subtitles[step];
+    
+    // Update buttons
+    const backBtn = document.getElementById('back-step-btn');
+    const skipBtn = document.getElementById('skip-step-btn');
+    const nextBtn = document.getElementById('next-step-btn');
+    const nextText = document.getElementById('next-step-text');
+    
+    // Show/hide back button
+    if (step === 1) {
+        backBtn.classList.add('hidden');
+    } else {
+        backBtn.classList.remove('hidden');
+    }
+    
+    // Show/hide skip button (only on steps 2 and 3)
+    if (step === 2 || step === 3) {
+        skipBtn.classList.remove('hidden');
+    } else {
+        skipBtn.classList.add('hidden');
+    }
+    
+    // Update next button text
+    if (step === 3) {
+        nextText.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Save Student
+        `;
+        // Update save button state based on policy checkbox
+        updateSaveButtonState();
+    } else {
+        nextText.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            Next Step
+        `;
+    }
+}
+
+// Policy modal functions
+function openModalPolicyModal() {
+    const modal = document.getElementById('modal-policy-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModalPolicyModal() {
+    const modal = document.getElementById('modal-policy-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+// Update save button state based on checkbox
+function updateSaveButtonState() {
+    const checkbox = document.getElementById('modal-policy-agreement');
+    const nextBtn = document.getElementById('next-step-btn');
+    const capturedCount = Object.values(faceEnrollmentData.captured).filter(v => v).length;
+    
+    // If on step 3, check if at least checkbox is checked (faces are optional)
+    if (currentModalStep === 3) {
+        // Enable save button only if checkbox is checked
+        nextBtn.disabled = !checkbox.checked;
+    }
+}
+
+// Validate face enrollment
+function validateFaceEnrollment() {
+    const capturedCount = Object.values(faceEnrollmentData.captured).filter(v => v).length;
+    
+    // If any face has been captured, all 3 must be captured
+    if (capturedCount > 0 && capturedCount < 3) {
+        showToast(`Please capture all 3 face angles. You have captured ${capturedCount} of 3.`, 'error');
+        return false;
+    }
+    
+    // Check policy agreement
+    const checkbox = document.getElementById('modal-policy-agreement');
+    if (!checkbox.checked) {
+        showToast('Please agree to the biometric data policy', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Handle next step
+async function handleNextStep() {
+    if (currentModalStep === 1) {
+        // Validate student form
+        if (!validateStudentForm()) {
+            return;
+        }
+        // Store student data
+        storeStudentFormData();
+        // Move to step 2
+        currentModalStep = 2;
+        updateStepUI(currentModalStep);
+    } else if (currentModalStep === 2) {
+        // Validate guardian form (if any field is filled)
+        if (!validateGuardianForm()) {
+            return;
+        }
+        // Store guardian data (if any)
+        storeGuardianFormData();
+        // Move to step 3
+        currentModalStep = 3;
+        updateStepUI(currentModalStep);
+        // Load face API if not loaded
+        if (!modalFaceApiLoaded) {
+            await loadModalFaceApi();
+        }
+    } else if (currentModalStep === 3) {
+        // Validate face enrollment (if started)
+        if (!validateFaceEnrollment()) {
+            return;
+        }
+        // Save everything
+        await saveStudent();
+    }
+}
+
+// Handle back step
+function handleBackStep() {
+    if (currentModalStep > 1) {
+        // Stop camera if on step 3
+        if (currentModalStep === 3) {
+            stopModalCamera();
+        }
+        currentModalStep--;
+        updateStepUI(currentModalStep);
+    }
+}
+
+// Handle skip step
+function handleSkipStep() {
+    if (currentModalStep === 2) {
+        // Clear guardian form data when skipping
+        guardianFormData = {};
+        document.getElementById('guardian-first-name').value = '';
+        document.getElementById('guardian-middle-name').value = '';
+        document.getElementById('guardian-last-name').value = '';
+        document.getElementById('guardian-email').value = '';
+        document.getElementById('guardian-phone').value = '';
+        document.getElementById('guardian-relationship').value = '';
+        
+        // Skip guardian, move to face enrollment
+        currentModalStep = 3;
+        updateStepUI(currentModalStep);
+        if (!modalFaceApiLoaded) {
+            loadModalFaceApi();
+        }
+    } else if (currentModalStep === 3) {
+        // Clear face enrollment data when skipping
+        faceEnrollmentData = {
+            images: { front: null, left: null, right: null },
+            captured: { front: false, left: false, right: false }
+        };
+        
+        // Skip face enrollment, save student
+        saveStudent();
+    }
+}
+
+// Validate student form
+function validateStudentForm() {
+    const form = document.getElementById('student-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return false;
+    }
+    return true;
+}
+
+// Store student form data
+function storeStudentFormData() {
+    studentFormData = {
+        lrn: document.getElementById('student-lrn').value,
+        first_name: document.getElementById('student-first-name').value,
+        middle_name: document.getElementById('student-middle-name').value,
+        last_name: document.getElementById('student-last-name').value,
+        grade_id: document.getElementById('student-grade').value,
+        section_id: document.getElementById('student-section').value,
+        status: document.getElementById('student-status').value,
+        profile_pic: document.getElementById('student-profile-pic').files[0]
+    };
+}
+
+// Validate guardian form
+function validateGuardianForm() {
+    const firstName = document.getElementById('guardian-first-name').value.trim();
+    const middleName = document.getElementById('guardian-middle-name').value.trim();
+    const lastName = document.getElementById('guardian-last-name').value.trim();
+    const email = document.getElementById('guardian-email').value.trim();
+    const phone = document.getElementById('guardian-phone').value.trim();
+    const relationship = document.getElementById('guardian-relationship').value;
+    
+    // Check if ANY field is filled
+    const anyFieldFilled = firstName || middleName || lastName || email || phone || relationship;
+    
+    if (anyFieldFilled) {
+        // If any field is filled, require all required fields
+        if (!firstName) {
+            showToast('Guardian first name is required when filling guardian information', 'error');
+            document.getElementById('guardian-first-name').focus();
+            return false;
+        }
+        if (!lastName) {
+            showToast('Guardian last name is required when filling guardian information', 'error');
+            document.getElementById('guardian-last-name').focus();
+            return false;
+        }
+        if (!email) {
+            showToast('Guardian email is required when filling guardian information', 'error');
+            document.getElementById('guardian-email').focus();
+            return false;
+        }
+        if (!phone) {
+            showToast('Guardian phone number is required when filling guardian information', 'error');
+            document.getElementById('guardian-phone').focus();
+            return false;
+        }
+        if (!relationship) {
+            showToast('Guardian relationship is required when filling guardian information', 'error');
+            document.getElementById('guardian-relationship').focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Store guardian form data
+function storeGuardianFormData() {
+    const firstName = document.getElementById('guardian-first-name').value;
+    const lastName = document.getElementById('guardian-last-name').value;
+    
+    // Only store if at least first name or last name is provided
+    if (firstName || lastName) {
+        guardianFormData = {
+            first_name: firstName,
+            middle_name: document.getElementById('guardian-middle-name').value,
+            last_name: lastName,
+            email: document.getElementById('guardian-email').value,
+            phone_number: document.getElementById('guardian-phone').value,
+            relationship: document.getElementById('guardian-relationship').value
+        };
+    } else {
+        guardianFormData = {};
+    }
+}
+
+// Save student (final step)
+async function saveStudent() {
+    const nextBtn = document.getElementById('next-step-btn');
+    const saveSpinner = document.getElementById('save-spinner');
+    const nextText = document.getElementById('next-step-text');
+    
+    nextBtn.disabled = true;
+    nextText.classList.add('hidden');
+    saveSpinner.classList.remove('hidden');
+    
+    try {
+        const formData = new FormData();
+        
+        // Add student data
+        Object.keys(studentFormData).forEach(key => {
+            if (studentFormData[key] !== null && studentFormData[key] !== undefined) {
+                formData.append(key, studentFormData[key]);
+            }
+        });
+        
+        // Add guardian data if exists
+        if (Object.keys(guardianFormData).length > 0) {
+            formData.append('has_guardian', 'true');
+            Object.keys(guardianFormData).forEach(key => {
+                if (guardianFormData[key]) {
+                    formData.append(`guardian_${key}`, guardianFormData[key]);
+                }
+            });
+        }
+        
+        const url = currentStudentData 
+            ? `/admin/students/${currentStudentData.id}/update/`
+            : '/admin/students/create/';
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const studentId = data.student_id;
+            
+            // If face enrollment data exists, extract embeddings and save them
+            if (faceEnrollmentData.images.front && faceEnrollmentData.images.left && faceEnrollmentData.images.right) {
+                try {
+                    showToast('Student saved. Processing face enrollment...', 'info');
+                    
+                    // Extract embeddings from each captured image
+                    const embeddings = [];
+                    for (const angle of ['front', 'left', 'right']) {
+                        const imageBlob = faceEnrollmentData.images[angle];
+                        
+                        // Create image element from blob
+                        const img = await createImageFromBlob(imageBlob);
+                        
+                        // Detect face and get embedding
+                        const detection = await faceapi
+                            .detectSingleFace(img, modalDetectorOptions)
+                            .withFaceLandmarks()
+                            .withFaceDescriptor();
+                        
+                        if (detection && detection.descriptor) {
+                            embeddings.push(Array.from(detection.descriptor));
+                        } else {
+                            throw new Error(`Failed to detect face in ${angle} image`);
+                        }
+                    }
+                    
+                    // Send embeddings to backend
+                    if (embeddings.length === 3) {
+                        const faceResponse = await fetch('/admin/students/save-face-embedding/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            },
+                            body: JSON.stringify({
+                                student_id: studentId,
+                                face_embeddings: embeddings
+                            })
+                        });
+                        
+                        const faceData = await faceResponse.json();
+                        
+                        if (faceData.status === 'success') {
+                            showToast('Student and face enrollment saved successfully!', 'success');
+                        } else {
+                            showToast(`Student saved, but face enrollment failed: ${faceData.message}`, 'warning');
+                        }
+                    }
+                } catch (faceError) {
+                    console.error('Face enrollment error:', faceError);
+                    showToast(`Student saved, but face enrollment failed: ${faceError.message}`, 'warning');
+                }
+            } else {
+                showToast(data.message, 'success');
+            }
+            
+            closeStudentModal();
+            loadStudents(currentPage);
+        } else {
+            showToast(data.message || 'Error saving student', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving student:', error);
+        showToast('Error saving student', 'error');
+    } finally {
+        nextBtn.disabled = false;
+        nextText.classList.remove('hidden');
+        saveSpinner.classList.add('hidden');
+    }
+}
+
+// Helper function to create image from blob
+function createImageFromBlob(blob) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = URL.createObjectURL(blob);
+    });
+}
+
+// =============================================
+// FACE ENROLLMENT FUNCTIONS
+// =============================================
+
+// Load face API models
+async function loadModalFaceApi() {
+    if (modalFaceApiLoaded) return;
+    
+    try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        ]);
+        modalDetectorOptions = new faceapi.TinyFaceDetectorOptions({
+            inputSize: 224,
+            scoreThreshold: 0.5
+        });
+        modalFaceApiLoaded = true;
+        console.log('Face API loaded successfully');
+    } catch (error) {
+        console.error('Error loading face API:', error);
+        showToast('Failed to load face recognition models', 'error');
+    }
+}
+
+// Start camera
+async function startModalCamera() {
+    try {
+        const video = document.getElementById('modal-camera-video');
+        modalVideoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { width: 640, height: 480 } 
+        });
+        video.srcObject = modalVideoStream;
+        
+        document.getElementById('modal-camera-overlay').classList.add('hidden');
+        document.getElementById('modal-capture-instructions').classList.remove('hidden');
+        document.getElementById('modal-capture-btn').classList.remove('hidden');
+        
+        // Start face detection
+        startFaceDetection();
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        showToast('Failed to access camera', 'error');
+    }
+}
+
+// Stop camera
+function stopModalCamera() {
+    if (modalVideoStream) {
+        modalVideoStream.getTracks().forEach(track => track.stop());
+        modalVideoStream = null;
+    }
+}
+
+// Start face detection
+function startFaceDetection() {
+    const video = document.getElementById('modal-camera-video');
+    const indicator = document.getElementById('modal-face-detection-indicator');
+    
+    setInterval(async () => {
+        if (!modalVideoStream) return;
+        
+        try {
+            const detection = await faceapi.detectSingleFace(video, modalDetectorOptions);
+            if (detection) {
+                indicator.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
+            }
+        } catch (error) {
+            // Silent fail
+        }
+    }, 100);
+}
+
+// Capture image
+async function captureModalImage() {
+    const video = document.getElementById('modal-camera-video');
+    const canvas = document.getElementById('modal-camera-canvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    // Convert to blob
+    canvas.toBlob(blob => {
+        const poseKey = modalCurrentPose === 1 ? 'front' : modalCurrentPose === 2 ? 'left' : 'right';
+        faceEnrollmentData.images[poseKey] = blob;
+        faceEnrollmentData.captured[poseKey] = true; // Mark as captured
+        
+        // Update preview
+        const previewId = `modal-preview-${poseKey}`;
+        document.getElementById(previewId).src = URL.createObjectURL(blob);
+        
+        // Update pose indicator
+        const currentIndicator = document.getElementById(`modal-pose-${modalCurrentPose}-indicator`);
+        currentIndicator.querySelector('div').classList.remove('bg-gray-400');
+        currentIndicator.querySelector('div').classList.add('bg-green-500');
+        currentIndicator.classList.remove('opacity-50');
+        
+        // Move to next pose
+        modalCurrentPose++;
+        if (modalCurrentPose <= 3) {
+            const nextIndicator = document.getElementById(`modal-pose-${modalCurrentPose}-indicator`);
+            nextIndicator.classList.remove('opacity-50');
+            
+            const stepTexts = {
+                2: 'Step 2: Turn your head slightly to the left',
+                3: 'Step 3: Turn your head slightly to the right'
+            };
+            document.getElementById('modal-capture-step-text').innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                ${stepTexts[modalCurrentPose]}
+            `;
+        } else {
+            // All poses captured
+            document.getElementById('modal-captured-images').classList.remove('hidden');
+            document.getElementById('modal-capture-btn').classList.add('hidden');
+            document.getElementById('modal-capture-step-text').innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                All photos captured! Click "Save Student" to finish.
+            `;
+            stopModalCamera();
+        }
+    }, 'image/jpeg', 0.95);
+}
 
 
 // Modal functions
 function openStudentModal(studentData = null) {
     currentStudentData = studentData;
     const modalTitle = document.getElementById('student-modal-title');
-    const saveText = document.getElementById('student-save-text');
+    
+    // Reset multi-step state
+    currentModalStep = 1;
+    studentFormData = {};
+    guardianFormData = {};
+    faceEnrollmentData = { 
+        images: { front: null, left: null, right: null }, 
+        captured: { front: false, left: false, right: false },
+        embeddings: [] 
+    };
+    modalCurrentPose = 1;
+    
+    // Reset policy checkbox
+    const policyCheckbox = document.getElementById('modal-policy-agreement');
+    if (policyCheckbox) {
+        policyCheckbox.checked = false;
+    }
+    
+    // Stop camera if running
+    stopModalCamera();
     
     if (studentData) {
         modalTitle.textContent = 'Edit Student';
-        saveText.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Update Student
-        `;
         populateStudentForm(studentData);
+        // For edit mode, skip guardian and face enrollment
+        document.getElementById('step-2-content').classList.add('hidden');
+        document.getElementById('step-3-content').classList.add('hidden');
     } else {
         modalTitle.textContent = 'Add Student';
-        saveText.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            Save Student
-        `;
         studentForm.reset();
         resetProfilePicturePreview();
+        // Reset guardian form
+        document.getElementById('guardian-form').reset();
+        // Reset face enrollment
+        document.getElementById('modal-camera-overlay').classList.remove('hidden');
+        document.getElementById('modal-capture-instructions').classList.add('hidden');
+        document.getElementById('modal-capture-btn').classList.add('hidden');
+        document.getElementById('modal-captured-images').classList.add('hidden');
     }
+    
+    // Initialize step 1
+    updateStepUI(1);
     
     studentModal.classList.remove('hidden');
     studentModal.classList.add('flex');
@@ -1224,6 +2911,9 @@ function openStudentModal(studentData = null) {
 }
 
 function closeStudentModal() {
+    // Stop camera if running
+    stopModalCamera();
+    
     // Animate modal exit
     studentModal.classList.remove('opacity-100');
     studentModal.querySelector('.bg-white').classList.remove('scale-100');
@@ -1612,6 +3302,207 @@ function closeStatusToggleModal() {
         document.body.style.overflow = 'auto';
         currentStudentData = null;
     }, 150);
+}
+
+// Import Modal Functions
+function openImportModal() {
+    const modal = document.getElementById('import-students-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    
+    // Trigger animation
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Reset form
+    document.getElementById('import-students-form').reset();
+    document.getElementById('import-students-file-name').classList.add('hidden');
+    document.getElementById('import-students-progress').classList.add('hidden');
+    document.getElementById('submit-import-students').disabled = true;
+    // Clear previous errors
+    const importErrorsEl = document.getElementById('import-students-errors');
+    if (importErrorsEl) {
+        importErrorsEl.classList.add('hidden');
+        importErrorsEl.innerHTML = '';
+    }
+}
+
+function closeImportModal() {
+    const modal = document.getElementById('import-students-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    // Start animation out
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    // Hide modal after animation
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }, 200);
+}
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    const fileNameDisplay = document.getElementById('import-students-file-name');
+    const submitBtn = document.getElementById('submit-import-students');
+    
+    if (file) {
+        // Validate file type
+        const validTypes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/csv'
+        ];
+        
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+            showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('File too large. Maximum file size is 10MB.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        fileNameDisplay.textContent = `Selected: ${file.name}`;
+        fileNameDisplay.classList.remove('hidden');
+        submitBtn.disabled = false;
+    } else {
+        fileNameDisplay.classList.add('hidden');
+        submitBtn.disabled = true;
+    }
+}
+
+function submitImport() {
+    const form = document.getElementById('import-students-form');
+    const fileInput = document.getElementById('import-students-file');
+    const submitBtn = document.getElementById('submit-import-students');
+    const progressContainer = document.getElementById('import-students-progress');
+    const progressBar = document.getElementById('import-students-progress-bar');
+    const progressPercent = document.getElementById('import-students-progress-percent');
+    
+    if (!fileInput.files[0]) {
+        showToast('Please select a file to import', 'warning');
+        return;
+    }
+    
+    // Disable button and show progress
+    submitBtn.disabled = true;
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPercent.textContent = '0%';
+    
+    // Animate progress bar
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if (progress < 90) {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+            progressPercent.textContent = Math.round(progress) + '%';
+        }
+    }, 200);
+    
+    // Submit form
+    const formData = new FormData(form);
+    // Clear any previous errors in the modal
+    const importErrorsEl = document.getElementById('import-students-errors');
+    if (importErrorsEl) {
+        importErrorsEl.classList.add('hidden');
+        importErrorsEl.innerHTML = '';
+    }
+    
+    fetch('{% url "import_students" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+        
+        setTimeout(() => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+
+                // Refresh the table
+                loadStudents(currentPage);
+
+                // Also show success message inside the modal where validation/errors are displayed
+                if (importErrorsEl) {
+                    let successHtml = `
+                        <div class="p-4 rounded-md bg-green-50 border border-green-200 text-green-800 font-semibold">${data.message}</div>
+                    `;
+                    // If the response includes counts, show them
+                    if (typeof data.students_created !== 'undefined' || typeof data.guardians_created !== 'undefined') {
+                        const studentsCreated = data.students_created || 0;
+                        const guardiansCreated = data.guardians_created || 0;
+                        successHtml += `<div class="mt-2 text-sm text-gray-700">Imported <strong>${studentsCreated}</strong> student(s) and <strong>${guardiansCreated}</strong> guardian(s).</div>`;
+                    }
+                    importErrorsEl.innerHTML = successHtml;
+                    importErrorsEl.classList.remove('hidden');
+                    importErrorsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // Show brief toast
+                showToast(data.message || 'Import failed', 'error');
+
+                // Show detailed errors inside the modal
+                if (importErrorsEl) {
+                    let html = '';
+                    if (data.message) {
+                        html += `<div class="font-semibold mb-2">${data.message}</div>`;
+                    }
+                    if (data.errors && data.errors.length > 0) {
+                        html += '<ul class="list-disc list-inside space-y-1">';
+                        data.errors.slice(0, 20).forEach(err => {
+                            html += `<li>${err}</li>`;
+                        });
+                        html += '</ul>';
+                    } else if (data.detail) {
+                        html += `<div>${data.detail}</div>`;
+                    }
+                    importErrorsEl.innerHTML = html || (data.message || 'Import failed');
+                    importErrorsEl.classList.remove('hidden');
+                    importErrorsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }, 500);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Error:', error);
+        showToast('An error occurred during import. Please try again.', 'error');
+        if (importErrorsEl) {
+            importErrorsEl.classList.remove('hidden');
+            importErrorsEl.innerText = 'An unexpected error occurred while processing the file. Please try again or contact support.';
+            importErrorsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    })
+    .finally(() => {
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            progressContainer.classList.add('hidden');
+        }, 1000);
+    });
 }
 
 // Add these styles to the <style> section
