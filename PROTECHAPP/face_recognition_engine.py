@@ -1,6 +1,6 @@
 """
-Ultra-fast Face Recognition Engine with GPU acceleration
-Optimized for real-time performance with hundreds of students
+Ultra-fast CPU-optimized Face Recognition Engine
+Optimized for real-time performance with 100+ students using frame skipping
 """
 import os
 import numpy as np
@@ -12,7 +12,7 @@ import threading
 import time
 
 class FaceRecognitionEngine:
-    """Singleton class for managing face recognition with GPU acceleration"""
+    """Singleton class for managing face recognition with CPU optimization"""
     _instance = None
     _lock = threading.Lock()
     
@@ -33,12 +33,15 @@ class FaceRecognitionEngine:
         self.student_info_cache = {}  # {student_id: {'lrn': ..., 'name': ...}}
         self.last_cache_update = 0
         self.cache_ttl = 300  # Refresh cache every 5 minutes
-        self.executor = ThreadPoolExecutor(max_workers=4)
-        self.match_threshold = float(getattr(settings, 'FACE_MATCH_THRESHOLD', 0.65))
+        self.executor = ThreadPoolExecutor(max_workers=2)  # Reduced for CPU
+        self.match_threshold = 0.95  # Very strict - only accept 95%+ confidence to prevent false matches
         
-        # Try to use GPU if available
-        self.use_gpu = cv2.cuda.getCudaEnabledDeviceCount() > 0
+        # CPU-only mode
+        self.use_gpu = False
         print(f"Face Recognition Engine initialized. GPU Available: {self.use_gpu}")
+        
+        # Pre-compute normalized embeddings for ultra-fast comparison
+        self.normalized_embeddings_cache = {}  # {student_id: normalized_embeddings}
         
         # Load all embeddings into memory at startup
         self.load_all_embeddings()
@@ -49,8 +52,10 @@ class FaceRecognitionEngine:
         start_time = time.time()
         
         try:
-            # Get all students with face embeddings
-            students = Student.objects.exclude(
+            # Get all ACTIVE students with face embeddings
+            students = Student.objects.filter(
+                status='ACTIVE'
+            ).exclude(
                 face_path__isnull=True
             ).exclude(
                 face_path__exact=''
@@ -71,11 +76,15 @@ class FaceRecognitionEngine:
                 
                 if os.path.exists(embedding_file):
                     try:
-                        # Load embedding file (should contain 3 embeddings: front, left, right)
+                        # Load embedding file (averaged embedding from 3 poses)
                         embeddings = np.load(embedding_file)
+                        
+                        # Pre-normalize for faster comparison
+                        normalized = self._normalize_embedding(embeddings)
                         
                         # Store in cache
                         self.embeddings_cache[student_id] = embeddings
+                        self.normalized_embeddings_cache[student_id] = normalized
                         self.student_info_cache[student_id] = {
                             'lrn': student['lrn'],
                             'name': f"{student['first_name']} {student['last_name']}",
@@ -93,6 +102,14 @@ class FaceRecognitionEngine:
         except Exception as e:
             print(f"Error in load_all_embeddings: {e}")
     
+    def _normalize_embedding(self, embedding):
+        """Normalize embedding for cosine similarity"""
+        embedding = np.array(embedding).flatten()
+        norm = np.linalg.norm(embedding)
+        if norm == 0:
+            return embedding
+        return embedding / norm
+    
     def refresh_cache_if_needed(self):
         """Refresh cache if TTL expired"""
         if time.time() - self.last_cache_update > self.cache_ttl:
@@ -100,12 +117,12 @@ class FaceRecognitionEngine:
     
     def compare_embeddings_vectorized(self, input_embedding, threshold=None):
         """
-        Ultra-fast vectorized comparison of input embedding against all cached embeddings
-        Uses numpy vectorization for maximum speed
+        Ultra-fast vectorized comparison using pre-normalized embeddings
+        CPU-optimized for maximum speed with 100+ students
         
         Args:
-            input_embedding: 128-d or 512-d face embedding from detected face
-            threshold: Cosine similarity threshold (defaults to settings.FACE_MATCH_THRESHOLD)
+            input_embedding: 128-d face embedding from detected face
+            threshold: Cosine similarity threshold (default 0.6)
         
         Returns:
             tuple: (student_id, confidence) or (None, 0) if no match
@@ -113,40 +130,27 @@ class FaceRecognitionEngine:
         if threshold is None:
             threshold = self.match_threshold
 
-        if not self.embeddings_cache:
+        if not self.normalized_embeddings_cache:
             return None, 0
-        
-        input_embedding = np.array(input_embedding).flatten()
         
         # Normalize input embedding
-        input_norm = np.linalg.norm(input_embedding)
-        if input_norm == 0:
+        input_normalized = self._normalize_embedding(input_embedding)
+        
+        if np.linalg.norm(input_normalized) == 0:
             return None, 0
-        input_embedding_normalized = input_embedding / input_norm
         
         best_match_id = None
         best_similarity = 0
         
-        # Vectorized comparison against all students
-        for student_id, stored_embeddings in self.embeddings_cache.items():
-            # stored_embeddings shape: (3, 128) or (3, 512) - 3 poses
-            # Compare against all 3 poses and take the best match
+        # Ultra-fast vectorized comparison using pre-normalized embeddings
+        # This is the performance bottleneck - optimized for CPU
+        for student_id, stored_embedding_normalized in self.normalized_embeddings_cache.items():
+            # Fast dot product (cosine similarity with normalized vectors)
+            similarity = np.dot(input_normalized, stored_embedding_normalized)
             
-            for embedding in stored_embeddings:
-                embedding = np.array(embedding).flatten()
-                
-                # Normalize stored embedding
-                embedding_norm = np.linalg.norm(embedding)
-                if embedding_norm == 0:
-                    continue
-                embedding_normalized = embedding / embedding_norm
-                
-                # Cosine similarity (fast dot product)
-                similarity = np.dot(input_embedding_normalized, embedding_normalized)
-                
-                if similarity > best_similarity:
-                    best_similarity = similarity
-                    best_match_id = student_id
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best_match_id = student_id
         
         # Return match if above threshold
         if best_similarity >= threshold:
@@ -162,7 +166,7 @@ class FaceRecognitionEngine:
             face_embedding: Face embedding array
         
         Returns:
-            dict: {'student_id': int, 'lrn': str, 'name': str, 'first_name': str, 'last_name': str, 'confidence': float, 'matched': bool}
+            dict: {'student_id': int, 'lrn': str, 'name': str, 'confidence': float, 'matched': bool}
         """
         # Refresh cache if needed
         self.refresh_cache_if_needed()
@@ -172,7 +176,6 @@ class FaceRecognitionEngine:
         
         if student_id:
             student_info = self.student_info_cache.get(student_id, {})
-            print(f"✅ Face matched: {student_info.get('name', 'Unknown')} (LRN: {student_info.get('lrn', 'N/A')}) - Confidence: {confidence:.2%}")
             return {
                 'matched': True,
                 'student_id': student_id,
@@ -182,8 +185,6 @@ class FaceRecognitionEngine:
                 'last_name': student_info.get('last_name', ''),
                 'confidence': confidence
             }
-        
-        print(f"❌ No face match found (best confidence: {confidence:.2%})")
         
         return {
             'matched': False,
@@ -197,7 +198,7 @@ class FaceRecognitionEngine:
     
     def recognize_multiple_faces(self, face_embeddings_list):
         """
-        Recognize multiple faces in parallel
+        Recognize multiple faces (CPU-optimized)
         
         Args:
             face_embeddings_list: List of face embeddings
@@ -205,8 +206,8 @@ class FaceRecognitionEngine:
         Returns:
             list: List of recognition results
         """
-        # Use thread pool for parallel processing
-        results = list(self.executor.map(self.recognize_face, face_embeddings_list))
+        # Process sequentially for CPU efficiency
+        results = [self.recognize_face(embedding) for embedding in face_embeddings_list]
         return results
 
 # Global instance
