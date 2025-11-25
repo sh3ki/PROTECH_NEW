@@ -53,6 +53,8 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.TEACHER)
     is_active = models.BooleanField(default=True)
     is_new = models.BooleanField(default=True)
+    # New field: whether the account email/identity is verified (e.g., by admin or email verification)
+    is_verified = models.BooleanField(default=False)
     section = models.ForeignKey('Section', on_delete=models.SET_NULL, null=True, blank=True, related_name='advisors')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -95,6 +97,19 @@ class Student(models.Model):
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.lrn})"
+
+    @property
+    def email(self):
+        """Return the primary email for the student.
+
+        This returns the email of the first related Guardian if present,
+        otherwise an empty string. Existing code that references
+        `student.email` will continue to work.
+        """
+        primary_guardian = self.guardians.first()
+        if primary_guardian and primary_guardian.email:
+            return primary_guardian.email
+        return ''
 
 # 5. Guardians Table
 class Guardian(models.Model):
@@ -254,6 +269,10 @@ class MessageNotification(models.Model):
         return f"Notification to {self.user} for message {self.message.id}"
 
 # 17. System Settings Table
+class AttendanceMode(models.TextChoices):
+    SEPARATE = 'SEPARATE', 'Separate (Time In & Time Out on different screens)'
+    HYBRID = 'HYBRID', 'Hybrid (Time In & Time Out on same screen)'
+
 class SystemSettings(models.Model):
     sms_gateway_url = models.CharField(max_length=255, blank=True, null=True)
     sms_api_key = models.CharField(max_length=255, blank=True, null=True)
@@ -266,6 +285,16 @@ class SystemSettings(models.Model):
     face_confidence_max = models.FloatField(default=0.9)
     attendance_time_in = models.TimeField(default='07:00:00')
     attendance_time_out = models.TimeField(default='16:00:00')
+    late_time_cutoff = models.TimeField(
+        default='08:00:00',
+        help_text="Time cutoff for late arrival (stored in UTC, displayed in Asia/Manila)"
+    )
+    attendance_mode = models.CharField(
+        max_length=20, 
+        choices=AttendanceMode.choices, 
+        default=AttendanceMode.SEPARATE,
+        help_text="Select whether attendance devices show separate or combined time in/out screens"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -274,3 +303,28 @@ class SystemSettings(models.Model):
     
     class Meta:
         verbose_name_plural = "System Settings"
+
+# 18. Password Reset OTP Table
+class PasswordResetOTP(models.Model):
+    email = models.EmailField()
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    ip_address = models.CharField(max_length=45, blank=True, null=True)
+    
+    def __str__(self):
+        return f"OTP for {self.email} - {'Used' if self.is_used else 'Active'}"
+    
+    def is_expired(self):
+        """Check if the OTP has expired"""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """Check if the OTP is valid (not used and not expired)"""
+        return not self.is_used and not self.is_expired()
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Password Reset OTP"
+        verbose_name_plural = "Password Reset OTPs"
