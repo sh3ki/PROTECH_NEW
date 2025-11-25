@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROTECH - Face Recognition Time In</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'public/images/protechlogowhite.png' %}">
+    <link rel="shortcut icon" href="{% static 'public/images/protechlogowhite.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'public/images/protechlogowhite.png' %}">
+    
     <!-- TailwindCSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -56,7 +62,7 @@
             }
             /* New component styles */
             .webcam-container {
-                @apply bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black rounded-xl shadow-xl border border-gray-700 dark:border-gray-800 flex flex-col;
+                @apply bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black rounded-xl shadow-xl border border-gray-700 dark:border-gray-800 flex flex-col overflow-hidden;
             }
             .info-card {
                 @apply bg-gray-100 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-all duration-300 hover:shadow-md;
@@ -108,7 +114,7 @@
 <body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300" data-attendance-type="time_in">
     <!-- Background image with overlay -->
     <div class="fixed inset-0 z-[-1] bg-white/40 dark:bg-gray-800/30">
-        <img src="{% static 'public/images/schoold.svg' %}" alt="Background"
+        <img src="{% static 'public/images/protechlogo.svg' %}" alt="Background"
              class="w-full h-full object-cover mix-blend-overlay select-none pointer-events-none opacity-40 dark:opacity-20" />
     </div>
 
@@ -130,20 +136,17 @@
             </div>
             <div class="flex items-center gap-4">
                 <!-- Dark mode toggle -->
-                <div class="flex items-center ml-3">
-                    <div class="relative inline-block w-12 mr-2 align-middle select-none">
-                        <input type="checkbox" id="toggle-dark" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                        <label for="toggle-dark" class="toggle-label block overflow-hidden h-6 rounded-full bg-accent cursor-pointer"></label>
-                    </div>
-                    <span class="text-white hidden md:inline-block">
-                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <button id="theme-toggle" class="relative inline-flex items-center h-10 rounded-full w-20 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200 dark:bg-gray-700" aria-label="Toggle dark mode">
+                    <span class="sr-only">Toggle dark mode</span>
+                    <span id="toggle-switch" class="inline-flex items-center justify-center h-8 w-8 transform transition-transform duration-300 ease-in-out translate-x-1 bg-white dark:bg-gray-800 rounded-full shadow-md">
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 transition-opacity duration-200" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
                         </svg>
-                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400 absolute transition-opacity duration-200 opacity-0" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </span>
-                </div>
+                </button>
             </div>
         </div>
     </header>
@@ -189,7 +192,7 @@
                     </div>
                     
                     <!-- Actual video element -->
-                    <video id="webcam" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"></video>
+                    <video id="webcam" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
                     
                     <!-- Canvas overlay for bounding boxes - MUST be on top -->
                     <canvas id="overlay-canvas" style="position: absolute !important; z-index: 999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none !important;"></canvas>
@@ -219,59 +222,9 @@
                 <!-- Scrollable content area with improved styling -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900/60">
                     <div id="student-list" class="p-4 space-y-3">
-                        <!-- This will be populated dynamically, but here's sample styling -->
-                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">John Smith</h3>
-                                        <span class="ml-2 status-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                            On Time
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0001</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
-                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:30 AM</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">Sarah Johnson</h3>
-                                        <span class="ml-2 status-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                            On Time
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0002</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
-                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:35 AM</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-card group hover:scale-[1.01] transform transition-all duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">Miguel Santos</h3>
-                                        <span class="ml-2 status-badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                            Late
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: 2023-0003</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Today</p>
-                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">10:45 AM</p>
-                                </div>
-                            </div>
+                        <!-- Will be populated dynamically via AJAX -->
+                        <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                            <p>No attendance records yet today</p>
                         </div>
                     </div>
                 </div>
@@ -309,7 +262,7 @@
                 
                 <!-- Camera preview with better styling -->
                 <div class="bg-black rounded-lg overflow-hidden w-full h-120 mb-4 shadow-inner border border-gray-700">
-                    <video id="test-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                    <video id="test-video" autoplay playsinline muted class="w-full h-full object-cover" style="transform: scaleX(-1);"></video>
                 </div>
                 
                 <!-- Modal footer with improved buttons -->
@@ -342,37 +295,38 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const html = document.documentElement;
-            const toggleCheckbox = document.getElementById('toggle-dark');
+            const themeToggle = document.getElementById('theme-toggle');
+            const toggleSwitch = document.getElementById('toggle-switch');
             const sunIcon = document.getElementById('sun-icon');
             const moonIcon = document.getElementById('moon-icon');
             
-            // Check for user preference or default to dark
             const isDarkMode = localStorage.getItem('darkMode') !== 'false';
             
-            // Apply initial state
             if (isDarkMode) {
                 html.classList.add('dark');
-                toggleCheckbox.checked = true;
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
-            } else {
-                html.classList.remove('dark');
-                sunIcon.classList.remove('hidden');
-                moonIcon.classList.add('hidden');
+                toggleSwitch.classList.add('translate-x-11');
+                toggleSwitch.classList.remove('translate-x-1');
+                sunIcon.classList.add('opacity-0');
+                moonIcon.classList.remove('opacity-0');
             }
             
-            // Toggle dark mode
-            toggleCheckbox.addEventListener('change', () => {
-                if (toggleCheckbox.checked) {
-                    html.classList.add('dark');
-                    localStorage.setItem('darkMode', 'true');
-                    sunIcon.classList.add('hidden');
-                    moonIcon.classList.remove('hidden');
-                } else {
+            themeToggle.addEventListener('click', () => {
+                const isDark = html.classList.contains('dark');
+                
+                if (isDark) {
                     html.classList.remove('dark');
                     localStorage.setItem('darkMode', 'false');
-                    sunIcon.classList.remove('hidden');
-                    moonIcon.classList.add('hidden');
+                    toggleSwitch.classList.remove('translate-x-11');
+                    toggleSwitch.classList.add('translate-x-1');
+                    sunIcon.classList.remove('opacity-0');
+                    moonIcon.classList.add('opacity-0');
+                } else {
+                    html.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                    toggleSwitch.classList.add('translate-x-11');
+                    toggleSwitch.classList.remove('translate-x-1');
+                    sunIcon.classList.add('opacity-0');
+                    moonIcon.classList.remove('opacity-0');
                 }
             });
         });
@@ -785,6 +739,76 @@
                 stopMediaStream(currentStream);
                 stopMediaStream(mainStream);
             });
+        });
+    </script>
+
+    <!-- Attendance List Auto-Refresh Script -->
+    <script>
+        // Function to fetch and update today's attendance list
+        async function fetchTodayAttendance() {
+            try {
+                const response = await fetch("{% url 'get_today_attendance' %}");
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateAttendanceList(data.attendances, data.count);
+                }
+            } catch (error) {
+                console.error('Error fetching attendance:', error);
+            }
+        }
+        
+        // Function to update the attendance list UI
+        function updateAttendanceList(attendances, count) {
+            const studentList = document.getElementById('student-list');
+            const studentCount = document.getElementById('student-count');
+            
+            // Update count
+            studentCount.textContent = count;
+            
+            // Clear existing content
+            studentList.innerHTML = '';
+            
+            if (attendances.length === 0) {
+                studentList.innerHTML = `
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                        <p>No attendance records yet today</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Populate with attendance records
+            attendances.forEach(attendance => {
+                const card = document.createElement('div');
+                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center">
+                                <h3 class="font-semibold text-gray-800 dark:text-white">${attendance.student_name}</h3>
+                                <span class="ml-2 status-badge ${attendance.status_class}">
+                                    ${attendance.status_text}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: ${attendance.student_id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${attendance.date}</p>
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">${attendance.time_in}</p>
+                        </div>
+                    </div>
+                `;
+                studentList.appendChild(card);
+            });
+        }
+        
+        // Fetch immediately on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTodayAttendance();
+            
+            // Poll every 1 second for updates
+            setInterval(fetchTodayAttendance, 1000);
         });
     </script>
     
