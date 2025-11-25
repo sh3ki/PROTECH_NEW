@@ -10,6 +10,8 @@ from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.hashers import make_password
 import json
 import os
+import io
+from datetime import datetime
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt
@@ -25,6 +27,10 @@ os.makedirs(PRIVATE_EXCUSE_LETTERS_DIR, exist_ok=True)
 def is_registrar(user):
     """Check if the logged-in user is a registrar"""
     return user.is_authenticated and user.role == UserRole.REGISTRAR
+
+def is_admin_or_registrar(user):
+    """Check if the logged-in user is an admin or registrar"""
+    return user.is_authenticated and user.role in [UserRole.ADMIN, UserRole.REGISTRAR]
 
 def get_pagination_range(paginator, current_page, num_pages=5):
     """Helper function to get page range for pagination UI"""
@@ -72,7 +78,11 @@ def registrar_announcements(request):
 @user_passes_test(is_registrar)
 def registrar_messages(request):
     """View for messages"""
-    return render(request, 'registrar/messages.html')
+    from django.conf import settings
+    context = {
+        'firebase_config': settings.FIREBASE_WEB_CONFIG
+    }
+    return render(request, 'registrar/messages.html', context)
 
 @login_required
 @user_passes_test(is_registrar)
@@ -1146,7 +1156,7 @@ def registrar_download_student_template(request):
     """Download Excel template for student import with guardian fields"""
     try:
         import openpyxl
-        from openpyxl.styles import Font, PatternFill
+        from openpyxl.styles import Font, PatternFill, Alignment
         from openpyxl.utils import get_column_letter
         from django.http import HttpResponse
         import io
@@ -1160,7 +1170,7 @@ def registrar_download_student_template(request):
         
         # Student headers
         student_headers = [
-            'LRN', 'First Name', 'Middle Name', 'Last Name', 
+            'ID', 'LRN', 'First Name', 'Middle Name', 'Last Name', 
             'Grade', 'Section', 'Status'
         ]
         
@@ -1182,15 +1192,23 @@ def registrar_download_student_template(request):
             cell.fill = header_fill
             ws_students.column_dimensions[get_column_letter(col)].width = 15
         
+        # Add instruction row
+        instruction_text = "Leave ID blank for new students. Rows with existing IDs will be SKIPPED (not imported)."
+        ws_students.merge_cells('A2:N2')
+        instruction_cell = ws_students.cell(row=2, column=1, value=instruction_text)
+        instruction_cell.font = Font(italic=True, color="666666")
+        instruction_cell.alignment = Alignment(horizontal='left', wrap_text=True)
+        ws_students.row_dimensions[2].height = 30
+        
         # Add sample data row
         sample_data = [
-            '123456789012', 'John', 'Middle', 'Doe', 
+            '', '123456789012', 'John', 'Middle', 'Doe', 
             'Grade 1', 'A', 'ACTIVE',
             'Jane', '', 'Doe', 'jane.doe@email.com', '09123456789', 'MOTHER'
         ]
         
         for col, data in enumerate(sample_data, 1):
-            ws_students.cell(row=2, column=col, value=data)
+            ws_students.cell(row=3, column=col, value=data)
         
         # Create Reference Data sheet
         ws_ref = wb.create_sheet(title="Reference Data")
@@ -1349,14 +1367,14 @@ def registrar_import_students(request):
             
             # Get header row
             headers = []
-            for col in range(1, 14):  # Expecting 13 columns
+            for col in range(1, 15):  # Expecting 14 columns (added ID)
                 cell_value = ws.cell(row=1, column=col).value
                 if cell_value:
                     headers.append(str(cell_value).strip())
             
             # Validate headers
             expected_headers = [
-                'LRN', 'First Name', 'Middle Name', 'Last Name', 
+                'ID', 'LRN', 'First Name', 'Middle Name', 'Last Name', 
                 'Grade', 'Section', 'Status',
                 'Guardian First Name', 'Guardian Middle Name', 'Guardian Last Name',
                 'Guardian Email', 'Guardian Phone', 'Guardian Relationship'
@@ -1380,21 +1398,30 @@ def registrar_import_students(request):
             
             for row_num in range(2, ws.max_row + 1):
                 row_data = []
-                for col in range(1, 14):
+                for col in range(1, 15):
                     cell_value = ws.cell(row=row_num, column=col).value
                     row_data.append(str(cell_value).strip() if cell_value else '')
                 
                 # Skip empty rows
-                if not any(row_data[:7]):  # Check if student data is empty
+                if not any(row_data[:8]):  # Check if student data is empty
                     continue
                 
                 # Extract data
-                lrn, first_name, middle_name, last_name, grade_name, section_name, status = row_data[:7]
-                guardian_first, guardian_middle, guardian_last, guardian_email, guardian_phone, guardian_relationship = row_data[7:]
+                student_id, lrn, first_name, middle_name, last_name, grade_name, section_name, status = row_data[:8]
+                guardian_first, guardian_middle, guardian_last, guardian_email, guardian_phone, guardian_relationship = row_data[8:]
                 
                 row_errors = []
                 
-                # Validate required student fields
+                # Check if ID is provided - skip if exists
+                if student_id and student_id != 'nan' and student_id != '':
+                    try:
+                        if Student.objects.filter(id=int(float(student_id))).exists():
+                            # Skip rows with existing ID
+                            continue
+                    except ValueError:
+                        pass
+                
+                # Validate required student fields (only for new students)
                 if not lrn:
                     row_errors.append("LRN is required")
                 elif not re.match(r'^\d{12}$', lrn):
@@ -1492,7 +1519,7 @@ def registrar_import_students(request):
                 created_guardians = 0
                 
                 for data in students_data:
-                    # Create student
+                    # Create new student
                     student = Student.objects.create(
                         lrn=data['lrn'],
                         first_name=data['first_name'],
@@ -2634,12 +2661,15 @@ def registrar_get_guardian_details(request, guardian_id):
         guardian_data = {
             'id': guardian.id,
             'first_name': guardian.first_name,
+            'middle_name': guardian.middle_name or '',
             'last_name': guardian.last_name,
             'email': guardian.email or '',
             'phone': guardian.phone or '',
             'relationship': guardian.relationship or '',
             'student_id': guardian.student.id if guardian.student else None,
             'student_name': f"{guardian.student.first_name} {guardian.student.last_name}" if guardian.student else '',
+            'grade_id': guardian.student.grade.id if guardian.student and guardian.student.grade else None,
+            'section_id': guardian.student.section.id if guardian.student and guardian.student.section else None,
         }
         
         return JsonResponse({
@@ -3221,59 +3251,277 @@ def registrar_get_grade_sections(request, grade_id):
 # ==========================
 
 @login_required
-@user_passes_test(is_registrar)
-@login_required
-@user_passes_test(is_registrar)
+@user_passes_test(is_admin_or_registrar)
 def registrar_face_enroll(request):
-    """Face enrollment page for registering student faces"""
-    # Get filter options
-    grades = Grade.objects.all().order_by('name')
-    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
-    
-    # Dashboard stats (same as registrar_students)
-    total_students = Student.objects.count()
-    active_students = Student.objects.filter(status='ACTIVE').count()
-    inactive_students = Student.objects.filter(status='INACTIVE').count()
-    face_enrolled_count = Student.objects.exclude(face_path__isnull=True).exclude(face_path__exact='').count()
-    
-    context = {
-        'grades': grades,
-        'sections': sections,
-        'total_students': total_students,
-        'active_students': active_students,
-        'inactive_students': inactive_students,
-        'face_enrolled_count': face_enrolled_count,
-    }
-    return render(request, 'registrar/face_enroll.html', context)
-
-@login_required
-@user_passes_test(is_registrar)
-@require_http_methods(["GET"])
-def registrar_search_students_for_face_enroll(request):
-    """AJAX search/filter students for face enrollment"""
+    """Face enrollment page - same as students page but for face enrollment"""
+    # Get query parameters
     search_query = request.GET.get('search', '')
     grade_filter = request.GET.get('grade', '')
     section_filter = request.GET.get('section', '')
-    enrollment_status = request.GET.get('enrollment_status', '')  # 'enrolled', 'not_enrolled', 'all'
+    status_filter = request.GET.get('status', '')
     page_number = request.GET.get('page', 1)
-    items_per_page = request.GET.get('items_per_page', 12)
 
-    # Base queryset - only active students
-    students = Student.objects.filter(status='ACTIVE').select_related('grade', 'section').order_by('last_name', 'first_name')
+    # Base queryset
+    students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
 
     # Apply search
     if search_query:
         students = students.filter(
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
-            Q(lrn__icontains=search_query)
+            Q(lrn__icontains=search_query) |
+            Q(email__icontains=search_query)
         )
-    
-    # Apply filters
+
+    # Apply grade filter
     if grade_filter:
         students = students.filter(grade_id=grade_filter)
+
+    # Apply section filter
     if section_filter:
         students = students.filter(section_id=section_filter)
+
+    # Apply status filter
+    if status_filter:
+        students = students.filter(status=status_filter)
+
+    # Dashboard stats
+    total_students = Student.objects.count()
+    active_students = Student.objects.filter(status='ACTIVE').count()
+    inactive_students = Student.objects.filter(status='INACTIVE').count()
+    face_enrolled_count = Student.objects.exclude(face_path__isnull=True).exclude(face_path__exact='').count()
+    not_enrolled_count = Student.objects.filter(status='ACTIVE').filter(Q(face_path__isnull=True) | Q(face_path__exact='')).count()
+
+    # For filter dropdowns
+    grades = Grade.objects.all().order_by('name')
+    sections = Section.objects.select_related('grade').order_by('grade__name', 'name')
+
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(students, 10)
+    page_obj = paginator.get_page(page_number)
+    page_range = get_pagination_range(paginator, page_obj.number, 5)
+
+    context = {
+        'students': page_obj,
+        'grades': grades,
+        'sections': sections,
+        'search_query': search_query,
+        'grade_filter': grade_filter,
+        'section_filter': section_filter,
+        'status_filter': status_filter,
+        'total_students': total_students,
+        'active_students': active_students,
+        'inactive_students': inactive_students,
+        'face_enrolled_count': face_enrolled_count,
+        'not_enrolled_count': not_enrolled_count,
+        'page_range': page_range,
+    }
+    return render(request, 'registrar/face_enroll.html', context)
+
+
+def get_pagination_range(paginator, current_page, display_range=5):
+    """
+    Calculate pagination range to display in the template
+    This creates a better UX by showing ellipsis for large page sets
+    """
+    total_pages = paginator.num_pages
+    
+    # If total pages is less than display range, show all pages
+    if total_pages <= display_range:
+        return range(1, total_pages + 1)
+    
+    # Calculate the range to display
+    start_page = max(current_page - display_range // 2, 1)
+    end_page = min(start_page + display_range - 1, total_pages)
+    
+    # Adjust if we're near the end
+    if end_page - start_page + 1 < display_range:
+        start_page = max(end_page - display_range + 1, 1)
+    
+    return range(start_page, end_page + 1)
+
+@login_required
+@user_passes_test(is_admin_or_registrar)
+@require_http_methods(["GET"])
+def registrar_search_students_for_face_enroll(request):
+    """AJAX search/filter for students in face enroll page"""
+    try:
+        search_query = request.GET.get('search', '')
+        grade_filter = request.GET.get('grade', '')
+        section_filter = request.GET.get('section', '')
+        status_filter = request.GET.get('status', '')
+        page_number = request.GET.get('page', 1)
+        items_per_page = request.GET.get('items_per_page', 10)
+
+        # Base filter: Only show ACTIVE students
+        students = Student.objects.filter(status='ACTIVE').select_related('grade', 'section').order_by('-created_at')
+
+        if search_query:
+            students = students.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(lrn__icontains=search_query)
+            )
+        if grade_filter:
+            students = students.filter(grade_id=grade_filter)
+        if section_filter:
+            students = students.filter(section_id=section_filter)
+        
+        # Handle enrollment status filter
+        if status_filter == 'enrolled':
+            students = students.exclude(face_path__isnull=True).exclude(face_path__exact='')
+        elif status_filter == 'not_enrolled':
+            students = students.filter(Q(face_path__isnull=True) | Q(face_path__exact=''))
+
+        total_count = students.count()
+        try:
+            page_number = int(page_number)
+            items_per_page = int(items_per_page)
+        except (ValueError, TypeError):
+            page_number = 1
+            items_per_page = 10
+
+        from django.core.paginator import Paginator
+        paginator = Paginator(students, items_per_page)
+        page_obj = paginator.get_page(page_number)
+
+        student_data = []
+        for student in page_obj:
+            profile_pic = None
+            if student.profile_pic:
+                profile_pic = student.profile_pic
+
+            student_data.append({
+                'id': student.id,
+                'lrn': student.lrn,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'full_name': f"{student.first_name} {student.last_name}",
+                'grade': student.grade.name if student.grade else '',
+                'grade_id': student.grade.id if student.grade else None,
+                'section': student.section.name if student.section else '',
+                'section_id': student.section.id if student.section else None,
+                'status': student.status,
+                'is_face_enrolled': bool(student.face_path and student.face_path.strip()),
+                'profile_pic': profile_pic,
+                'created_at': student.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': student.created_at.strftime('%b %d, %Y'),
+            })
+
+        pagination = {
+            'current_page': page_obj.number,
+            'num_pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+            'start_index': page_obj.start_index(),
+            'end_index': page_obj.end_index(),
+            'total_count': total_count,
+        }
+
+        return JsonResponse({
+            'status': 'success',
+            'students': student_data,
+            'pagination': pagination,
+            'total_count': total_count,
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_admin_or_registrar)
+@require_http_methods(["POST"])
+def registrar_enroll_face(request):
+    """Handle face enrollment submission"""
+    try:
+        import json
+        import numpy as np
+        from django.core.files.base import ContentFile
+        from django.conf import settings
+        import os
+        import base64
+        
+        student_id = request.POST.get('student_id')
+        embeddings_json = request.POST.get('embeddings')
+        
+        if not student_id or not embeddings_json:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required data'
+            }, status=400)
+        
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student not found'
+            }, status=404)
+        
+        # Check if this is an update (student already has face_path)
+        is_update = bool(student.face_path)
+        
+        # Parse embeddings
+        embeddings = json.loads(embeddings_json)
+        
+        # Average the three embeddings (front, left, right)
+        embeddings_array = np.array(embeddings)
+        averaged_embedding = np.mean(embeddings_array, axis=0)
+        
+        # Save embedding to file
+        face_embeddings_dir = os.path.join(settings.BASE_DIR, 'face_embeddings')
+        os.makedirs(face_embeddings_dir, exist_ok=True)
+        
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        embedding_filename = f'student_{student.lrn}_{timestamp}.npy'
+        embedding_path = os.path.join(face_embeddings_dir, embedding_filename)
+        
+        # Save the numpy array
+        np.save(embedding_path, averaged_embedding)
+        
+        # Create student folder for images using LRN
+        student_images_dir = os.path.join(settings.MEDIA_ROOT, 'face_enrollment_images', f'student_{student.lrn}')
+        os.makedirs(student_images_dir, exist_ok=True)
+        
+        # Save images (front, left, right)
+        for position in ['front', 'left', 'right']:
+            image_file = request.FILES.get(f'image_{position}')
+            if image_file:
+                image_filename = f'{position}_{timestamp}.jpg'
+                image_path = os.path.join(student_images_dir, image_filename)
+                with open(image_path, 'wb') as f:
+                    for chunk in image_file.chunks():
+                        f.write(chunk)
+        
+        # Update student record with face_path
+        student.face_path = embedding_filename
+        student.save()
+        
+        # Force reload embeddings cache immediately so new face is available for recognition
+        from PROTECHAPP.face_recognition_engine import face_engine
+        face_engine.load_all_embeddings()
+        
+        action_message = 'updated' if is_update else 'enrolled'
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Face {action_message} successfully for {student.first_name} {student.last_name}'
+        })
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
     
     # Apply enrollment status filter
     if enrollment_status == 'enrolled':
@@ -3501,4 +3749,880 @@ def registrar_delete_face_embedding(request, student_id):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# ==========================
+# EXPORT FUNCTIONS
+# ==========================
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_students(request):
+    """Export students to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    export_format = request.GET.get('format', 'excel')
+    students = Student.objects.all().select_related('grade', 'section').order_by('id')
+    
+    headers = ['ID', 'LRN', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Grade', 'Section', 'Status', 'Face Enrolled']
+    data_rows = []
+    
+    for student in students:
+        data_rows.append([
+            student.id,
+            student.lrn or '',
+            student.first_name,
+            student.middle_name or '',
+            student.last_name,
+            student.email or '',
+            student.grade.name if student.grade else '',
+            student.section.name if student.section else '',
+            student.status,
+            'Yes' if student.face_path else 'No'
+        ])
+    
+    if export_format == 'pdf':
+        return export_registrar_data_to_pdf(headers, data_rows, "Students")
+    elif export_format == 'word':
+        return export_registrar_data_to_word(headers, data_rows, "Students")
+    else:
+        return export_registrar_data_to_excel(headers, data_rows, "Students")
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_guardians(request):
+    """Export guardians to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    export_format = request.GET.get('format', 'excel')
+    guardians = Guardian.objects.all().select_related('student').order_by('id')
+    
+    headers = ['ID', 'First Name', 'Middle Name', 'Last Name', 'Relationship', 'Contact Number', 'Email', 'Student Name']
+    data_rows = []
+    
+    for guardian in guardians:
+        data_rows.append([
+            guardian.id,
+            guardian.first_name,
+            guardian.middle_name or '',
+            guardian.last_name,
+            guardian.relationship or '',
+            guardian.contact_number or '',
+            guardian.email or '',
+            f"{guardian.student.first_name} {guardian.student.last_name}" if guardian.student else ''
+        ])
+    
+    if export_format == 'pdf':
+        return export_registrar_data_to_pdf(headers, data_rows, "Guardians")
+    elif export_format == 'word':
+        return export_registrar_data_to_word(headers, data_rows, "Guardians")
+    else:
+        return export_registrar_data_to_excel(headers, data_rows, "Guardians")
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_grades(request):
+    """Export grades to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    export_format = request.GET.get('format', 'excel')
+    grades = Grade.objects.all().order_by('id')
+    
+    headers = ['ID', 'Grade Name']
+    data_rows = [[grade.id, grade.name] for grade in grades]
+    
+    if export_format == 'pdf':
+        return export_registrar_data_to_pdf(headers, data_rows, "Grades")
+    elif export_format == 'word':
+        return export_registrar_data_to_word(headers, data_rows, "Grades")
+    else:
+        return export_registrar_data_to_excel(headers, data_rows, "Grades")
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_sections(request):
+    """Export sections to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    export_format = request.GET.get('format', 'excel')
+    sections = Section.objects.all().select_related('grade').order_by('id')
+    
+    headers = ['ID', 'Section Name', 'Grade', 'Room Number', 'Capacity']
+    data_rows = []
+    
+    for section in sections:
+        data_rows.append([
+            section.id,
+            section.name,
+            section.grade.name if section.grade else '',
+            section.room_number or '',
+            section.capacity or ''
+        ])
+    
+    if export_format == 'pdf':
+        return export_registrar_data_to_pdf(headers, data_rows, "Sections")
+    elif export_format == 'word':
+        return export_registrar_data_to_word(headers, data_rows, "Sections")
+    else:
+        return export_registrar_data_to_excel(headers, data_rows, "Sections")
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_attendance(request):
+    """Export attendance records to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    try:
+        export_format = request.GET.get('format', 'excel')
+        date_filter = request.GET.get('date', str(timezone.now().date()))
+        
+        attendance_records = Attendance.objects.filter(date=date_filter).select_related('student').order_by('id')
+        
+        headers = ['ID', 'Student Name', 'LRN', 'Date', 'Time In', 'Time Out', 'Status']
+        data_rows = []
+        
+        for record in attendance_records:
+            data_rows.append([
+                str(record.id),
+                f"{record.student.first_name} {record.student.last_name}",
+                record.student.lrn or '',
+                str(record.date),
+                str(record.time_in) if record.time_in else '',
+                str(record.time_out) if record.time_out else '',
+                record.status or ''
+            ])
+        
+        title = f"Attendance {date_filter}"
+        
+        if export_format == 'pdf':
+            return export_registrar_data_to_pdf(headers, data_rows, title)
+        elif export_format == 'word':
+            return export_registrar_data_to_word(headers, data_rows, title)
+        else:
+            return export_registrar_data_to_excel(headers, data_rows, title)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Export error: {error_trace}")
+        return JsonResponse({'success': False, 'error': f'Export failed: {str(e)}'}, status=500)
+
+@login_required
+@user_passes_test(is_registrar)
+def export_registrar_excused(request):
+    """Export excused absences to Excel, PDF, or Word"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as e:
+        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
+    
+    export_format = request.GET.get('format', 'excel')
+    
+    excused_absences = ExcusedAbsence.objects.all().select_related('student').order_by('id')
+
+    headers = ['ID', 'Student Name', 'LRN', 'Date Absent', 'Effective Date', 'End Date', 'Has Letter']
+    data_rows = []
+
+    for excuse in excused_absences:
+        student_name = f"{excuse.student.first_name} {excuse.student.last_name}"
+        has_letter = 'Yes' if excuse.excuse_letter else 'No'
+        data_rows.append([
+            str(excuse.id),
+            student_name,
+            excuse.student.lrn or '',
+            excuse.date_absent.strftime('%Y-%m-%d') if excuse.date_absent else '',
+            excuse.effective_date.strftime('%Y-%m-%d') if excuse.effective_date else '',
+            excuse.end_date.strftime('%Y-%m-%d') if excuse.end_date else '',
+            has_letter
+        ])
+    
+    if export_format == 'pdf':
+        return export_registrar_data_to_pdf(headers, data_rows, "Excused Absences")
+    elif export_format == 'word':
+        return export_registrar_data_to_word(headers, data_rows, "Excused Absences")
+    else:
+        return export_registrar_data_to_excel(headers, data_rows, "Excused Absences")
+
+def export_registrar_data_to_excel(headers, data_rows, title):
+    """Export data to Excel format"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = title[:31]
+    
+    # Write headers
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    
+    # Write data rows
+    for row_num, row_data in enumerate(data_rows, 2):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left', vertical='center')
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column = [cell for cell in column]
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[get_column_letter(column[0].column)].width = adjusted_width
+    
+    # Save to HTTP response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{title}.xlsx"'
+    wb.save(response)
+    return response
+
+def export_registrar_data_to_pdf(headers, data_rows, title):
+    """Export data to PDF format"""
+    try:
+        from reportlab.lib.pagesizes import letter, landscape
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import inch
+        
+        # Ensure all data is string
+        headers = [str(h) for h in headers]
+        data_rows = [[str(cell) if cell is not None else "" for cell in row] for row in data_rows]
+        
+        # If no data, add a message row
+        if not data_rows:
+            data_rows = [["No records found"] + [""] * (len(headers) - 1)]
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), topMargin=0.5*inch, bottomMargin=0.5*inch)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = styles['Heading1']
+        title_style.textColor = colors.HexColor('#1F4E78')
+        elements.append(Paragraph(str(title), title_style))
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Table
+        table_data = [headers] + data_rows
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F0F0F0')]),
+        ]))
+        elements.append(table)
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{title}.pdf"'
+        return response
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"PDF export error: {error_trace}")
+        # Re-raise the exception to be caught by the parent function
+        raise
+
+def export_registrar_data_to_word(headers, data_rows, title):
+    """Export data to Word format"""
+    from docx import Document
+    from docx.shared import Inches, RGBColor, Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    
+    doc = Document()
+    
+    # Title
+    heading = doc.add_heading(title, 0)
+    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    heading.runs[0].font.color.rgb = RGBColor(31, 78, 120)
+    
+    # Table
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = 'Light Grid Accent 1'
+    
+    # Headers
+    hdr_cells = table.rows[0].cells
+    for i, header in enumerate(headers):
+        hdr_cells[i].text = header
+        hdr_cells[i].paragraphs[0].runs[0].font.bold = True
+        hdr_cells[i].paragraphs[0].runs[0].font.color.rgb = RGBColor(31, 78, 120)
+    
+    # Data rows
+    for row_data in data_rows:
+        row_cells = table.add_row().cells
+        for i, value in enumerate(row_data):
+            row_cells[i].text = str(value)
+    
+    # Save to buffer
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    response['Content-Disposition'] = f'attachment; filename="{title}.docx"'
+    return response
+
+# ==========================
+# IMPORT FUNCTIONS
+# ==========================
+
+@login_required
+@user_passes_test(is_registrar)
+def import_registrar_grades(request):
+    """Import grades from CSV or Excel file"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    
+    try:
+        import pandas as pd
+    except ImportError:
+        return JsonResponse({'success': False, 'error': 'pandas library not installed'}, status=500)
+    
+    if 'import_file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file uploaded'}, status=400)
+    
+    file = request.FILES['import_file']
+    
+    try:
+        # Read file
+        if file.name.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif file.name.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid file format. Use CSV or Excel'}, status=400)
+        
+        # Normalize column names
+        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+        
+        # Map column variations
+        column_map = {
+            'id': ['id', 'grade_id'],
+            'name': ['name', 'grade_name', 'grade']
+        }
+        
+        # Rename columns
+        for standard, variations in column_map.items():
+            for var in variations:
+                if var in df.columns:
+                    df.rename(columns={var: standard}, inplace=True)
+                    break
+        
+        # Validate required columns
+        if 'name' not in df.columns:
+            return JsonResponse({'success': False, 'error': 'Missing required column: Name'}, status=400)
+        
+        created_count = 0
+        updated_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                grade_name = str(row['name']).strip()
+                
+                if not grade_name or grade_name.lower() == 'nan':
+                    continue
+                
+                # Check if ID is provided in Excel
+                grade_id = row.get('id') if 'id' in row and pd.notna(row['id']) else None
+                
+                if grade_id:
+                    # Skip rows with existing ID - don't import or update
+                    try:
+                        if Grade.objects.filter(id=int(grade_id)).exists():
+                            skipped_count += 1
+                            continue
+                    except ValueError:
+                        pass
+                
+                # Only import new grades (blank ID)
+                Grade.objects.create(name=grade_name)
+                created_count += 1
+                        
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        message = f"Successfully imported grades. Created: {created_count}, Updated: {updated_count}"
+        if errors:
+            message += f". Errors: {len(errors)}"
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'created': created_count,
+            'updated': updated_count,
+            'errors': errors[:10]  # Limit errors shown
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_registrar)
+def download_registrar_grades_template(request):
+    """Download Excel template for grade import"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Grades"
+    
+    # Headers
+    headers = ['ID', 'Grade Name']
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    
+    ws.column_dimensions['A'].width = 8
+    ws.column_dimensions['B'].width = 20
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Add instruction row
+    ws.cell(row=2, column=1, value="Instructions:")
+    ws.cell(row=2, column=2, value="Leave ID blank for new grades. Rows with existing IDs will be SKIPPED (not imported).")
+    ws.merge_cells('B2:B2')
+    ws.cell(row=2, column=1).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    ws.row_dimensions[2].height = 30
+    
+    # Sample data
+    sample_data = [
+        ['', 'Grade 7'],
+        ['', 'Grade 8'],
+        ['', 'Grade 9']
+    ]
+    
+    for row_num, row_data in enumerate(sample_data, 3):
+        for col_num, value in enumerate(row_data, 1):
+            ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Save to response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="grades_template.xlsx"'
+    wb.save(response)
+    return response
+
+@login_required
+@user_passes_test(is_registrar)
+def import_registrar_sections(request):
+    """Import sections from CSV or Excel file"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    
+    try:
+        import pandas as pd
+    except ImportError:
+        return JsonResponse({'success': False, 'error': 'pandas library not installed'}, status=500)
+    
+    if 'import_file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file uploaded'}, status=400)
+    
+    file = request.FILES['import_file']
+    
+    try:
+        # Read file
+        if file.name.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif file.name.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid file format'}, status=400)
+        
+        # Normalize columns
+        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+        
+        # Map column variations
+        column_map = {
+            'id': ['id', 'section_id'],
+            'name': ['name', 'section_name', 'section'],
+            'grade': ['grade', 'grade_name'],
+            'room_number': ['room_number', 'room', 'room_no'],
+            'capacity': ['capacity', 'max_capacity']
+        }
+        
+        for standard, variations in column_map.items():
+            for var in variations:
+                if var in df.columns:
+                    df.rename(columns={var: standard}, inplace=True)
+                    break
+        
+        # Validate required columns
+        if 'name' not in df.columns or 'grade' not in df.columns:
+            return JsonResponse({'success': False, 'error': 'Missing required columns: Name, Grade'}, status=400)
+        
+        created_count = 0
+        updated_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                section_name = str(row['name']).strip()
+                grade_name = str(row['grade']).strip()
+                
+                if not section_name or not grade_name or section_name.lower() == 'nan' or grade_name.lower() == 'nan':
+                    continue
+                
+                # Get grade
+                try:
+                    grade = Grade.objects.get(name=grade_name)
+                except Grade.DoesNotExist:
+                    errors.append(f"Row {index + 2}: Grade '{grade_name}' not found")
+                    continue
+                
+                section_data = {
+                    'name': section_name,
+                    'grade': grade
+                }
+                
+                if 'room_number' in df.columns and pd.notna(row.get('room_number')):
+                    section_data['room_number'] = str(row['room_number']).strip()
+                
+                if 'capacity' in df.columns and pd.notna(row.get('capacity')):
+                    try:
+                        section_data['capacity'] = int(row['capacity'])
+                    except:
+                        pass
+                
+                # Check if ID is provided in Excel
+                section_id = row.get('id') if 'id' in row and pd.notna(row['id']) else None
+                
+                if section_id:
+                    # Skip rows with existing ID - don't import or update
+                    try:
+                        if Section.objects.filter(id=int(section_id)).exists():
+                            skipped_count += 1
+                            continue
+                    except ValueError:
+                        pass
+                
+                # Only import new sections (blank ID)
+                Section.objects.create(**section_data)
+                created_count += 1
+                        
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        message = f"Successfully imported {created_count} sections. Skipped {skipped_count} existing records."
+        if errors:
+            message += f" Errors: {len(errors)}"
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'created': created_count,
+            'skipped': skipped_count,
+            'errors': errors[:10]
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_registrar)
+def download_registrar_sections_template(request):
+    """Download Excel template for section import"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sections"
+    
+    # Headers
+    headers = ['ID', 'Section Name', 'Grade', 'Room Number', 'Capacity']
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Add instruction row
+    ws.cell(row=2, column=1, value="Instructions:")
+    ws.cell(row=2, column=2, value="Leave ID blank for new sections. Rows with existing IDs will be SKIPPED (not imported).")
+    ws.cell(row=2, column=1).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    ws.merge_cells('B2:E2')
+    ws.row_dimensions[2].height = 30
+    
+    # Sample data
+    sample_data = [
+        ['', 'A', 'Grade 7', 'Room 101', '40'],
+        ['', 'B', 'Grade 7', 'Room 102', '40'],
+        ['', 'A', 'Grade 8', 'Room 201', '40']
+    ]
+    
+    for row_num, row_data in enumerate(sample_data, 3):
+        for col_num, value in enumerate(row_data, 1):
+            ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 8
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 12
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="sections_template.xlsx"'
+    wb.save(response)
+    return response
+
+@login_required
+@user_passes_test(is_registrar)
+def import_registrar_guardians(request):
+    """Import guardians from CSV or Excel file"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    
+    try:
+        import pandas as pd
+    except ImportError:
+        return JsonResponse({'success': False, 'error': 'pandas library not installed'}, status=500)
+    
+    if 'import_file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file uploaded'}, status=400)
+    
+    file = request.FILES['import_file']
+    
+    try:
+        # Read file
+        if file.name.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif file.name.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid file format'}, status=400)
+        
+        # Normalize columns
+        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+        
+        # Map column variations
+        column_map = {
+            'id': ['id', 'guardian_id'],
+            'first_name': ['first_name', 'firstname', 'fname'],
+            'middle_name': ['middle_name', 'middlename', 'mname'],
+            'last_name': ['last_name', 'lastname', 'lname'],
+            'relationship': ['relationship', 'relation'],
+            'contact_number': ['contact_number', 'phone', 'mobile', 'contact'],
+            'email': ['email', 'email_address'],
+            'student_name': ['student_name', 'student']
+        }
+        
+        for standard, variations in column_map.items():
+            for var in variations:
+                if var in df.columns:
+                    df.rename(columns={var: standard}, inplace=True)
+                    break
+        
+        # Validate required columns
+        required = ['first_name', 'last_name', 'student_name']
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            return JsonResponse({'success': False, 'error': f'Missing required columns: {", ".join(missing)}'}, status=400)
+        
+        created_count = 0
+        updated_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                first_name = str(row['first_name']).strip()
+                last_name = str(row['last_name']).strip()
+                student_name = str(row['student_name']).strip()
+                
+                if not first_name or not last_name or not student_name:
+                    continue
+                
+                # Find student
+                student_parts = student_name.split()
+                if len(student_parts) < 2:
+                    errors.append(f"Row {index + 2}: Invalid student name format")
+                    continue
+                
+                student_fname = student_parts[0]
+                student_lname = student_parts[-1]
+                
+                try:
+                    student = Student.objects.get(
+                        first_name__icontains=student_fname,
+                        last_name__icontains=student_lname
+                    )
+                except Student.DoesNotExist:
+                    errors.append(f"Row {index + 2}: Student '{student_name}' not found")
+                    continue
+                except Student.MultipleObjectsReturned:
+                    errors.append(f"Row {index + 2}: Multiple students found for '{student_name}'")
+                    continue
+                
+                guardian_data = {
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'student': student
+                }
+                
+                if 'middle_name' in df.columns and pd.notna(row.get('middle_name')):
+                    guardian_data['middle_name'] = str(row['middle_name']).strip()
+                
+                if 'relationship' in df.columns and pd.notna(row.get('relationship')):
+                    guardian_data['relationship'] = str(row['relationship']).strip()
+                
+                if 'contact_number' in df.columns and pd.notna(row.get('contact_number')):
+                    guardian_data['contact_number'] = str(row['contact_number']).strip()
+                
+                if 'email' in df.columns and pd.notna(row.get('email')):
+                    guardian_data['email'] = str(row['email']).strip()
+                
+                # Check if ID is provided in Excel
+                guardian_id = row.get('id') if 'id' in row and pd.notna(row['id']) else None
+                
+                if guardian_id:
+                    # Skip rows with existing ID - don't import or update
+                    try:
+                        if Guardian.objects.filter(id=int(guardian_id)).exists():
+                            skipped_count += 1
+                            continue
+                    except ValueError:
+                        pass
+                
+                # Only import new guardians (blank ID)
+                Guardian.objects.create(**guardian_data)
+                created_count += 1
+                        
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        message = f"Successfully imported {created_count} guardians. Skipped {skipped_count} existing records."
+        if errors:
+            message += f" Errors: {len(errors)}"
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'created': created_count,
+            'skipped': skipped_count,
+            'errors': errors[:10]
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_registrar)
+def download_registrar_guardians_template(request):
+    """Download Excel template for guardian import"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Guardians"
+    
+    # Headers
+    headers = ['ID', 'First Name', 'Middle Name', 'Last Name', 'Relationship', 'Contact Number', 'Email', 'Student Name']
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Add instruction row
+    ws.cell(row=2, column=1, value="Instructions:")
+    ws.cell(row=2, column=2, value="Leave ID blank for new guardians. Rows with existing IDs will be SKIPPED (not imported).")
+    ws.cell(row=2, column=1).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).font = Font(italic=True, color="666666", size=10)
+    ws.cell(row=2, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    ws.merge_cells('B2:H2')
+    ws.row_dimensions[2].height = 30
+    
+    # Sample data
+    sample_data = [
+        ['', 'John', '', 'Doe', 'FATHER', '09123456789', 'john.doe@email.com', 'Jane Doe'],
+        ['', 'Maria', '', 'Smith', 'MOTHER', '09987654321', 'maria.smith@email.com', 'John Smith']
+    ]
+    
+    for row_num, row_data in enumerate(sample_data, 3):
+        for col_num, value in enumerate(row_data, 1):
+            ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 8
+    for i in range(2, 9):
+        ws.column_dimensions[get_column_letter(i)].width = 18
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="guardians_template.xlsx"'
+    wb.save(response)
+    return response
 
