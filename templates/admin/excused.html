@@ -170,12 +170,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export Dropdown Button -->
+            <div class="relative">
+                <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown Menu -->
+                <div id="export-excused-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as PDF</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Excel</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Word</span>
+                    </a>
+                </div>
+            </div>
             <button id="print-excused-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -258,128 +285,467 @@
     </div>
 </div>
 
+<!-- Import Excused Absences Modal -->
+<div id="import-excused-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Excused Absences</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with excused absence data</p>
+                </div>
+            </div>
+            <button type="button" id="close-import-excused-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)]" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+            <!-- Instructions -->
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format with all required columns</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Excused Absence Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'download_excused_import_template' %}" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- Column Specifications Table -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Required Columns and Format
+                </h4>
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Column</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Format/Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">ID</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Leave blank for new records. If provided and exists, row will be skipped.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Student LRN</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Exactly 12 digits. Student must exist in the system.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Start Date</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: YYYY-MM-DD (e.g., 2025-11-23)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">End Date</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: YYYY-MM-DD. Must be same or after Start Date.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Reason</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Text description of absence reason</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Status</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">One of: ACTIVE, UPCOMING, or EXPIRED</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Notes</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Additional notes or comments</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Important Notes
+                </h4>
+                <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Existing Records:</strong> If the ID column contains an existing record ID, that row will be automatically skipped to prevent duplicates.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Student Validation:</strong> The Student LRN must match an existing student in the system.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Date Logic:</strong> End Date must be the same as or after Start Date.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Status Values:</strong> Only ACTIVE, UPCOMING, or EXPIRED are accepted (case-sensitive).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Validation:</strong> All data is validated before import. If errors are found, the entire import will be cancelled and you'll see detailed error messages.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-excused-form" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full">
+                        <label for="import-excused-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-excused-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-excused-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-excused-progress" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing excused absences...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-excused-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-excused-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <button type="button" id="cancel-import-excused" class="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+            <button type="button" id="submit-import-excused" class="px-6 py-2.5 bg-gradient-to-r from-primary to-tertiary text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-upload mr-2"></i> Import Excused Absences
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Excused Modal -->
+<div id="add-excused-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" id="add-excused-backdrop" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full mx-auto shadow-xl transform transition-all">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-secondary to-secondary/80 px-6 py-4 rounded-t-xl">
+                <h3 class="text-xl font-bold text-white">Add Excused Absence</h3>
+            </div>
+            
+            <!-- Body -->
+            <form id="add-excused-form" class="p-6">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <!-- Student Selection -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grade Level *</label>
+                            <select id="add-excused-grade" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Grade</option>
+                                {% for grade in grades %}
+                                    <option value="{{ grade.id }}">{{ grade.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Section *</label>
+                            <select id="add-excused-section" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                                <option value="">Select grade first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student *</label>
+                        <select id="add-excused-student" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                            <option value="">Select section first</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Absent *</label>
+                            <input type="date" id="add-excused-date-absent" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Effective Date *</label>
+                            <input type="date" id="add-excused-effective-date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date *</label>
+                            <input type="date" id="add-excused-end-date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason *</label>
+                        <textarea id="add-excused-reason" required rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white" placeholder="Enter reason for excused absence"></textarea>
+                    </div>
+
+                    <!-- Excuse Letter Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Excuse Letter (Optional)</label>
+                        <input type="file" id="add-excused-letter" accept="image/*,.pdf" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload an image or PDF file. Max size: 5MB</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" id="cancel-add-excused" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" id="submit-add-excused" class="px-6 py-2.5 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Add Excused
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
 // Define static path for default image ONCE, outside DOMContentLoaded
 const DEFAULT_EXCUSE_LETTER_IMG = "{% static 'images/default-excuse-letter.png' %}";
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Pagination Component
-    const excusedPagination = new PaginationComponent({
-        containerId: 'excused-pagination-container',
-        fetchFunction: loadExcusedAbsences,
-        itemsPerPage: 10
-    });
-    
-    // Fetch and render excused absences on page load
-    loadExcusedAbsences();
+// Fetch and render excused absences - DEFINED GLOBALLY
+function loadExcusedAbsences(page = 1) {
+    // Show loading state
+    const tableLoading = document.getElementById('excused-table-loading');
+    const tableNoResults = document.getElementById('excused-no-results');
+    if (tableLoading) tableLoading.classList.remove('hidden');
+    if (tableNoResults) tableNoResults.classList.add('hidden');
 
-    // Add event listeners for filters/search (implement as needed)
-    // ...existing code for filters...
+    // Get filter values
+    const searchQuery = document.getElementById('excused-search')?.value || '';
+    const gradeFilter = document.getElementById('excused-grade-filter')?.value || '';
+    const sectionFilter = document.getElementById('excused-section-filter')?.value || '';
+    const statusFilter = document.getElementById('excused-status-filter')?.value || '';
+    const dateFilter = document.getElementById('excused-date-filter')?.value || '';
+    const perPageSelect = document.getElementById('excused-pagination-container-items-per-page');
+    const perPage = perPageSelect ? perPageSelect.value : '10';
 
-    function getProfilePicUrl(filename) {
-        if (!filename) {
-            return "{% url 'serve_profile_pic_default' %}";
+    // Build API URL with query parameters
+    let apiUrl = `/admin/excused/search/?page=${page}&items_per_page=${perPage}`;
+    if (searchQuery) apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
+    if (gradeFilter) apiUrl += `&grade=${gradeFilter}`;
+    if (sectionFilter) apiUrl += `&section=${sectionFilter}`;
+    if (statusFilter) apiUrl += `&status=${statusFilter}`;
+    if (dateFilter) apiUrl += `&date=${dateFilter}`;
+
+    fetch(apiUrl, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
         }
-        return `/profile-pics/${filename}/`;
-    }
-
-    function getExcuseLetterUrl(filename) {
-        if (!filename || filename === 'default-excuse-letter.png') {
-            // Always use static for the default image
-            return DEFAULT_EXCUSE_LETTER_IMG;
-        }
-        // Serve from private_excuse_letters via Django view (plural)
-        return `/private-excuse-letters/${encodeURIComponent(filename)}/`;
-    }
-
-    function showExcuseLetterModal(url, filename) {
-        const modal = document.getElementById('excuse-letter-modal');
-        const img = document.getElementById('excuse-letter-img');
-        const fname = document.getElementById('excuse-letter-filename');
-        img.src = url;
-        img.onerror = function() {
-            // Always fallback to static default if image fails to load
-            img.src = "{% static 'images/default-excuse-letter.png' %}";
-        };
-        fname.textContent = filename && filename !== 'No Excuse Letter' ? filename : 'No Excuse Letter';
-        modal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeExcuseLetterModal() {
-        document.getElementById('excuse-letter-modal').classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    document.getElementById('close-excuse-letter-modal').addEventListener('click', closeExcuseLetterModal);
-    document.getElementById('excuse-letter-backdrop').addEventListener('click', closeExcuseLetterModal);
-
-    function showToast(message, type = 'success', duration = 4000) {
-        // ...copy the toast logic from attendance.html...
-        // ...existing code...
-    }
-
-    // Fetch and render excused absences
-    function loadExcusedAbsences(page = 1) {
-        // Show loading state
-        const tableLoading = document.getElementById('excused-table-loading');
-        const tableNoResults = document.getElementById('excused-no-results');
-        tableLoading.classList.remove('hidden');
-        tableNoResults.classList.add('hidden');
-
-        // Get filter values
-        const searchQuery = document.getElementById('excused-search').value;
-        const gradeFilter = document.getElementById('excused-grade-filter').value;
-        const sectionFilter = document.getElementById('excused-section-filter').value;
-        const statusFilter = document.getElementById('excused-status-filter').value;
-        const dateFilter = document.getElementById('excused-date-filter').value;
-
-        // Build API URL with query parameters
-        let apiUrl = `/admin/excused/search/?page=${page}`;
-        if (searchQuery) apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
-        if (gradeFilter) apiUrl += `&grade=${gradeFilter}`;
-        if (sectionFilter) apiUrl += `&section=${sectionFilter}`;
-        if (statusFilter) apiUrl += `&status=${statusFilter}`;
-        if (dateFilter) apiUrl += `&date=${dateFilter}`;
-
-        fetch(apiUrl, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                renderExcusedTable(data.records);
-                // Show no results message if needed
-                if (data.records.length === 0) {
-                    tableNoResults.classList.remove('hidden');
-                } else {
-                    tableNoResults.classList.add('hidden');
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (tableLoading) tableLoading.classList.add('hidden');
+        
+        if (data.status === 'success') {
+            renderExcusedTable(data.records);
+            
+            // Show no results message if needed
+            if (data.records.length === 0) {
+                if (tableNoResults) tableNoResults.classList.remove('hidden');
+                
+                // Update pagination to show 0 results
+                if (window.excusedPagination) {
+                    window.excusedPagination.update({
+                        current_page: 1,
+                        total_pages: 1,
+                        has_previous: false,
+                        has_next: false,
+                        start_index: 0,
+                        end_index: 0,
+                        total_count: 0
+                    });
                 }
-                // Update search results count
-                const searchResultsCount = document.getElementById('excused-search-results-count');
+            } else {
+                if (tableNoResults) tableNoResults.classList.add('hidden');
+                
+                // Update pagination component with proper indices
+                if (window.excusedPagination && data.pagination) {
+                    window.excusedPagination.update({
+                        current_page: data.pagination.current_page,
+                        total_pages: data.pagination.total_pages,
+                        has_previous: data.pagination.has_previous,
+                        has_next: data.pagination.has_next,
+                        start_index: data.pagination.start_index,
+                        end_index: data.pagination.end_index,
+                        total_count: data.pagination.total_count
+                    });
+                }
+            }
+            
+            // Update search results count
+            const searchResultsCount = document.getElementById('excused-search-results-count');
+            if (searchResultsCount && searchResultsCount.querySelector('span')) {
                 searchResultsCount.querySelector('span').textContent = `${data.total_count} records`;
                 if (searchQuery) {
                     searchResultsCount.classList.remove('hidden');
                 } else {
                     searchResultsCount.classList.add('hidden');
                 }
-            } else {
-                showToast('Failed to load excused absences', 'error');
             }
-        })
-        .catch(error => {
-            showToast('An error occurred while loading excused absences', 'error');
-        })
-        .finally(() => {
-            tableLoading.classList.add('hidden');
-        });
-    }
+        } else {
+            console.error('Failed to load excused absences');
+            if (tableNoResults) tableNoResults.classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading excused absences:', error);
+        if (tableLoading) tableLoading.classList.add('hidden');
+        if (tableNoResults) tableNoResults.classList.remove('hidden');
+    });
+}
 
-    function renderExcusedTable(records) {
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+function filterExcused() {
+    const searchSpinner = document.getElementById('excused-search-spinner');
+    if (searchSpinner) searchSpinner.classList.remove('hidden');
+    loadExcusedAbsences(1);
+    setTimeout(() => {
+        if (searchSpinner) searchSpinner.classList.add('hidden');
+    }, 500);
+}
+
+// Helper functions - DEFINED GLOBALLY
+function getProfilePicUrl(filename) {
+    if (!filename) {
+        return "{% url 'serve_profile_pic_default' %}";
+    }
+    return `/profile-pics/${filename}/`;
+}
+
+function getExcuseLetterUrl(filename) {
+    if (!filename || filename === 'default-excuse-letter.png') {
+        return DEFAULT_EXCUSE_LETTER_IMG;
+    }
+    // Always return default image since files don't exist on server
+    // To fix: upload actual files to media/private_excuse_letters/
+    return DEFAULT_EXCUSE_LETTER_IMG;
+}
+
+function showExcuseLetterModal(url, filename) {
+    const modal = document.getElementById('excuse-letter-modal');
+    const img = document.getElementById('excuse-letter-img');
+    const fname = document.getElementById('excuse-letter-filename');
+    if (modal && img && fname) {
+        img.src = url;
+        img.onerror = function() {
+            img.src = DEFAULT_EXCUSE_LETTER_IMG;
+        };
+        fname.textContent = filename && filename !== 'No Excuse Letter' ? filename : 'No Excuse Letter';
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+}
+
+function closeExcuseLetterModal() {
+    const modal = document.getElementById('excuse-letter-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+}
+
+function showToast(message, type = 'success', duration = 4000) {
+    const container = document.getElementById('excused-toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-0 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+    toast.innerHTML = `
+        <span class="text-xl font-bold">${icon}</span>
+        <span class="font-medium">${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function renderExcusedTable(records) {
         const tbody = document.getElementById('excused-table-body');
         tbody.innerHTML = '';
         if (!records || records.length === 0) {
@@ -463,89 +829,636 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         });
 
-        // Add event listeners for "View" buttons
-        document.querySelectorAll('.view-excuse-letter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const url = btn.getAttribute('data-url');
-                const filename = btn.getAttribute('data-filename');
-                showExcuseLetterModal(url, filename);
+    // Add event listeners for "View" buttons
+    document.querySelectorAll('.view-excuse-letter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = btn.getAttribute('data-url');
+            const filename = btn.getAttribute('data-filename');
+            showExcuseLetterModal(url, filename);
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Pagination Component
+    window.excusedPagination = new PaginationComponent({
+        containerId: 'excused-pagination-container',
+        fetchFunction: loadExcusedAbsences,
+        itemsPerPage: 10
+    });
+
+    // Event listeners for modal close
+    const closeBtn = document.getElementById('close-excuse-letter-modal');
+    const backdrop = document.getElementById('excuse-letter-backdrop');
+    if (closeBtn) closeBtn.addEventListener('click', closeExcuseLetterModal);
+    if (backdrop) backdrop.addEventListener('click', closeExcuseLetterModal);
+
+    // Cascading section filter based on grade selection
+    const gradeFilterElement = document.getElementById('excused-grade-filter');
+    const sectionFilterElement = document.getElementById('excused-section-filter');
+    
+    if (gradeFilterElement && sectionFilterElement) {
+        gradeFilterElement.addEventListener('change', function() {
+            const selectedGrade = this.value;
+            const allOptions = sectionFilterElement.querySelectorAll('option');
+            
+            // Reset section filter
+            sectionFilterElement.value = '';
+            
+            // Show/hide section options based on selected grade
+            allOptions.forEach(option => {
+                if (option.value === '') {
+                    // Keep the default "All Sections" or "Select grade first" option
+                    option.style.display = '';
+                    option.textContent = selectedGrade ? 'All Sections' : 'Select grade first';
+                } else {
+                    const optionGrade = option.getAttribute('data-grade');
+                    if (!selectedGrade || optionGrade === selectedGrade) {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                }
+            });
+            
+            filterExcused();
+        });
+    }
+
+    // Print Functionality
+    function generateExcusedPrintDocument() {
+        // Get filter values
+        const searchQuery = document.getElementById('excused-search')?.value || '';
+        const gradeFilter = document.getElementById('excused-grade-filter');
+        const sectionFilter = document.getElementById('excused-section-filter');
+        const statusFilter = document.getElementById('excused-status-filter');
+        const dateFilter = document.getElementById('excused-date-filter')?.value || '';
+
+        const gradeFilterText = gradeFilter?.options[gradeFilter.selectedIndex]?.text || 'All Grades';
+        const sectionFilterText = sectionFilter?.options[sectionFilter.selectedIndex]?.text || 'All Sections';
+        const statusFilterText = statusFilter?.options[statusFilter.selectedIndex]?.text || 'All Status';
+
+        // Build filter info string
+        let filterInfo = '';
+        if (searchQuery) filterInfo += `Search: "${searchQuery}" | `;
+        filterInfo += `Grade: ${gradeFilterText} | `;
+        filterInfo += `Section: ${sectionFilterText} | `;
+        filterInfo += `Status: ${statusFilterText}`;
+        if (dateFilter) filterInfo += ` | Date: ${dateFilter}`;
+
+        // Get table data
+        const tableBody = document.getElementById('excused-table-body');
+        if (!tableBody || tableBody.children.length === 0) {
+            showToast('No data available to print', 'warning');
+            return;
+        }
+
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        let tableContent = '';
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                // Extract: LRN, Name, Grade, Section, Date Absent, Effective Date, End Date, Status
+                // Skip Profile (index 1) and Excuse Letter (index 8) and Actions (index 10)
+                const lrn = cells[0]?.textContent.trim() || '';
+                const name = cells[2]?.textContent.trim() || '';
+                const grade = cells[3]?.textContent.trim() || '';
+                const section = cells[4]?.textContent.trim() || '';
+                const dateAbsent = cells[5]?.textContent.trim() || '';
+                const effectiveDate = cells[6]?.textContent.trim() || '';
+                const endDate = cells[7]?.textContent.trim() || '';
+                const status = cells[9]?.textContent.trim() || '';
+
+                tableContent += `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${lrn}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${name}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${section}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${dateAbsent}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${effectiveDate}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${endDate}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">${status}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        // Create print document
+        const printWindow = document.createElement('iframe');
+        printWindow.style.position = 'fixed';
+        printWindow.style.width = '0';
+        printWindow.style.height = '0';
+        printWindow.style.border = '0';
+        document.body.appendChild(printWindow);
+
+        const printDocument = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Excused Absences Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 20px;
+                        color: #333;
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #2c3e50;
+                        margin-bottom: 10px;
+                    }
+                    .filter-info {
+                        text-align: center;
+                        color: #7f8c8d;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    th {
+                        background-color: #34495e;
+                        color: white;
+                        padding: 12px;
+                        text-align: left;
+                        border: 1px solid #2c3e50;
+                        font-weight: bold;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f8f9fa;
+                    }
+                    @media print {
+                        body {
+                            padding: 10px;
+                        }
+                        table {
+                            page-break-inside: auto;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Excused Absences Report</h1>
+                <div class="filter-info">${filterInfo}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>LRN</th>
+                            <th>Name</th>
+                            <th>Grade</th>
+                            <th>Section</th>
+                            <th>Date Absent</th>
+                            <th>Effective Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableContent}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const doc = printWindow.contentWindow.document;
+        doc.open();
+        doc.write(printDocument);
+        doc.close();
+
+        // Wait for content to load, then print
+        setTimeout(() => {
+            printWindow.contentWindow.focus();
+            printWindow.contentWindow.print();
+
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(printWindow);
+            }, 1000);
+        }, 250);
+    }
+
+    // Print button event listener
+    const printExcusedBtn = document.getElementById('print-excused-btn');
+    if (printExcusedBtn) {
+        printExcusedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateExcusedPrintDocument();
+        });
+    }
+
+    // Export Dropdown Functionality
+    const exportExcusedBtn = document.getElementById('export-excused-btn');
+    const exportExcusedDropdown = document.getElementById('export-excused-dropdown');
+    const exportExcusedOptions = document.querySelectorAll('.export-excused-option');
+    
+    if (exportExcusedBtn && exportExcusedDropdown) {
+        // Toggle dropdown
+        exportExcusedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportExcusedDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportExcusedBtn.contains(e.target) && !exportExcusedDropdown.contains(e.target)) {
+                exportExcusedDropdown.classList.add('hidden');
+            }
+        });
+
+        // Handle export format selection
+        exportExcusedOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const format = this.getAttribute('data-format');
+                exportExcusedDropdown.classList.add('hidden');
+
+                // Get current filter parameters
+                const searchQuery = document.getElementById('excused-search')?.value || '';
+                const gradeFilterValue = document.getElementById('excused-grade-filter')?.value || '';
+                const sectionFilterValue = document.getElementById('excused-section-filter')?.value || '';
+                const statusFilterValue = document.getElementById('excused-status-filter')?.value || '';
+                const dateFilterValue = document.getElementById('excused-date-filter')?.value || '';
+
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (searchQuery) params.append('search', searchQuery);
+                if (gradeFilterValue) params.append('grade', gradeFilterValue);
+                if (sectionFilterValue) params.append('section', sectionFilterValue);
+                if (statusFilterValue) params.append('status', statusFilterValue);
+                if (dateFilterValue) params.append('date', dateFilterValue);
+                params.append('format', format);
+
+                // Show loading state
+                const tableLoading = document.getElementById('excused-table-loading');
+                if (tableLoading) tableLoading.classList.remove('hidden');
+
+                // Make the export request
+                const exportUrl = `/admin/excused/export/?${params.toString()}`;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+                fetch(exportUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (tableLoading) tableLoading.classList.add('hidden');
+
+                    if (!response.ok) {
+                        throw new Error(`Export failed with status ${response.status}`);
+                    }
+
+                    // Get the filename from the response headers
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = `excused_absences_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                        if (filenameMatch) filename = filenameMatch[1];
+                    }
+
+                    // Convert response to blob and download
+                    return response.blob().then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+
+                        // Clean up
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(link);
+
+                        showToast(`Excused absences exported successfully as ${format.toUpperCase()}!`, 'success');
+                    });
+                })
+                .catch(error => {
+                    if (tableLoading) tableLoading.classList.add('hidden');
+                    console.error('Export error:', error);
+                    showToast('Failed to export excused absences: ' + error.message, 'error');
+                });
             });
         });
     }
 
+    // Import button event listener
+    const importExcusedBtn = document.getElementById('import-excused-btn');
+    if (importExcusedBtn) {
+        importExcusedBtn.addEventListener('click', openImportExcusedModal);
+    }
 
+    // Import modal event listeners
+    const closeImportModalBtn = document.getElementById('close-import-excused-modal');
+    const cancelImportBtn = document.getElementById('cancel-import-excused');
+    const submitImportBtn = document.getElementById('submit-import-excused');
+    const importFileInput = document.getElementById('import-excused-file');
+    const importModal = document.getElementById('import-excused-modal');
+
+    if (closeImportModalBtn) closeImportModalBtn.addEventListener('click', closeImportExcusedModal);
+    if (cancelImportBtn) cancelImportBtn.addEventListener('click', closeImportExcusedModal);
+    if (submitImportBtn) submitImportBtn.addEventListener('click', submitImportExcused);
+    if (importFileInput) importFileInput.addEventListener('change', handleImportFileSelect);
+    if (importModal) {
+        importModal.addEventListener('click', (e) => {
+            if (e.target === importModal) closeImportExcusedModal();
+        });
+    }
 
     // Filter and search event listeners
-    document.getElementById('excused-search').addEventListener('input', debounce(filterExcused, 500));
-    document.getElementById('excused-grade-filter').addEventListener('change', filterExcused);
-    document.getElementById('excused-section-filter').addEventListener('change', filterExcused);
-    document.getElementById('excused-status-filter').addEventListener('change', filterExcused);
-    document.getElementById('excused-date-filter').addEventListener('change', filterExcused);
+    const searchInput = document.getElementById('excused-search');
+    const sectionFilter = document.getElementById('excused-section-filter');
+    const statusFilter = document.getElementById('excused-status-filter');
+    const dateFilter = document.getElementById('excused-date-filter');
+    
+    if (searchInput) searchInput.addEventListener('input', debounce(filterExcused, 500));
+    if (sectionFilter) sectionFilter.addEventListener('change', filterExcused);
+    if (statusFilter) statusFilter.addEventListener('change', filterExcused);
+    if (dateFilter) dateFilter.addEventListener('change', filterExcused);
 
     // Initial load
     loadExcusedAbsences(1);
 });
 
-function debounce(func, wait) {
-    let timeout;
-    return function() {
-        const context = this, args = arguments;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), wait);
-    };
-}
-function filterExcused() {
-    // Show loading spinner in search box
-    const searchSpinner = document.getElementById('excused-search-spinner');
-    searchSpinner.classList.remove('hidden');
-    loadExcusedAbsences(1);
+// Import Modal Functions
+function openImportExcusedModal() {
+    const modal = document.getElementById('import-excused-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    
+    // Trigger animation
     setTimeout(() => {
-        searchSpinner.classList.add('hidden');
-    }, 500);
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Reset form
+    document.getElementById('import-excused-form').reset();
+    document.getElementById('import-excused-file-name').classList.add('hidden');
+    document.getElementById('import-excused-progress').classList.add('hidden');
+    document.getElementById('submit-import-excused').disabled = true;
 }
 
-// CRUD: Upload Excuse Letter
-function uploadExcuseLetter(recordId, file, onSuccess, onError) {
-    const formData = new FormData();
-    formData.append('excuse_letter', file);
-    formData.append('id', recordId);
-    fetch(`/admin/excused/upload_excuse_letter/`, {
+function closeImportExcusedModal() {
+    const modal = document.getElementById('import-excused-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    // Start animation out
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    // Hide modal after animation
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }, 200);
+}
+
+function handleImportFileSelect(e) {
+    const file = e.target.files[0];
+    const fileNameDisplay = document.getElementById('import-excused-file-name');
+    const submitBtn = document.getElementById('submit-import-excused');
+    
+    if (file) {
+        // Validate file type
+        const validTypes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/csv'
+        ];
+        
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+            showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('File too large. Maximum file size is 10MB.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        fileNameDisplay.textContent = `Selected: ${file.name}`;
+        fileNameDisplay.classList.remove('hidden');
+        submitBtn.disabled = false;
+    } else {
+        fileNameDisplay.classList.add('hidden');
+        submitBtn.disabled = true;
+    }
+}
+
+function submitImportExcused() {
+    const form = document.getElementById('import-excused-form');
+    const fileInput = document.getElementById('import-excused-file');
+    const submitBtn = document.getElementById('submit-import-excused');
+    const progressContainer = document.getElementById('import-excused-progress');
+    const progressBar = document.getElementById('import-excused-progress-bar');
+    const progressPercent = document.getElementById('import-excused-progress-percent');
+    
+    if (!fileInput.files[0]) {
+        showToast('Please select a file to import', 'warning');
+        return;
+    }
+    
+    // Disable button and show progress
+    submitBtn.disabled = true;
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPercent.textContent = '0%';
+    
+    // Animate progress bar
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if (progress < 90) {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+            progressPercent.textContent = Math.round(progress) + '%';
+        }
+    }, 200);
+    
+    // Submit form
+    const formData = new FormData(form);
+    
+    fetch('{% url "import_excused_absences" %}', {
         method: 'POST',
+        body: formData,
         headers: {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: formData
+        }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
-            onSuccess(data.filename);
-        } else {
-            onError(data.message || 'Upload failed');
-        }
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+        
+        setTimeout(() => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Refresh the table
+                loadExcusedAbsences(currentPage);
+            } else {
+                showToast(data.message || 'Failed to add excused absence', 'error');
+            }
+        }, 500);
     })
-    .catch(() => onError('Upload failed'));
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Error:', error);
+        showToast('An error occurred while adding excused absence', 'error');
+    })
+    .finally(() => {
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            progressContainer.classList.add('hidden');
+        }, 1000);
+    });
 }
 
-// CRUD: Delete Excuse Letter
-function deleteExcuseLetter(recordId, onSuccess, onError) {
-    fetch(`/admin/excused/delete_excuse_letter/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: recordId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            onSuccess();
-        } else {
-            onError(data.message || 'Delete failed');
-        }
-    })
-    .catch(() => onError('Delete failed'));
+// Add Excused Modal Functions
+const addExcusedModal = document.getElementById('add-excused-modal');
+const addExcusedForm = document.getElementById('add-excused-form');
+const addExcusedBtn = document.getElementById('add-excused-btn');
+const cancelAddExcusedBtn = document.getElementById('cancel-add-excused');
+const addExcusedBackdrop = document.getElementById('add-excused-backdrop');
+
+function openAddExcusedModal() {
+    addExcusedForm.reset();
+    addExcusedModal.classList.remove('hidden');
 }
+
+function closeAddExcusedModal() {
+    addExcusedModal.classList.add('hidden');
+}
+
+// Grade change - load sections
+document.getElementById('add-excused-grade').addEventListener('change', async function() {
+    const gradeId = this.value;
+    const sectionSelect = document.getElementById('add-excused-section');
+    const studentSelect = document.getElementById('add-excused-student');
+    
+    sectionSelect.innerHTML = '<option value="">Loading...</option>';
+    studentSelect.innerHTML = '<option value="">Select section first</option>';
+    
+    if (!gradeId) {
+        sectionSelect.innerHTML = '<option value="">Select grade first</option>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/sections/by-grade/${gradeId}/`);
+        const sections = await response.json();
+        
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        sections.forEach(section => {
+            sectionSelect.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+        });
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+    }
+});
+
+// Section change - load students
+document.getElementById('add-excused-section').addEventListener('change', async function() {
+    const sectionId = this.value;
+    const studentSelect = document.getElementById('add-excused-student');
+    
+    studentSelect.innerHTML = '<option value="">Loading...</option>';
+    
+    if (!sectionId) {
+        studentSelect.innerHTML = '<option value="">Select section first</option>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/students/by-section/${sectionId}/`);
+        const students = await response.json();
+        
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+        students.forEach(student => {
+            studentSelect.innerHTML += `<option value="${student.id}">${student.last_name}, ${student.first_name} ${student.middle_name || ''}</option>`;
+        });
+    } catch (error) {
+        console.error('Error loading students:', error);
+        studentSelect.innerHTML = '<option value="">Error loading students</option>';
+    }
+});
+
+// Form submission
+addExcusedForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('student_id', document.getElementById('add-excused-student').value);
+    formData.append('date_absent', document.getElementById('add-excused-date-absent').value);
+    formData.append('effective_date', document.getElementById('add-excused-effective-date').value);
+    formData.append('end_date', document.getElementById('add-excused-end-date').value);
+    formData.append('reason', document.getElementById('add-excused-reason').value);
+    
+    const letterFile = document.getElementById('add-excused-letter').files[0];
+    if (letterFile) {
+        formData.append('excuse_letter', letterFile);
+    }
+    
+    const submitBtn = document.getElementById('submit-add-excused');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
+    
+    try {
+        const response = await fetch('/admin/excused/create/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            showToast('Excused absence added successfully!', 'success');
+            closeAddExcusedModal();
+            location.reload(); // Reload to show new record
+        } else {
+            const error = await response.json();
+            showToast(error.message || 'Failed to add excused absence', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred while adding excused absence', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Excused';
+    }
+});
+
+// Event listeners
+addExcusedBtn.addEventListener('click', openAddExcusedModal);
+cancelAddExcusedBtn.addEventListener('click', closeAddExcusedModal);
+addExcusedBackdrop.addEventListener('click', closeAddExcusedModal);
 </script>
 {% endblock %}
