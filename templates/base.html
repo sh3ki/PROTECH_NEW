@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROTECH - Face Recognition Attendance System</title>
+    <!-- Favicon (site-wide) -->
+    <link rel="icon" type="image/png" href="{% static 'public/images/protechlogowhite.png' %}">
+    <link rel="shortcut icon" href="{% static 'public/images/protechlogowhite.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'public/images/protechlogowhite.png' %}">
     <!-- TailwindCSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,12 +17,14 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#023c82',      /* Dark blue */
-                        secondary: '#4c9cfc',    /* Medium blue */
-                        tertiary: '#7cb4fc',     /* Light blue */
+                        /* New system blue theme */
+                        primary: '#1e40af',      /* Indigo / deep blue */
+                        secondary: '#2563eb',    /* Bright blue */
+                        tertiary: '#6366f1',     /* Soft indigo */
+                        surface: '#0b1f4a',      /* System surface (dark blue) */
                         accent: '#7c848c',       /* Medium gray */
                         light: '#c4cfdb',        /* Light gray/blue */
-                        dark: '#3c444c',         /* Dark gray */
+                        dark: '#0b1220',         /* Very dark blue/near-black for dark mode */
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -40,6 +46,9 @@
         }
     </script>
     <style type="text/tailwindcss">
+        :root {
+            --surface: #0b1f4a; /* dark-blue surface */
+        }
         @layer components {
             .school-btn {
                 @apply text-white bg-primary hover:bg-secondary py-3 px-8 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg text-center;
@@ -51,7 +60,7 @@
                 @apply max-w-full mx-auto px-4 sm:px-6 lg:px-8;
             }
             .school-card {
-                @apply bg-white dark:bg-dark rounded-lg shadow-md p-6 border-2 border-primary/20 dark:border-tertiary/20 transition-all duration-300;
+                @apply bg-surface dark:bg-dark rounded-lg shadow-md p-6 border-2 border-primary/20 dark:border-tertiary/20 transition-all duration-300 text-white;
             }
             .toggle-checkbox:checked {
                 @apply right-0 border-secondary;
@@ -72,7 +81,12 @@
     </style>
 </head>
 <body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
-    <header class="bg-primary shadow-md">
+    <!-- Full-bleed background image (landscape-friendly) -->
+    <div class="fixed inset-0 z-0">
+        <img src="{% static 'images/background.png' %}" alt="background" class="w-full h-full object-cover object-center">
+        <div class="absolute inset-0 bg-white/10 dark:bg-black/20"></div>
+    </div>
+    <header class="bg-primary shadow-md relative" style="z-index: 100;">
         <div class="school-container py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <a href="{% url 'landing_page' %}" class="flex items-center gap-2 font-bold text-white text-2xl">
@@ -90,30 +104,27 @@
             <div class="flex items-center gap-4">
                 <p class="text-white hidden md:block"></p>
                 <!-- Dark mode toggle -->
-                <div class="flex items-center ml-3">
-                    <div class="relative inline-block w-12 mr-2 align-middle select-none">
-                        <input type="checkbox" id="toggle-dark" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                        <label for="toggle-dark" class="toggle-label block overflow-hidden h-6 rounded-full bg-accent cursor-pointer"></label>
-                    </div>
-                    <span class="text-white hidden md:inline-block">
-                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <button id="theme-toggle" class="relative inline-flex items-center h-10 rounded-full w-20 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200 dark:bg-gray-700" aria-label="Toggle dark mode">
+                    <span class="sr-only">Toggle dark mode</span>
+                    <span id="toggle-switch" class="inline-flex items-center justify-center h-8 w-8 transform transition-transform duration-300 ease-in-out translate-x-1 bg-white dark:bg-gray-800 rounded-full shadow-md">
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 transition-opacity duration-200" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
                         </svg>
-                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400 absolute transition-opacity duration-200 opacity-0" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </span>
-                </div>
+                </button>
             </div>
         </div>
     </header>
     
-    <main class="school-container py-8 flex-grow animate-fade-in">
+    <main class="school-container py-8 flex-grow animate-fade-in relative z-10">
         {% block content %}
         {% endblock %}
     </main>
     
-    <footer class="bg-primary text-white py-4 mt-auto">
+    <footer class="bg-primary text-white py-4 mt-auto relative" style="z-index: 100;">
         <div class="school-container text-center">
             <p>&copy; {% now "Y" %} PROTECH. All rights reserved.</p>
         </div>
@@ -123,36 +134,46 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const html = document.documentElement;
-            const toggleCheckbox = document.getElementById('toggle-dark');
+            const themeToggle = document.getElementById('theme-toggle');
+            const toggleSwitch = document.getElementById('toggle-switch');
             const sunIcon = document.getElementById('sun-icon');
             const moonIcon = document.getElementById('moon-icon');
             
-            // Check for user preference or default to light
             const isDarkMode = localStorage.getItem('darkMode') === 'true';
             
-            // Apply initial state
             if (isDarkMode) {
                 html.classList.add('dark');
-                toggleCheckbox.checked = true;
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
+                toggleSwitch.classList.add('translate-x-11');
+                toggleSwitch.classList.remove('translate-x-1');
+                sunIcon.classList.add('opacity-0');
+                moonIcon.classList.remove('opacity-0');
             }
             
-            // Toggle dark mode
-            toggleCheckbox.addEventListener('change', () => {
-                if (toggleCheckbox.checked) {
-                    html.classList.add('dark');
-                    localStorage.setItem('darkMode', 'true');
-                    sunIcon.classList.add('hidden');
-                    moonIcon.classList.remove('hidden');
-                } else {
+            themeToggle.addEventListener('click', () => {
+                const isDark = html.classList.contains('dark');
+                
+                if (isDark) {
                     html.classList.remove('dark');
                     localStorage.setItem('darkMode', 'false');
-                    sunIcon.classList.remove('hidden');
-                    moonIcon.classList.add('hidden');
+                    toggleSwitch.classList.remove('translate-x-11');
+                    toggleSwitch.classList.add('translate-x-1');
+                    sunIcon.classList.remove('opacity-0');
+                    moonIcon.classList.add('opacity-0');
+                } else {
+                    html.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                    toggleSwitch.classList.add('translate-x-11');
+                    toggleSwitch.classList.remove('translate-x-1');
+                    sunIcon.classList.add('opacity-0');
+                    moonIcon.classList.remove('opacity-0');
                 }
             });
         });
     </script>
+    
+    <!-- PROTECH AI Chatbot Widget (excluded from time-in, time-out, hybrid pages) -->
+    {% block chatbot %}
+        {% include 'components/chatbot_widget.html' %}
+    {% endblock %}
 </body>
 </html>
