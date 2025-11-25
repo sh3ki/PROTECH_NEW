@@ -1,0 +1,33 @@
+{% extends 'components/base_component.html' %}
+{% load static %}
+
+{% block title %}First-time Verification{% endblock %}
+{% block page_title %}Account Verification{% endblock %}
+
+{% block content %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Open the unified modal on page load and prefill the email/username
+    const modal = document.getElementById('first-time-password-modal');
+    const modalEmail = document.getElementById('modal-ft-email');
+    const verifyStep = document.getElementById('ft-verify-step');
+    const changeStep = document.getElementById('ft-change-step');
+    const modalSendMsg = document.getElementById('modal-send-code-msg');
+
+    function openFTModal() {
+        if (!modal) return;
+        if (modalEmail) modalEmail.value = '{{ email }}';
+        if (verifyStep) verifyStep.classList.remove('hidden');
+        if (changeStep) changeStep.classList.add('hidden');
+        if (modalSendMsg) modalSendMsg.textContent = '';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => { modal.classList.remove('opacity-0'); }, 50);
+    }
+
+    // Open automatically to show verification-first UX
+    openFTModal();
+});
+</script>
+{% endblock %}
