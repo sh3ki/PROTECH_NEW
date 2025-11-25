@@ -1,18 +1,1163 @@
 {% extends 'components/base_component.html' %}
+{% load static %}
 
-{% block title %}PROTECH - My Students{% endblock %}
-{% block page_title %}My Students{% endblock %}
+{% block title %}PROTECH - Student Management{% endblock %}
+{% block page_title %}Student Management{% endblock %}
 
 {% block sidebar %}
     {% include 'components/sidebar/advisory_teacher_sidebar.html' with active='students' %}
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-accent/30 dark:text-accent/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-    </svg>
-    <h2 class="text-2xl font-semibold text-primary dark:text-tertiary mt-4">My Students</h2>
-    <p class="text-accent dark:text-gray-400 mt-4">My Students content will appear here.</p>
+{% csrf_token %}
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Advisory Class Info -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Advisory Class</p>
+                <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ section.grade.name }} - {{ section.name }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Students</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_students|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Students -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-primary dark:border-tertiary transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-primary/10 dark:bg-tertiary/20 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ active_students|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Face Enrolled -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-purple-500 dark:border-purple-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-purple-100 dark:bg-purple-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600 dark:text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Face Enrolled</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ face_enrolled|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Search, Filter and Actions -->
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <!-- Search -->
+            <div class="relative flex-grow">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" id="student-search" placeholder="Search by name, LRN, or section..." 
+                    class="pl-10 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm">
+            </div>
+            
+            <!-- Filters -->
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <select id="status-filter" class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm">
+                    <option value="">All Status</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="flex flex-wrap md:flex-nowrap gap-2">
+            <button id="import-students-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <span class="hidden sm:inline">Import</span>
+            </button>
+            
+            <!-- Export dropdown button -->
+            <div class="relative inline-block">
+                <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="export-students-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="#" class="export-students-option block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="csv">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as CSV
+                    </a>
+                    <a href="#" class="export-students-option block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export as Excel
+                    </a>
+                </div>
+            </div>
+            
+            <button id="print-students-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span class="hidden sm:inline">Print</span>
+            </button>
+            
+            <button id="add-student-btn" class="flex items-center bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span class="hidden sm:inline">Add Student</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div id="student-table-container" class="relative">
+    <div id="student-table-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-12 w-12 text-primary dark:text-tertiary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading students...</p>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+        <div class="overflow-x-auto">
+            <table id="students-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LRN</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3.5 text-center font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for student in students %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                {% if student.profile_pic %}
+                                    <img class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700" src="{{ student.profile_pic.url }}" alt="{{ student.first_name }}">
+                                {% else %}
+                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary dark:from-tertiary dark:to-primary flex items-center justify-center ring-2 ring-gray-200 dark:ring-gray-700">
+                                        <span class="text-white font-semibold text-sm">{{ student.first_name|first }}{{ student.last_name|first }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ student.lrn }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-gray-900 dark:text-white">
+                                {{ student.first_name }} {% if student.middle_name %}{{ student.middle_name|first }}.{% endif %} {{ student.last_name }}
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ student.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if student.status == 'ACTIVE' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-3">
+                                <button onclick="editStudent({{ student.id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                                <button onclick="toggleStudentStatus({{ student.id }}, '{{ student.status }}', '{{ student.first_name }} {{ student.last_name }}')" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" title="{% if student.status == 'ACTIVE' %}Deactivate Student{% else %}Activate Student{% endif %}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {% if student.status == 'ACTIVE' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l14 14" />
+                                            {% else %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        {% endif %}
+                                    </svg>
+                                </button>
+                                <button onclick="deleteStudent({{ student.id }}, '{{ student.first_name }} {{ student.last_name }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No students found</h3>
+                                <p class="text-gray-500 dark:text-gray-400">Your advisory class has no students yet</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="student-pagination-container"></div>
+    </div>
+    
+    <div id="student-no-results" class="hidden py-20 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No students found</h3>
+            <p class="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+        </div>
+    </div>
+</div>
+
+<!-- Import Students Modal -->
+<div id="import-students-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-file-import text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Import Students</h3>
+                        <p class="text-white/80 text-sm">Upload CSV or Excel file to import students to {{ section.grade.name }} - {{ section.name }}</p>
+                    </div>
+                </div>
+                <button id="close-import-students-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Instructions Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
+                    <a href="{% url 'download_advisory_student_template' %}" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Download Excel Template
+                    </a>
+                </div>
+                
+                <!-- Format Example -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
+                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
+                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">ID</td>
+                                    <td class="p-2">Student ID (optional, for reference only)</td>
+                                    <td class="p-2">Leave blank for new students</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">LRN</td>
+                                    <td class="p-2">Learner Reference Number (required, 12 digits)</td>
+                                    <td class="p-2">123456789012</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">First Name</td>
+                                    <td class="p-2">Student first name (required)</td>
+                                    <td class="p-2">Juan</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Middle Name</td>
+                                    <td class="p-2">Student middle name (optional)</td>
+                                    <td class="p-2">Santos</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Last Name</td>
+                                    <td class="p-2">Student last name (required)</td>
+                                    <td class="p-2">Dela Cruz</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Status</td>
+                                    <td class="p-2">Student status (required)</td>
+                                    <td class="p-2">ACTIVE or INACTIVE</td>
+                                </tr>
+                                <tr class="border-b dark:border-gray-600">
+                                    <td class="p-2 font-medium">Guardian Info</td>
+                                    <td class="p-2">Guardian details (optional but recommended)</td>
+                                    <td class="p-2">Name, Email, Phone, Relationship</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
+                    </h5>
+                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• <strong>Leave ID blank for new students.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
+                        <li>• LRN must be exactly 12 digits and unique</li>
+                        <li>• Students will be automatically assigned to {{ section.grade.name }} - {{ section.name }}</li>
+                        <li>• Guardian information is optional but highly recommended</li>
+                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
+                        <li>• Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="border-t dark:border-gray-700 pt-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                
+                <form id="import-students-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full mb-4">
+                        <label for="import-students-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                                <p id="import-students-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                            </div>
+                            <input id="import-students-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar (hidden initially) -->
+                    <div id="import-students-progress" class="hidden mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing students...</span>
+                            <span id="import-students-progress-percent" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-students-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results (hidden initially) -->
+                    <div id="import-students-results" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-import-students" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="button" id="submit-import-students" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
+                    <i class="fas fa-upload mr-2"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/pagination-component.js' %}"></script>
+<script>
+// Global variables
+let allStudents = [];
+let filteredStudents = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+let isLoading = false;
+
+// DOM Elements
+const studentTableBody = document.querySelector('#students-table tbody');
+const studentTableLoading = document.getElementById('student-table-loading');
+const searchInput = document.getElementById('student-search');
+const statusFilter = document.getElementById('status-filter');
+const paginationContainer = document.getElementById('student-pagination-container');
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    initializeExportDropdown();
+    initializePrintButton();
+    loadStudents();
+});
+
+// Load students from server
+function loadStudents() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    showLoading();
+    
+    // Use Django-rendered data directly (no API call needed)
+    setTimeout(() => {
+        loadStudentsFromDOM();
+        filteredStudents = [...allStudents];
+        currentPage = 1;
+        renderPagination();
+        isLoading = false;
+        hideLoading();
+    }, 100);
+}
+
+// Load students from existing table rows
+function loadStudentsFromDOM() {
+    const rows = studentTableBody.querySelectorAll('tr');
+    
+    // Filter out empty state rows
+    const validRows = Array.from(rows).filter(row => {
+        return row.querySelector('[onclick*="editStudent"]');
+    });
+    
+    allStudents = validRows.map(row => {
+        const nameText = row.cells[2]?.querySelector('.text-sm.font-bold')?.textContent.trim() || '';
+        const nameParts = nameText.split(' ');
+        
+        return {
+            id: row.querySelector('[onclick*="editStudent"]')?.getAttribute('onclick')?.match(/\d+/)?.[0],
+            profile_pic: row.querySelector('img')?.src || '',
+            lrn: row.cells[1]?.textContent.trim() || '',
+            first_name: nameParts[0] || '',
+            middle_name: nameParts.length > 2 ? nameParts[1].replace('.', '') : '',
+            last_name: nameParts[nameParts.length - 1] || '',
+            email: row.cells[2]?.querySelector('.text-xs')?.textContent || '',
+            status: row.cells[3]?.querySelector('span')?.textContent.trim() || '',
+            _rowHTML: row.outerHTML
+        };
+    });
+}
+
+// Render pagination controls
+function renderPagination() {
+    const totalItems = filteredStudents.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+    
+    // Get items for current page
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    const pageItems = filteredStudents.slice(startIdx, endIdx);
+    
+    // Render table with current page items
+    renderStudentsTable(pageItems);
+    
+    // Build pagination HTML
+    if (totalItems === 0) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = `
+        <div class="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} 
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} 
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next
+                </button>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-700 dark:text-gray-300">Show:</label>
+                    <select onchange="changeItemsPerPage(this.value)" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary">
+                        <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                        <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                        <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                        <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                    </select>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing <span class="font-medium">${startIndex}</span> to <span class="font-medium">${endIndex}</span> of <span class="font-medium">${totalItems}</span> results
+                    </p>
+                    <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} 
+                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="sr-only">First</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} 
+                            class="relative inline-flex items-center px-2 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+    `;
+    
+    // Generate page numbers
+    const maxPageButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+    
+    if (endPage - startPage < maxPageButtons - 1) {
+        startPage = Math.max(1, endPage - maxPageButtons + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            paginationHTML += `
+                <span class="relative inline-flex items-center px-4 py-2 border border-primary dark:border-tertiary bg-primary dark:bg-tertiary text-sm font-medium text-white">
+                    ${i}
+                </span>
+            `;
+        } else {
+            paginationHTML += `
+                <button onclick="goToPage(${i})" 
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    ${i}
+                </button>
+            `;
+        }
+    }
+    
+    paginationHTML += `
+                        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} 
+                            class="relative inline-flex items-center px-2 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} 
+                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="sr-only">Last</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Navigate to specific page
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderPagination();
+    
+    // Scroll to top of table
+    document.getElementById('student-table-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Change items per page
+function changeItemsPerPage(newItemsPerPage) {
+    itemsPerPage = parseInt(newItemsPerPage);
+    currentPage = 1; // Reset to first page
+    renderPagination();
+}
+
+// Render students table
+function renderStudentsTable(students) {
+    if (!students || students.length === 0) {
+        studentTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="px-6 py-20 text-center">
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">No students found</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Your advisory class has no students yet</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // If students have _rowHTML (from DOM), use it directly
+    if (students[0]._rowHTML) {
+        studentTableBody.innerHTML = students.map(s => s._rowHTML).join('');
+        return;
+    }
+    
+    // Otherwise, build rows from data
+    studentTableBody.innerHTML = students.map(student => {
+        const profilePic = student.profile_pic ? 
+            `<img class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700" src="${student.profile_pic}" alt="${student.first_name}">` :
+            `<div class="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold ring-2 ring-gray-200 dark:ring-gray-700">${student.first_name.charAt(0)}${student.last_name.charAt(0)}</div>`;
+        
+        const middleInitial = student.middle_name ? `${student.middle_name.charAt(0)}.` : '';
+        const statusClass = student.status === 'ACTIVE' ? 
+            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+            'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        
+        return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        ${profilePic}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">${student.lrn}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-bold text-gray-900 dark:text-white">
+                        ${student.first_name} ${middleInitial} ${student.last_name}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">${student.email || ''}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                        ${student.status}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <div class="flex items-center justify-center space-x-3">
+                        <button onclick="editStudent(${student.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button class="deactivate-student text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-full" 
+                                data-student-id="${student.id}" 
+                                data-status="${student.status}" 
+                                data-name="${student.first_name} ${student.last_name}"
+                                title="${student.status === 'ACTIVE' ? 'Deactivate Student' : 'Activate Student'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                ${student.status === 'ACTIVE' ? 
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l14 14" />' : 
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />'}
+                            </svg>
+                        </button>
+                        <button onclick="deleteStudent(${student.id}, '${student.first_name} ${student.last_name}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Add event listeners for the newly created buttons
+    document.querySelectorAll('.deactivate-student').forEach(button => {
+        button.addEventListener('click', function() {
+            const studentId = this.dataset.studentId;
+            const status = this.dataset.status;
+            const name = this.dataset.name;
+            toggleStudentStatus(studentId, status, name);
+        });
+    });
+}
+
+// Utility functions
+function showLoading() {
+    if (studentTableLoading) {
+        studentTableLoading.classList.remove('hidden');
+    }
+}
+
+function hideLoading() {
+    if (studentTableLoading) {
+        studentTableLoading.classList.add('hidden');
+    }
+}
+
+// Initialize Print Button
+function initializePrintButton() {
+    const printBtn = document.getElementById('print-students-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', function() {
+            window.print();
+        });
+    }
+}
+
+// Search functionality
+if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const statusValue = statusFilter ? statusFilter.value : '';
+        
+        // Apply both search and status filter
+        filteredStudents = allStudents.filter(student => {
+            const matchesSearch = query === '' || 
+                student.lrn.toLowerCase().includes(query) ||
+                student.first_name.toLowerCase().includes(query) ||
+                student.last_name.toLowerCase().includes(query) ||
+                (student.middle_name && student.middle_name.toLowerCase().includes(query));
+            
+            const matchesStatus = statusValue === '' || student.status === statusValue;
+            
+            return matchesSearch && matchesStatus;
+        });
+        
+        currentPage = 1;
+        renderPagination();
+    });
+}
+
+// Status filter change
+if (statusFilter) {
+    statusFilter.addEventListener('change', function(e) {
+        const statusValue = e.target.value;
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        
+        // Apply both search and status filter
+        filteredStudents = allStudents.filter(student => {
+            const matchesSearch = query === '' || 
+                student.lrn.toLowerCase().includes(query) ||
+                student.first_name.toLowerCase().includes(query) ||
+                student.last_name.toLowerCase().includes(query) ||
+                (student.middle_name && student.middle_name.toLowerCase().includes(query));
+            
+            const matchesStatus = statusValue === '' || student.status === statusValue;
+            
+            return matchesSearch && matchesStatus;
+        });
+        
+        currentPage = 1;
+        renderPagination();
+    });
+}
+
+// Edit student function
+function editStudent(studentId) {
+    alert('Edit student ID: ' + studentId);
+    // TODO: Implement edit modal or redirect to edit page
+}
+
+// Toggle student status function
+function toggleStudentStatus(studentId, currentStatus, studentName) {
+    const action = currentStatus === 'ACTIVE' ? 'deactivate' : 'activate';
+    if (confirm(`Are you sure you want to ${action} ${studentName}?`)) {
+        alert(`${action === 'deactivate' ? 'Deactivating' : 'Activating'} student ID: ` + studentId);
+        // TODO: Implement status toggle functionality
+    }
+}
+
+// Delete student function
+function deleteStudent(studentId, studentName) {
+    if (confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
+        alert('Deleting student ID: ' + studentId);
+        // TODO: Implement delete functionality
+    }
+}
+
+// Import Modal Functionality
+const importBtn = document.getElementById('import-students-btn');
+const importModal = document.getElementById('import-students-modal');
+const closeImportModal = document.getElementById('close-import-students-modal');
+const cancelImportBtn = document.getElementById('cancel-import-students');
+const submitImportBtn = document.getElementById('submit-import-students');
+const importFileInput = document.getElementById('import-students-file');
+const importForm = document.getElementById('import-students-form');
+const importProgress = document.getElementById('import-students-progress');
+const importProgressBar = document.getElementById('import-students-progress-bar');
+const importProgressPercent = document.getElementById('import-students-progress-percent');
+const importResults = document.getElementById('import-students-results');
+const importFileName = document.getElementById('import-students-file-name');
+
+function openImportModal() {
+    importModal.classList.remove('hidden');
+    importModal.classList.add('flex');
+    setTimeout(() => {
+        importModal.classList.remove('opacity-0');
+        importModal.querySelector('.transform').classList.remove('scale-95');
+    }, 10);
+    
+    // Reset file display on open
+    if (importFileName) importFileName.classList.add('hidden');
+    if (submitImportBtn) submitImportBtn.disabled = true;
+}
+
+function closeImportModalFunc() {
+    importModal.classList.add('opacity-0');
+    importModal.querySelector('.transform').classList.add('scale-95');
+    setTimeout(() => {
+        importModal.classList.add('hidden');
+        importModal.classList.remove('flex');
+        importForm.reset();
+        importProgress.classList.add('hidden');
+        importResults.classList.add('hidden');
+        importProgressBar.style.width = '0%';
+        if (importProgressPercent) importProgressPercent.textContent = '0%';
+    }, 300);
+}
+
+if (importBtn) {
+    importBtn.addEventListener('click', openImportModal);
+}
+
+if (closeImportModal) {
+    closeImportModal.addEventListener('click', closeImportModalFunc);
+}
+
+if (cancelImportBtn) {
+    cancelImportBtn.addEventListener('click', closeImportModalFunc);
+}
+
+// File change handler
+if (importFileInput && submitImportBtn) {
+    // Initially disable submit button
+    submitImportBtn.disabled = true;
+    
+    importFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+                'text/csv'
+            ];
+            
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+                e.target.value = '';
+                if (importFileName) importFileName.classList.add('hidden');
+                submitImportBtn.disabled = true;
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File too large. Maximum file size is 10MB.', 'error');
+                e.target.value = '';
+                if (importFileName) importFileName.classList.add('hidden');
+                submitImportBtn.disabled = true;
+                return;
+            }
+            
+            if (importFileName) {
+                importFileName.textContent = `Selected: ${file.name}`;
+                importFileName.classList.remove('hidden');
+            }
+            submitImportBtn.disabled = false;
+        } else {
+            if (importFileName) importFileName.classList.add('hidden');
+            submitImportBtn.disabled = true;
+        }
+    });
+}
+
+if (submitImportBtn) {
+    submitImportBtn.addEventListener('click', function() {
+        const file = importFileInput.files[0];
+        if (!file) {
+            showToast('Please select a file to import', 'error');
+            return;
+        }
+
+        const formData = new FormData(importForm);
+        
+        // Ensure file is in the FormData under the server-expected key
+        if (!formData.has('import_file')) {
+            formData.append('import_file', file);
+        }
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        importProgress.classList.remove('hidden');
+        importResults.classList.add('hidden');
+        submitImportBtn.disabled = true;
+        // show spinner in button like admin
+        if (submitImportBtn) {
+            submitImportBtn.dataset.origText = submitImportBtn.innerHTML;
+            submitImportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+        }
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += 10;
+                importProgressBar.style.width = progress + '%';
+                if (importProgressPercent) importProgressPercent.textContent = progress + '%';
+            }
+        }, 200);
+
+        fetch('{% url "import_advisory_students" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    try {
+                        const err = JSON.parse(text);
+                        throw new Error(err.message || `HTTP ${response.status}`);
+                    } catch (e) {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    }
+                });
+            }
+
+            const ct = response.headers.get('content-type') || '';
+            if (ct.includes('application/json')) return response.json();
+            return response.text().then(text => {
+                try { return JSON.parse(text); }
+                catch (e) { throw new Error('Expected JSON response but received: ' + text); }
+            });
+        })
+        .then(data => {
+            clearInterval(progressInterval);
+            importProgressBar.style.width = '100%';
+            if (importProgressPercent) importProgressPercent.textContent = '100%';
+            
+            setTimeout(() => {
+                importProgress.classList.add('hidden');
+                importResults.classList.remove('hidden');
+                
+                if (data.status === 'success') {
+                    importResults.innerHTML = `
+                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
+                                <div>
+                                    <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${data.message}</h5>
+                                    <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                        ${data.students_created > 0 ? `<li>• Students created: ${data.students_created}</li>` : ''}
+                                        ${data.guardians_created > 0 ? `<li>• Guardians created: ${data.guardians_created}</li>` : ''}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    showToast('Students imported successfully!', 'success');
+                    
+                    // Refresh the table
+                    loadStudents(currentPage);
+                } else {
+                    let errorHtml = `
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
+                                    <p class="text-sm text-red-700 dark:text-red-300">${data.message}</p>
+                    `;
+                    
+                    if (data.errors && data.errors.length > 0) {
+                        errorHtml += '<ul class="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">';
+                        data.errors.forEach(error => {
+                            errorHtml += `<li>• ${error}</li>`;
+                        });
+                        errorHtml += '</ul>';
+                    }
+                    
+                    errorHtml += '</div></div></div>';
+                    importResults.innerHTML = errorHtml;
+                    showToast('Import failed. Please check the errors.', 'error');
+                }
+                
+                // restore button
+                if (submitImportBtn) {
+                    submitImportBtn.disabled = false;
+                    if (submitImportBtn.dataset.origText) submitImportBtn.innerHTML = submitImportBtn.dataset.origText;
+                }
+            }, 500);
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            importProgress.classList.add('hidden');
+            importResults.classList.remove('hidden');
+            importResults.innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
+                        <div>
+                            <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Network Error</h5>
+                            <p class="text-sm text-red-700 dark:text-red-300">${error.message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showToast('Failed to import students. Please try again.', 'error');
+            // restore button
+            if (submitImportBtn) {
+                submitImportBtn.disabled = false;
+                if (submitImportBtn.dataset.origText) submitImportBtn.innerHTML = submitImportBtn.dataset.origText;
+            }
+        });
+    });
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'fixed top-5 right-5 z-50';
+    
+    const colors = {
+        success: 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 border-green-500',
+        error: 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 border-red-500',
+        info: 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 border-blue-500',
+        warning: 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 border-yellow-500'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `flex items-center w-full max-w-xs p-4 rounded-lg shadow-lg transition-all duration-300 ${colors[type]} border-l-4`;
+    toast.innerHTML = `
+        <div class="text-sm font-medium">${message}</div>
+        <button class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="this.parentElement.remove()">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    document.body.appendChild(toastContainer);
+    
+    setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => {
+            toastContainer.remove();
+        }, 300);
+    }, 5000);
+}
+
+// Add student button
+const addStudentBtn = document.getElementById('add-student-btn');
+if (addStudentBtn) {
+    addStudentBtn.addEventListener('click', function() {
+        alert('Open Add Student modal (not implemented)');
+    });
+}
+
+// Initialize Export Dropdown Functionality
+function initializeExportDropdown() {
+    const exportBtn = document.getElementById('export-students-btn');
+    const exportDropdown = document.getElementById('export-students-dropdown');
+    const exportOptions = document.querySelectorAll('.export-students-option');
+
+    if (!exportBtn || !exportDropdown) return;
+
+    // Toggle dropdown on button click
+    exportBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        exportDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!exportBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+            exportDropdown.classList.add('hidden');
+        }
+    });
+
+    // Handle export format selection
+    exportOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const format = this.getAttribute('data-format');
+            exportDropdown.classList.add('hidden');
+
+            // Export students
+            window.location.href = `/teacher/advisory/students/export/?format=${format}`;
+        });
+    });
+}
+</script>
+
+<style>
+@media print {
+    /* Hide non-essential elements when printing */
+    .sidebar, button, input[type="search"], .no-print {
+        display: none !important;
+    }
+    
+    /* Optimize table for printing */
+    table {
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+}
+</style>
+
 {% endblock %}
