@@ -25,7 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-v-xhcna5eyu$&gv()p=4iqf+z#8p0e3*^ik#+3vi6*x%o1vei4')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+# Default to False so Django shows standard error pages instead of debug tracebacks
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
@@ -139,6 +140,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Set the custom user model
 AUTH_USER_MODEL = 'PROTECHAPP.CustomUser'
 
+# Authentication URLs
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/admin/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
+
 # Face recognition tuning
 FACE_MATCH_THRESHOLD = 0.65
 
@@ -150,6 +156,11 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='PROTECH Attendance System <noreply@protech.com>')
+
+# PhilSMS Configuration
+PHILSMS_API_TOKEN = config('PHILSMS_API_TOKEN', default='377|DT0C9GeHCgLXdNt5oxjajd3QqdLlKcqMHv5KLZcE3b45ab96')
+# Leave sender_id as None until approved in PhilSMS dashboard
+PHILSMS_SENDER_ID = config('PHILSMS_SENDER_ID', default='PhilSMS')  # Set to 'PROTECH' after approval
 
 
 # Configure logging
@@ -184,4 +195,18 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
+}
+
+# Firebase Configuration
+FIREBASE_CREDENTIALS_PATH = config('FIREBASE_CREDENTIALS_PATH', default=os.path.join(BASE_DIR, 'firebase-credentials.json'))
+
+# Firebase Web SDK Configuration (for client-side real-time features)
+# Get these from your Firebase Project Settings > General > Your apps > Web app
+FIREBASE_WEB_CONFIG = {
+    'apiKey': config('FIREBASE_API_KEY', default=''),
+    'authDomain': config('FIREBASE_AUTH_DOMAIN', default=''),
+    'projectId': config('FIREBASE_PROJECT_ID', default=''),
+    'storageBucket': config('FIREBASE_STORAGE_BUCKET', default=''),
+    'messagingSenderId': config('FIREBASE_MESSAGING_SENDER_ID', default=''),
+    'appId': config('FIREBASE_APP_ID', default='')
 }
