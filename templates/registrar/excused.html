@@ -15,6 +15,7 @@
 <!-- Toast Container -->
 <div id="excused-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
+
 <!-- Dashboard Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
@@ -170,12 +171,39 @@
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export Dropdown Button -->
+            <div class="relative">
+                <button id="export-excused-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown Menu -->
+                <div id="export-excused-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as PDF</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Excel</span>
+                    </a>
+                    <a href="#" class="export-excused-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Word</span>
+                    </a>
+                </div>
+            </div>
             <button id="print-excused-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -340,6 +368,87 @@
     </div>
 </div>
 
+<!-- Edit Excused Modal -->
+<div id="edit-excused-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" id="edit-excused-backdrop" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full mx-auto shadow-xl transform transition-all">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-secondary to-secondary/80 px-6 py-4 rounded-t-xl">
+                <h3 class="text-xl font-bold text-white">Edit Excused Absence</h3>
+            </div>
+            
+            <!-- Body -->
+            <form id="edit-excused-form" class="p-6">
+                {% csrf_token %}
+                <input type="hidden" id="edit-excused-id">
+                <div class="space-y-4">
+                    <!-- Student Info (Read Only) -->
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Student</label>
+                                <p id="edit-excused-student-name" class="text-gray-900 dark:text-white font-medium">-</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">LRN</label>
+                                <p id="edit-excused-lrn" class="text-gray-900 dark:text-white font-medium">-</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Grade & Section</label>
+                                <p id="edit-excused-grade-section" class="text-gray-900 dark:text-white font-medium">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Absent *</label>
+                            <input type="date" id="edit-excused-date-absent" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Effective Date *</label>
+                            <input type="date" id="edit-excused-effective-date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date *</label>
+                            <input type="date" id="edit-excused-end-date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white">
+                        </div>
+                    </div>
+
+                    <!-- Current Excuse Letter -->
+                    <div id="current-excuse-letter-section" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Excuse Letter</label>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <i class="fas fa-file-alt text-primary dark:text-tertiary text-xl"></i>
+                            <a id="current-excuse-letter-link" href="#" target="_blank" class="text-primary dark:text-tertiary hover:underline font-medium flex-1">View Current Letter</a>
+                            <button type="button" id="remove-excuse-letter-btn" class="text-red-600 hover:text-red-700 text-sm font-medium">
+                                <i class="fas fa-times mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- New Excuse Letter Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Update Excuse Letter (Optional)</label>
+                        <input type="file" id="edit-excused-letter" accept="image/*,.pdf" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-tertiary dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload a new file to replace the existing one. Max size: 5MB</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" id="cancel-edit-excused" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" id="submit-edit-excused" class="px-6 py-2.5 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Import Excused Modal -->
 <div id="import-excused-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden flex items-center justify-center z-[9999] p-4 transition-all duration-300">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
@@ -365,7 +474,7 @@
             <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
                 <div class="flex items-center justify-between mb-3">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
-                    <a href="/registrar/excused/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                    <a href="/admin/excused/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
                         <i class="fas fa-file-excel mr-2"></i>
                         Download Template
                     </a>
@@ -383,7 +492,7 @@
                         <h5 class="font-semibold text-gray-900 dark:text-white">Excused Absence Import Template</h5>
                         <p class="text-sm text-gray-600 dark:text-gray-300">Excel template with proper format and column headers.</p>
                         <div class="mt-3">
-                            <a href="/registrar/excused/import/template/" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 text-primary dark:text-tertiary rounded-lg shadow-sm hover:shadow transition-colors text-sm">
+                            <a href="/admin/excused/import/template/" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 text-primary dark:text-tertiary rounded-lg shadow-sm hover:shadow transition-colors text-sm">
                                 <i class="fas fa-download mr-2"></i>Download Template
                             </a>
                         </div>
@@ -584,20 +693,45 @@ document.addEventListener('DOMContentLoaded', function() {
             // Always use static for the default image
             return DEFAULT_EXCUSE_LETTER_IMG;
         }
+        // Remove 'private_excuse_letters/' prefix if it exists in the filename
+        let cleanFilename = filename;
+        if (filename.startsWith('private_excuse_letters/')) {
+            cleanFilename = filename.replace('private_excuse_letters/', '');
+        }
         // Serve from private_excuse_letters via Django view (plural)
-        return `/private-excuse-letters/${encodeURIComponent(filename)}/`;
+        return `/private-excuse-letters/${encodeURIComponent(cleanFilename)}/`;
     }
 
     function showExcuseLetterModal(url, filename) {
         const modal = document.getElementById('excuse-letter-modal');
         const img = document.getElementById('excuse-letter-img');
         const fname = document.getElementById('excuse-letter-filename');
-        img.src = url;
-        img.onerror = function() {
-            // Always fallback to static default if image fails to load
-            img.src = "{% static 'images/default-excuse-letter.png' %}";
-        };
-        fname.textContent = filename && filename !== 'No Excuse Letter' ? filename : 'No Excuse Letter';
+        
+        // Check if this is a default/missing file
+        if (url === DEFAULT_EXCUSE_LETTER_IMG || !filename || filename === 'No Excuse Letter') {
+            img.src = DEFAULT_EXCUSE_LETTER_IMG;
+            fname.textContent = 'No Excuse Letter';
+        } else {
+            // Try to load the actual file
+            img.src = DEFAULT_EXCUSE_LETTER_IMG; // Show default first
+            fname.textContent = filename;
+            
+            // Attempt to verify file exists before showing
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        img.src = url; // File exists, load it
+                    } else {
+                        // File doesn't exist, show message
+                        fname.textContent = `${filename} (File not found on server)`;
+                    }
+                })
+                .catch(() => {
+                    // Network error or file doesn't exist
+                    fname.textContent = `${filename} (File not found on server)`;
+                });
+        }
+        
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     }
@@ -745,22 +879,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 default:
                     statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Unknown</span>';
             }
-            // Use static path for thumbnail if no excuse_letter, otherwise use media path
-            let thumbnailUrl, modalUrl;
-            if (record.excuse_letter) {
-                thumbnailUrl = getExcuseLetterUrl(record.excuse_letter);
-                modalUrl = thumbnailUrl;
-            } else {
-                thumbnailUrl = DEFAULT_EXCUSE_LETTER_IMG;
-                modalUrl = DEFAULT_EXCUSE_LETTER_IMG;
-            }
+            // Always use default image for thumbnails to avoid 404 errors
+            // PDFs can't be displayed as images anyway, so show default placeholder
+            const thumbnailUrl = DEFAULT_EXCUSE_LETTER_IMG;
+            const modalUrl = record.excuse_letter ? getExcuseLetterUrl(record.excuse_letter) : DEFAULT_EXCUSE_LETTER_IMG;
             const isDefault = !record.excuse_letter;
+            const hasLetter = record.excuse_letter && record.excuse_letter !== 'default-excuse-letter.png';
             const excuseLetterCell = `
                 <button class="view-excuse-letter-btn text-blue-600 underline hover:text-blue-800" 
                         data-url="${modalUrl}" 
                         data-filename="${record.excuse_letter ? record.excuse_letter : 'No Excuse Letter'}"
                         data-default="${isDefault}">
-                    <img src="${thumbnailUrl}" alt="Excuse Letter" class="inline-block h-12 w-12 items-center object-cover rounded border border-gray-200 dark:border-gray-700 mr-2" style="background:#fff;">
+                    <img src="${thumbnailUrl}" 
+                         alt="Excuse Letter" 
+                         class="inline-block h-12 w-12 items-center object-cover rounded border border-gray-200 dark:border-gray-700 mr-2 ${hasLetter ? '' : 'opacity-50'}" 
+                         style="background:#fff;">
+                    ${hasLetter ? '<span class="text-xs text-green-600 dark:text-green-400">●</span>' : ''}
                 </button>
             `;
             tbody.innerHTML += `
@@ -815,6 +949,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 showExcuseLetterModal(url, filename);
             });
         });
+
+        // Add event listeners for edit buttons
+        document.querySelectorAll('.edit-excused-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const excusedId = btn.getAttribute('data-id');
+                openEditExcusedModal(excusedId);
+            });
+        });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-excused-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const excusedId = btn.getAttribute('data-id');
+                const studentName = btn.getAttribute('data-name');
+                const dateAbsent = btn.getAttribute('data-date');
+                openDeleteExcusedModal(excusedId, studentName, dateAbsent);
+            });
+        });
     }
 
 
@@ -826,8 +978,248 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('excused-status-filter').addEventListener('change', filterExcused);
     document.getElementById('excused-date-filter').addEventListener('change', filterExcused);
 
+    // Export Dropdown Functionality
+    const exportExcusedBtn = document.getElementById('export-excused-btn');
+    const exportExcusedDropdown = document.getElementById('export-excused-dropdown');
+    const exportExcusedOptions = document.querySelectorAll('.export-excused-option');
+
+    if (exportExcusedBtn && exportExcusedDropdown) {
+        // Toggle dropdown
+        exportExcusedBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            exportExcusedDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportExcusedBtn.contains(e.target) && !exportExcusedDropdown.contains(e.target)) {
+                exportExcusedDropdown.classList.add('hidden');
+            }
+        });
+
+        // Handle export format selection
+        exportExcusedOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const format = this.getAttribute('data-format');
+                
+                // Get current filter values
+                const searchQuery = document.getElementById('excused-search')?.value || '';
+                const gradeFilter = document.getElementById('excused-grade-filter')?.value || '';
+                const sectionFilter = document.getElementById('excused-section-filter')?.value || '';
+                const statusFilter = document.getElementById('excused-status-filter')?.value || '';
+                const dateFilter = document.getElementById('excused-date-filter')?.value || '';
+                
+                // Build export URL with filters
+                let exportUrl = `/registrar/excused/export/?format=${format}`;
+                if (searchQuery) exportUrl += `&search=${encodeURIComponent(searchQuery)}`;
+                if (gradeFilter) exportUrl += `&grade=${gradeFilter}`;
+                if (sectionFilter) exportUrl += `&section=${sectionFilter}`;
+                if (statusFilter) exportUrl += `&status=${statusFilter}`;
+                if (dateFilter) exportUrl += `&date=${dateFilter}`;
+                
+                // Show loading toast
+                showToast(`Preparing ${format.toUpperCase()} export...`, 'info', 2000);
+                
+                // Trigger download
+                window.location.href = exportUrl;
+                
+                // Close dropdown
+                exportExcusedDropdown.classList.add('hidden');
+            });
+        });
+    }
+
     // Initial load
     loadExcusedAbsences(1);
+
+    // Edit Excused Modal Functions
+    const editExcusedModal = document.getElementById('edit-excused-modal');
+    const editExcusedForm = document.getElementById('edit-excused-form');
+    const cancelEditExcusedBtn = document.getElementById('cancel-edit-excused');
+    const editExcusedBackdrop = document.getElementById('edit-excused-backdrop');
+
+    async function openEditExcusedModal(excusedId) {
+        console.log('[Edit Excused] Opening modal for ID:', excusedId);
+        
+        try {
+            const response = await fetch(`/registrar/excused/${excusedId}/`);
+            console.log('[Edit Excused] Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch excused record: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('[Edit Excused] Full response data:', data);
+            
+            // Handle multiple response formats
+            let record = null;
+            
+            // Check for different response structures
+            if (data.status === 'success' && data.record) {
+                record = data.record;
+                console.log('[Edit Excused] Using data.record format');
+            } else if (data.success && data.excused) {
+                record = data.excused;
+                console.log('[Edit Excused] Using data.excused format');
+            } else if (data.id) {
+                // Direct record format
+                record = data;
+                console.log('[Edit Excused] Using direct data format');
+            }
+            
+            if (!record) {
+                console.error('[Edit Excused] Could not find record in response');
+                throw new Error('Invalid response format');
+            }
+            
+            console.log('[Edit Excused] Extracted record:', record);
+            
+            // Populate form fields
+            document.getElementById('edit-excused-id').value = record.id;
+            
+            // Student info
+            const studentName = record.student_name || record.student?.full_name || 
+                              `${record.student?.first_name || ''} ${record.student?.last_name || ''}`.trim();
+            document.getElementById('edit-excused-student-name').textContent = studentName || 'N/A';
+            document.getElementById('edit-excused-lrn').textContent = record.lrn || record.student?.lrn || 'N/A';
+            
+            const gradeSection = record.grade_section || 
+                               `${record.grade?.name || ''} - ${record.section?.name || ''}`.trim();
+            document.getElementById('edit-excused-grade-section').textContent = gradeSection || 'N/A';
+            
+            // Date fields
+            document.getElementById('edit-excused-date-absent').value = record.date_absent || '';
+            document.getElementById('edit-excused-effective-date').value = record.effective_date || '';
+            document.getElementById('edit-excused-end-date').value = record.end_date || '';
+            
+            // Current excuse letter
+            const excuseLetterSection = document.getElementById('current-excuse-letter-section');
+            const excuseLetterLink = document.getElementById('current-excuse-letter-link');
+            
+            if (record.excuse_letter && record.excuse_letter !== 'default-excuse-letter.png') {
+                // Check if file exists before showing link
+                const fileUrl = getExcuseLetterUrl(record.excuse_letter);
+                fetch(fileUrl, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            excuseLetterSection.classList.remove('hidden');
+                            excuseLetterLink.href = fileUrl;
+                        } else {
+                            excuseLetterSection.classList.add('hidden');
+                        }
+                    })
+                    .catch(() => {
+                        excuseLetterSection.classList.add('hidden');
+                    });
+            } else {
+                excuseLetterSection.classList.add('hidden');
+            }
+            
+            // Clear file input
+            document.getElementById('edit-excused-letter').value = '';
+            
+            // Show modal
+            editExcusedModal.classList.remove('hidden');
+            console.log('[Edit Excused] Modal opened successfully');
+            
+        } catch (error) {
+            console.error('[Edit Excused] Error:', error);
+            showToast('Failed to load excused record', 'error');
+        }
+    }
+
+    function closeEditExcusedModal() {
+        editExcusedModal.classList.add('hidden');
+    }
+
+    // Edit form submission
+    editExcusedForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const excusedId = document.getElementById('edit-excused-id').value;
+        const formData = new FormData();
+        
+        formData.append('date_absent', document.getElementById('edit-excused-date-absent').value);
+        formData.append('effective_date', document.getElementById('edit-excused-effective-date').value);
+        formData.append('end_date', document.getElementById('edit-excused-end-date').value);
+        
+        // Add file if selected
+        const fileInput = document.getElementById('edit-excused-letter');
+        if (fileInput.files.length > 0) {
+            formData.append('excuse_letter', fileInput.files[0]);
+        }
+        
+        const submitBtn = document.getElementById('submit-edit-excused');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+        
+        try {
+            const response = await fetch(`/registrar/excused/${excusedId}/update/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                showToast('Excused absence updated successfully!', 'success');
+                closeEditExcusedModal();
+                location.reload();
+            } else {
+                const error = await response.json();
+                showToast(error.message || 'Failed to update excused absence', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred while updating excused absence', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+        }
+    });
+
+    // Event listeners
+    cancelEditExcusedBtn.addEventListener('click', closeEditExcusedModal);
+    editExcusedBackdrop.addEventListener('click', closeEditExcusedModal);
+
+    // Delete Excused Modal Function
+    function openDeleteExcusedModal(excusedId, studentName, dateAbsent) {
+        console.log('[Delete Excused] Opening delete modal for:', excusedId, studentName, dateAbsent);
+        // TODO: Implement delete modal if needed
+        if (confirm(`Are you sure you want to delete the excused absence for ${studentName} on ${dateAbsent}?`)) {
+            deleteExcusedRecord(excusedId);
+        }
+    }
+
+    async function deleteExcusedRecord(excusedId) {
+        try {
+            const response = await fetch(`/registrar/excused/${excusedId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            if (response.ok) {
+                showToast('Excused absence deleted successfully!', 'success');
+                location.reload();
+            } else {
+                const error = await response.json();
+                showToast(error.message || 'Failed to delete excused absence', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred while deleting excused absence', 'error');
+        }
+    }
+
+    // Make functions globally accessible for event listeners
+    window.openEditExcusedModal = openEditExcusedModal;
+    window.openDeleteExcusedModal = openDeleteExcusedModal;
 });
 
 function debounce(func, wait) {
@@ -890,33 +1282,6 @@ function deleteExcuseLetter(recordId, onSuccess, onError) {
         }
     })
     .catch(() => onError('Delete failed'));
-}
-
-// Export functionality
-const exportBtn = document.getElementById('export-excused-btn');
-if (exportBtn) {
-    exportBtn.addEventListener('click', function() {
-        const dropdown = document.createElement('div');
-        dropdown.className = 'absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden';
-        dropdown.innerHTML = `
-            <a href="/registrar/excused/export/?format=excel" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Excel</a>
-            <a href="/registrar/excused/export/?format=pdf" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as PDF</a>
-            <a href="/registrar/excused/export/?format=word" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Word</a>
-        `;
-        const existing = document.querySelector('.export-dropdown');
-        if (existing) existing.remove();
-        dropdown.classList.add('export-dropdown');
-        exportBtn.parentElement.style.position = 'relative';
-        exportBtn.parentElement.appendChild(dropdown);
-        setTimeout(() => {
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        }, 100);
-    });
 }
 
 // Add Excused Modal Functions
