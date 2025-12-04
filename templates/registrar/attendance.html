@@ -10,96 +10,86 @@
 
 {% block content %}
 {% csrf_token %}
-<div id="import-attendance-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden overflow-hidden z-[9999] transition-opacity">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col modal-content scale-95 opacity-0 transition-all duration-300 relative overflow-hidden">
-        <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <i class="fas fa-file-import text-white text-2xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-bold text-white">Import Attendance Records</h3>
-                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with attendance data</p>
-                </div>
+
+<!-- Toast Container -->
+<div id="attendance-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Total Records -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
             </div>
-            <button id="close-import-attendance-modal" type="button" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <!-- Modal Body -->
-        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)] custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
-            <!-- Instructions -->
             <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
-                    <a href="/registrar/attendance-records/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Download Template
-                    </a>
-                </div>
-                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
-                    </h5>
-                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                        <li>• Attendance records are automatically created by the face recognition system</li>
-                        <li>• Manual import is for backup restoration or data migration only</li>
-                        <li>• Required columns: Student LRN, Date, Time In, Time Out, Status</li>
-                        <li>• Status must be: PRESENT, ABSENT, or EXCUSED</li>
-                        <li>• Supported formats: .csv, .xlsx, .xls</li>
-                        <li>• Maximum file size: 10MB</li>
-                    </ul>
-                </div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Records</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_records }}</h3>
             </div>
-            <!-- File Upload -->
-            <div class="mb-6">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
-                    Upload File
-                </h4>
-                <form id="import-attendance-form" class="space-y-4">
-                    {% csrf_token %}
-                    <div class="flex items-center justify-center w-full">
-                        <label for="import-attendance-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
-                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                    <span class="font-semibold">Click to upload</span> or drag and drop
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
-                                <p id="import-attendance-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
-                            </div>
-                            <input id="import-attendance-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
-                        </label>
-                    </div>
-                    <!-- Progress Bar -->
-                    <div id="import-attendance-progress" class="hidden">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing attendance...</span>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-attendance-progress-percent">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                            <div id="import-attendance-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <!-- Results -->
-                    <div id="import-attendance-results" class="hidden"></div>
-                </form>
-            </div>
-        </div>
-        <!-- Modal Footer -->
-        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
-            <button type="button" id="cancel-import-attendance" class="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm">
-                <i class="fas fa-times mr-2"></i> Cancel
-            </button>
-            <button type="button" id="submit-import-attendance" class="px-6 py-2.5 bg-gradient-to-r from-primary to-tertiary text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                <i class="fas fa-upload mr-2"></i> Import Attendance
-            </button>
-        </div>
         </div>
     </div>
+    <!-- Present -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Present</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ present_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Absent -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-red-500 dark:border-red-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Absent</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ absent_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Excused -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Excused</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ excused_count }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="attendance-search" placeholder="Search by name, LRN, or section..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div id="attendance-search-spinner" class="hidden absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </div>
                 <div id="attendance-search-results-count" class="hidden absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-gray-500 dark:text-gray-400">
@@ -178,18 +168,45 @@
         </div>
         <!-- Action buttons (copy exact design from students.html) -->
         <div class="flex flex-wrap md:flex-nowrap gap-2">
-            <button id="import-students-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+            <button id="import-attendance-btn" class="flex items-center bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
                 <span class="hidden sm:inline">Import</span>
             </button>
-            <button id="export-students-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span class="hidden sm:inline">Export</span>
-            </button>
+            <!-- Export Dropdown Button -->
+            <div class="relative">
+                <button id="export-attendance-btn" class="flex items-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown Menu -->
+                <div id="export-attendance-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="#" class="export-attendance-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as PDF</span>
+                    </a>
+                    <a href="#" class="export-attendance-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Excel</span>
+                    </a>
+                    <a href="#" class="export-attendance-option flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Export as Word</span>
+                    </a>
+                </div>
+            </div>
             <button id="print-students-btn" class="flex items-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -239,7 +256,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="attendance-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+        <div id="attendance-pagination-container" class="bg-white dark:bg-gray-800 px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6">
             <!-- Pagination will be dynamically updated -->
         </div>
     </div>
@@ -409,45 +426,148 @@
 </div>
 
 <!-- Import Attendance Modal -->
-<div id="import-attendance-modal" class="fixed inset-0 z-[9999] hidden overflow-hidden bg-gray-900/80 backdrop-blur-sm transition-opacity">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col modal-content scale-95 opacity-0 transition-all duration-300 relative overflow-hidden">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-2xl flex justify-between items-center">
-            <h3 class="text-xl font-bold text-white">Import Attendance Records</h3>
-            <button id="close-import-attendance-modal" class="text-white hover:text-gray-200 transition-colors">
+<div id="import-attendance-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Attendance Records</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with attendance data</p>
+                </div>
+            </div>
+            <button type="button" id="close-import-attendance-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <!-- Body -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 pb-24">
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)]" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
             <!-- Instructions -->
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
-                    <a href="/registrar/attendance-records/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Download Template
-                    </a>
-                </div>
-                
-                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
-                    </h5>
-                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                        <li>• Attendance records are automatically created by the face recognition system</li>
-                        <li>• Manual import is for backup restoration or data migration only</li>
-                        <li>• Required columns: Student LRN, Date, Time In, Time Out, Status</li>
-                        <li>• Status must be: PRESENT, ABSENT, or EXCUSED</li>
-                        <li>• Supported formats: .csv, .xlsx, .xls</li>
-                        <li>• Maximum file size: 10MB</li>
-                    </ul>
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format with all required columns</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
                 </div>
             </div>
 
-            <!-- File Upload -->
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Attendance Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'download_attendance_import_template' %}" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- Column Specifications Table -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Required Columns and Format
+                </h4>
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Column</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Format/Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">ID</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Leave blank for new records. If provided and exists, row will be skipped.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Student LRN</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Exactly 12 digits. Student must exist in the system.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Date</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: YYYY-MM-DD (e.g., 2025-11-23)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Time In</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: HH:MM (e.g., 08:00)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Time Out</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Format: HH:MM (e.g., 17:00)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Status</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">One of: ON TIME, LATE, ABSENT, or EXCUSED</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Important Notes
+                </h4>
+                <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Existing Records:</strong> If the ID column contains an existing record ID, that row will be automatically skipped to prevent duplicates.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Student Validation:</strong> The Student LRN must match an existing student in the system.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Time Format:</strong> Time In and Time Out are optional. Use HH:MM format (24-hour).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Status Values:</strong> Only ON TIME, LATE, ABSENT, or EXCUSED are accepted (case-sensitive).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Validation:</strong> All data is validated before import. If errors are found, the entire import will be cancelled and you'll see detailed error messages.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- File Upload Section -->
             <div class="mb-6">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                     <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
@@ -465,34 +585,32 @@
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
                                 <p id="import-attendance-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
                             </div>
-                            <input id="import-attendance-file" name="import_file" type="file" class="hidden" accept=".csv,.xlsx,.xls" />
+                            <input id="import-attendance-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
                         </label>
                     </div>
 
                     <!-- Progress Bar -->
                     <div id="import-attendance-progress" class="hidden">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing attendance...</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing attendance records...</span>
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="import-attendance-progress-percent">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                             <div id="import-attendance-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
                         </div>
                     </div>
-
-                    <!-- Results -->
-                    <div id="import-attendance-results" class="hidden"></div>
                 </form>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 absolute bottom-0 left-0 right-0 z-50">
-            <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-import-attendance" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
-                <button type="button" id="submit-import-attendance" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled><i class="fas fa-upload mr-2"></i>Import</button>
-            </div>
-        </div>
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <button type="button" id="cancel-import-attendance" class="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+            <button type="button" id="submit-import-attendance" class="px-6 py-2.5 bg-gradient-to-r from-primary to-tertiary text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-upload mr-2"></i> Import Attendance
+            </button>
         </div>
     </div>
 </div>
@@ -643,40 +761,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Note: grade-filter and section-filter listeners are set up in setupFilterDropdowns()
 
     // Button event handlers
-    document.getElementById('import-students-btn').addEventListener('click', openImportAttendanceModal);
+    const importAttendanceBtn = document.getElementById('import-attendance-btn');
+    if (importAttendanceBtn) {
+        importAttendanceBtn.addEventListener('click', openImportAttendanceModal);
+    }
     
     document.getElementById('add-attendance-btn').addEventListener('click', function() {
         openAddAttendanceModal();
     });
     
-    // Export functionality
-    document.getElementById('export-students-btn').addEventListener('click', function() {
-        const dropdown = document.createElement('div');
-        dropdown.className = 'absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden';
-        const dateFilter = document.getElementById('attendance-date')?.value || '';
-        dropdown.innerHTML = `
-            <a href="/registrar/attendance-records/export/?format=excel&date=${dateFilter}" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Excel</a>
-            <a href="/registrar/attendance-records/export/?format=pdf&date=${dateFilter}" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as PDF</a>
-            <a href="/registrar/attendance-records/export/?format=word&date=${dateFilter}" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Word</a>
-        `;
-        const existing = document.querySelector('.export-dropdown');
-        if (existing) existing.remove();
-        dropdown.classList.add('export-dropdown');
-        this.parentElement.style.position = 'relative';
-        this.parentElement.appendChild(dropdown);
-        setTimeout(() => {
-            document.addEventListener('click', function closeDropdown(e) {
-                const exportBtn = document.getElementById('export-students-btn');
-                if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        }, 100);
-    });
-    
     document.getElementById('print-students-btn').addEventListener('click', function() {
-        showToast('Print feature coming soon!', 'info');
+        generateAttendancePrintDocument();
     });
 
     // Close modal handlers
@@ -699,9 +794,382 @@ document.addEventListener('DOMContentLoaded', function() {
     // Section change event to load students
     document.getElementById('add-student-section').addEventListener('change', loadStudentsForSection);
 
+    // Import modal event listeners
+    const closeImportModalBtn = document.getElementById('close-import-attendance-modal');
+    const cancelImportBtn = document.getElementById('cancel-import-attendance');
+    const submitImportBtn = document.getElementById('submit-import-attendance');
+    const importFileInput = document.getElementById('import-attendance-file');
+    const importModal = document.getElementById('import-attendance-modal');
+
+    if (closeImportModalBtn) closeImportModalBtn.addEventListener('click', closeImportAttendanceModal);
+    if (cancelImportBtn) cancelImportBtn.addEventListener('click', closeImportAttendanceModal);
+    if (submitImportBtn) submitImportBtn.addEventListener('click', submitImportAttendance);
+    if (importFileInput) importFileInput.addEventListener('change', handleImportFileSelect);
+    if (importModal) {
+        importModal.addEventListener('click', (e) => {
+            if (e.target === importModal) closeImportAttendanceModal();
+        });
+    }
+
     // Load attendance records on page load
     loadAttendanceRecords(1);
+    
+    // Initialize export dropdown
+    initializeExportDropdown();
 });
+
+// Import Modal Functions
+function openImportAttendanceModal() {
+    const modal = document.getElementById('import-attendance-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    document.getElementById('import-attendance-form').reset();
+    document.getElementById('import-attendance-file-name').classList.add('hidden');
+    document.getElementById('import-attendance-progress').classList.add('hidden');
+    document.getElementById('submit-import-attendance').disabled = true;
+}
+
+function closeImportAttendanceModal() {
+    const modal = document.getElementById('import-attendance-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }, 200);
+}
+
+function handleImportFileSelect(e) {
+    const file = e.target.files[0];
+    const fileNameDisplay = document.getElementById('import-attendance-file-name');
+    const submitBtn = document.getElementById('submit-import-attendance');
+    
+    if (file) {
+        const validTypes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/csv'
+        ];
+        
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+            showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('File too large. Maximum file size is 10MB.', 'error');
+            e.target.value = '';
+            fileNameDisplay.classList.add('hidden');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        fileNameDisplay.textContent = `Selected: ${file.name}`;
+        fileNameDisplay.classList.remove('hidden');
+        submitBtn.disabled = false;
+    } else {
+        fileNameDisplay.classList.add('hidden');
+        submitBtn.disabled = true;
+    }
+}
+
+function submitImportAttendance() {
+    const form = document.getElementById('import-attendance-form');
+    const fileInput = document.getElementById('import-attendance-file');
+    const submitBtn = document.getElementById('submit-import-attendance');
+    const progressContainer = document.getElementById('import-attendance-progress');
+    const progressBar = document.getElementById('import-attendance-progress-bar');
+    const progressPercent = document.getElementById('import-attendance-progress-percent');
+    
+    if (!fileInput.files[0]) {
+        showToast('Please select a file to import', 'warning');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPercent.textContent = '0%';
+    
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if (progress < 90) {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+            progressPercent.textContent = Math.round(progress) + '%';
+        }
+    }, 200);
+    
+    const formData = new FormData(form);
+    
+    fetch('{% url "import_attendance" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(async response => {
+        // tolerant parse: try JSON, else return text inside message
+        try {
+            const ct = response.headers.get('content-type') || '';
+            const text = await response.text();
+            if (ct.includes('application/json')) {
+                try { return JSON.parse(text); } catch (e) { return { status: 'error', message: text }; }
+            }
+            try { return JSON.parse(text); } catch (e) { return { status: 'error', message: text }; }
+        } catch (e) {
+            return { status: 'error', message: e.message };
+        }
+    })
+    .then(data => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+        
+        setTimeout(() => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Refresh the table
+                loadAttendanceRecords(currentPage);
+            } else {
+                showToast(data.message || 'Import failed', 'error');
+                
+                if (data.errors && data.errors.length > 0) {
+                    const errorList = data.errors.slice(0, 5).join('\n');
+                    showToast('Validation Errors:\n' + errorList, 'error');
+                }
+            }
+        }, 500);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Error:', error);
+        showToast('An error occurred during import. Please try again.', 'error');
+    })
+    .finally(() => {
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            progressContainer.classList.add('hidden');
+        }, 1000);
+    });
+}
+
+// Generate print document for attendance
+function generateAttendancePrintDocument() {
+    // Get current filter values
+    const searchQuery = document.getElementById('attendance-search').value.trim();
+    const gradeValue = document.getElementById('grade-filter').value;
+    const sectionValue = document.getElementById('section-filter').value;
+    const statusValue = document.getElementById('status-filter').value;
+    const dateValue = document.getElementById('date-filter').value;
+    
+    // Build filter info string
+    let filterInfo = '';
+    const filters = [];
+    if (searchQuery) filters.push(`Search: ${searchQuery}`);
+    if (gradeValue) {
+        const gradeFilter = document.getElementById('grade-filter');
+        const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
+        filters.push(`Grade: ${gradeText}`);
+    }
+    if (sectionValue) {
+        const sectionFilter = document.getElementById('section-filter');
+        const sectionText = sectionFilter.options[sectionFilter.selectedIndex].text;
+        filters.push(`Section: ${sectionText}`);
+    }
+    if (statusValue) filters.push(`Status: ${statusValue}`);
+    if (dateValue) filters.push(`Date: ${dateValue}`);
+    if (filters.length > 0) {
+        filterInfo = filters.join(', ');
+    }
+    
+    // Get table rows and clean them for printing
+    const tableBody = document.querySelector('#attendance-table tbody');
+    if (!tableBody) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    const rows = tableBody.querySelectorAll('tr');
+    if (rows.length === 0) {
+        showToast('No data available to print', 'warning');
+        return;
+    }
+    
+    let printRows = '';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            // Extract data from cells (skip profile pic and action buttons columns)
+            const lrn = cells[0] ? cells[0].textContent.trim() : '';
+            const name = cells[2] ? cells[2].textContent.trim() : '';
+            const grade = cells[3] ? cells[3].textContent.trim() : '';
+            const section = cells[4] ? cells[4].textContent.trim() : '';
+            const date = cells[5] ? cells[5].textContent.trim() : '';
+            const timeIn = cells[6] ? cells[6].textContent.trim() : '';
+            const timeOut = cells[7] ? cells[7].textContent.trim() : '';
+            const status = cells[8] ? cells[8].textContent.trim() : '';
+            
+            printRows += `
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${lrn}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${name}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${section}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${date}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${timeIn}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${timeOut}</td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">${status}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    // Create hidden iframe for printing
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+    
+    const printDocument = printFrame.contentWindow.document;
+    printDocument.open();
+    printDocument.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Attendance Report</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #333;
+                    padding-bottom: 10px;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #1a202c;
+                }
+                .header h2 {
+                    margin: 5px 0 0 0;
+                    font-size: 16px;
+                    color: #4a5568;
+                    font-weight: normal;
+                }
+                .info {
+                    margin-bottom: 20px;
+                }
+                .info p {
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background-color: #f7fafc;
+                    padding: 12px;
+                    text-align: left;
+                    border: 1px solid #ddd;
+                    font-weight: bold;
+                    color: #2d3748;
+                    font-size: 12px;
+                }
+                td {
+                    padding: 12px;
+                    border: 1px solid #ddd;
+                    font-size: 11px;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9fafb;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #718096;
+                }
+                @media print {
+                    body { margin: 15px; }
+                    .header { margin-bottom: 20px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>PROTECH: THE TECH TO PROTECT</h1>
+                <h2>Face Recognition Attendance Monitoring System</h2>
+            </div>
+            <div class="info">
+                <p><strong>Report:</strong> Attendance Records</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>LRN</th>
+                        <th>Name</th>
+                        <th>Grade</th>
+                        <th>Section</th>
+                        <th>Date</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${printRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+        </body>
+        </html>
+    `);
+    printDocument.close();
+    
+    // Wait for content to load, then print
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+        printFrame.contentWindow.print();
+        // Remove iframe after printing
+        setTimeout(() => {
+            document.body.removeChild(printFrame);
+        }, 1000);
+    }, 250);
+}
 
 // Debounce function to prevent excessive API calls
 function debounce(func, wait) {
@@ -783,6 +1251,108 @@ function showToast(message, type = 'success', duration = 4000) {
     }
 }
 
+// --- Export Dropdown Functionality ---
+function initializeExportDropdown() {
+    const exportAttendanceBtn = document.getElementById('export-attendance-btn');
+    const exportAttendanceDropdown = document.getElementById('export-attendance-dropdown');
+    const exportAttendanceOptions = document.querySelectorAll('.export-attendance-option');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Toggle dropdown on button click
+    if (exportAttendanceBtn && exportAttendanceDropdown) {
+        exportAttendanceBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exportAttendanceDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportAttendanceBtn.contains(e.target) && !exportAttendanceDropdown.contains(e.target)) {
+                exportAttendanceDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Handle export format selection
+    exportAttendanceOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const format = this.getAttribute('data-format');
+            exportAttendanceDropdown.classList.add('hidden');
+
+            // Show loading state
+            const tableLoading = document.getElementById('attendance-table-loading');
+            tableLoading.classList.remove('hidden');
+
+            // Get current filter parameters
+            const searchQuery = document.getElementById('attendance-search').value;
+            const gradeFilterValue = document.getElementById('grade-filter').value;
+            const sectionFilterValue = document.getElementById('section-filter').value;
+            const statusFilterValue = document.getElementById('status-filter').value;
+            const dateFilterValue = document.getElementById('date-filter').value;
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (gradeFilterValue) params.append('grade', gradeFilterValue);
+            if (sectionFilterValue) params.append('section', sectionFilterValue);
+            if (statusFilterValue) params.append('status', statusFilterValue);
+            if (dateFilterValue) params.append('date', dateFilterValue);
+            params.append('format', format);
+
+            // Make the export request
+            const exportUrl = `/admin/attendance/export/?${params.toString()}`;
+
+            fetch(exportUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                tableLoading.classList.add('hidden');
+
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = `attendance_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
+
+                // Convert response to blob and download
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    // Clean up
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+
+                    showToast(`Attendance records exported successfully as ${format.toUpperCase()}!`, 'success');
+                });
+            })
+            .catch(error => {
+                tableLoading.classList.add('hidden');
+                console.error('Export error:', error);
+                showToast('Failed to export attendance records: ' + error.message, 'error');
+            });
+        });
+    });
+}
+
 // Function to load attendance records
 function loadAttendanceRecords(page = 1) {
     // Show loading state
@@ -799,9 +1369,11 @@ function loadAttendanceRecords(page = 1) {
     const sectionFilter = document.getElementById('section-filter').value;
     const statusFilter = document.getElementById('status-filter').value;
     const dateFilter = document.getElementById('date-filter').value;
+    const perPageSelect = document.getElementById('per-page-select');
+    const perPage = perPageSelect ? perPageSelect.value : '10';
     
     // Build API URL with query parameters
-    let apiUrl = `/registrar/attendance-records/search/?page=${page}`;
+    let apiUrl = `/registrar/attendance-records/search/?page=${page}&items_per_page=${perPage}`;
     if (searchQuery) apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
     if (gradeFilter) apiUrl += `&grade=${gradeFilter}`;
     if (sectionFilter) apiUrl += `&section=${sectionFilter}`;
@@ -818,6 +1390,11 @@ function loadAttendanceRecords(page = 1) {
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. Please check the URL configuration.');
         }
         return response.json();
     })
@@ -955,27 +1532,70 @@ function updatePagination(pagination) {
         return;
     }
     
+    const perPageSelect = document.getElementById('per-page-select');
+    const currentPerPage = perPageSelect ? perPageSelect.value : '10';
+    
     let paginationHTML = `
-        <div class="flex-1 flex justify-between items-center">
-            <div class="text-sm text-gray-700 dark:text-gray-300">
-                Showing <span class="font-medium">${pagination.start_index}</span> to 
-                <span class="font-medium">${pagination.end_index}</span> of 
-                <span class="font-medium">${pagination.total_count}</span> records
-            </div>
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 w-full">
+            <!-- Left: Per-page selector -->
             <div class="flex items-center space-x-2">
+                <label for="per-page-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">Show:</label>
+                <select id="per-page-select" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors">
+                    <option value="10" ${currentPerPage === '10' ? 'selected' : ''}>10</option>
+                    <option value="25" ${currentPerPage === '25' ? 'selected' : ''}>25</option>
+                    <option value="50" ${currentPerPage === '50' ? 'selected' : ''}>50</option>
+                    <option value="100" ${currentPerPage === '100' ? 'selected' : ''}>100</option>
+                </select>
+                <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+            </div>
+            
+            <!-- Right: Pagination controls with results info -->
+            <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <!-- Results info -->
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing <span class="font-medium">${pagination.start_index}</span> to 
+                    <span class="font-medium">${pagination.end_index}</span> of 
+                    <span class="font-medium">${pagination.total_count}</span> results
+                </div>
+                
+                <!-- Pagination buttons -->
+                <div class="flex items-center space-x-2">
     `;
     
-    // Previous button
-    if (pagination.has_previous) {
+    // First button
+    if (pagination.current_page > 1) {
         paginationHTML += `
-            <button data-page="${pagination.current_page - 1}" class="pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                Previous
+            <button data-page="1" class="pagination-btn relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" title="First page">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
             </button>
         `;
     } else {
         paginationHTML += `
-            <button disabled class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
-                Previous
+            <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed" title="First page">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+    }
+    
+    // Previous button
+    if (pagination.has_previous) {
+        paginationHTML += `
+            <button data-page="${pagination.current_page - 1}" class="pagination-btn relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+    } else {
+        paginationHTML += `
+            <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
             </button>
         `;
     }
@@ -1004,19 +1624,43 @@ function updatePagination(pagination) {
     // Next button
     if (pagination.has_next) {
         paginationHTML += `
-            <button data-page="${pagination.current_page + 1}" class="pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                Next
+            <button data-page="${pagination.current_page + 1}" class="pagination-btn relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
             </button>
         `;
     } else {
         paginationHTML += `
-            <button disabled class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
-                Next
+            <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+    }
+    
+    // Last button
+    if (pagination.current_page < pagination.num_pages) {
+        paginationHTML += `
+            <button data-page="${pagination.num_pages}" class="pagination-btn relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" title="Last page">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0zm-6 0a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+    } else {
+        paginationHTML += `
+            <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed" title="Last page">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0zm-6 0a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
             </button>
         `;
     }
     
     paginationHTML += `
+                </div>
             </div>
         </div>
     `;
@@ -1030,6 +1674,14 @@ function updatePagination(pagination) {
             loadAttendanceRecords(page);
         });
     });
+    
+    // Re-attach event listener for per-page selector
+    const newPerPageSelect = document.getElementById('per-page-select');
+    if (newPerPageSelect) {
+        newPerPageSelect.addEventListener('change', function() {
+            loadAttendanceRecords(1); // Reset to page 1 when changing page size
+        });
+    }
 }
 
 // Function to filter attendance records
@@ -1183,6 +1835,8 @@ function openEditAttendanceModal(attendanceId) {
     // Show loading state
     showToast('Loading attendance record...', 'info');
     
+    console.log('Fetching attendance record:', attendanceId);
+    
     // Fetch attendance record details
     fetch(`/registrar/attendance-records/${attendanceId}/`, {
         headers: {
@@ -1191,20 +1845,43 @@ function openEditAttendanceModal(attendanceId) {
         }
     })
     .then(response => {
+        console.log('Response status:', response.status);
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            return response.text().then(text => {
+                console.error('Response text:', text);
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
         }
         return response.json();
     })
     .then(data => {
-        if (data.status === 'success') {
-            const record = data.record;
+        console.log('API Response:', data);
+        console.log('Attendance object:', data.attendance);
+        if (data.success && data.attendance) {
+            const record = data.attendance;
             
             // Populate form fields
             document.getElementById('edit-attendance-id').value = record.id;
-            document.getElementById('edit-student-name').textContent = record.student_name;
-            document.getElementById('edit-student-lrn').textContent = `LRN: ${record.lrn}`;
-            document.getElementById('edit-student-section').textContent = `${record.grade} - ${record.section}`;
+            
+            // Handle student name - check different possible formats
+            let studentName = record.student_name || 
+                             (record.student ? `${record.student.first_name} ${record.student.last_name}` : '') ||
+                             `${record.first_name || ''} ${record.last_name || ''}`.trim() ||
+                             'Unknown Student';
+            document.getElementById('edit-student-name').textContent = studentName;
+            
+            // Handle LRN - check different possible locations
+            let lrn = record.student_lrn || 
+                     (record.student ? record.student.lrn : '') ||
+                     record.lrn || 
+                     'N/A';
+            document.getElementById('edit-student-lrn').textContent = `LRN: ${lrn}`;
+            
+            // Handle grade and section
+            let grade = record.grade || (record.student ? record.student.grade : '') || 'N/A';
+            let section = record.section || (record.student ? record.student.section : '') || 'N/A';
+            document.getElementById('edit-student-section').textContent = `${grade} - ${section}`;
+            
             document.getElementById('edit-attendance-date').value = record.date;
             document.getElementById('edit-attendance-status').value = record.status;
             
@@ -1225,12 +1902,13 @@ function openEditAttendanceModal(attendanceId) {
             document.getElementById('edit-attendance-modal').classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         } else {
-            throw new Error(data.message || 'Failed to load attendance record');
+            showToast(data.message || 'Failed to load attendance record', 'error');
+            console.error('API Error:', data);
         }
     })
     .catch(error => {
-        console.error('Error loading attendance record:', error);
-        showToast('Failed to load attendance record. Please try again.', 'error');
+        console.error('Catch block error:', error);
+        showToast(error.message || 'Failed to load attendance record. Please check console for details.', 'error');
     });
 }
 
@@ -1350,241 +2028,6 @@ function confirmDeleteAttendance() {
         showToast('An error occurred while deleting the attendance record', 'error');
     });
 }
-
-// Import Attendance Modal Functions
-function openImportAttendanceModal() {
-    const modal = document.getElementById('import-attendance-modal');
-    if (!modal) return;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    // ensure wrapper fades in
-    modal.classList.add('opacity-100');
-    document.body.classList.add('overflow-hidden');
-    setTimeout(() => {
-        const modalContent = modal.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.classList.remove('scale-95', 'opacity-0');
-            modalContent.classList.add('scale-100', 'opacity-100');
-        }
-    }, 10);
-    
-    // Reset form
-    document.getElementById('import-attendance-form').reset();
-    document.getElementById('import-attendance-file-name').classList.add('hidden');
-    document.getElementById('submit-import-attendance').disabled = true;
-    document.getElementById('import-attendance-progress').classList.add('hidden');
-    document.getElementById('import-attendance-results').classList.add('hidden');
-    document.getElementById('import-attendance-results').innerHTML = '';
-}
-
-function closeImportAttendanceModal() {
-    const modal = document.getElementById('import-attendance-modal');
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.classList.remove('scale-100', 'opacity-100');
-        modalContent.classList.add('scale-95', 'opacity-0');
-    }
-    // fade wrapper out
-    modal.classList.remove('opacity-100');
-    modal.classList.add('opacity-0');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        modal.classList.remove('opacity-0');
-        document.body.classList.remove('overflow-hidden');
-    }, 300);
-}
-
-// Handle file selection
-document.getElementById('import-attendance-file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const fileNameDisplay = document.getElementById('import-attendance-file-name');
-    const submitBtn = document.getElementById('submit-import-attendance');
-    if (file) {
-        // Validate file type
-        const validTypes = [
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-excel',
-            'text/csv'
-        ];
-        if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
-            showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
-            e.target.value = '';
-            fileNameDisplay.classList.add('hidden');
-            submitBtn.disabled = true;
-            return;
-        }
-        // Validate file size (10MB max)
-        if (file.size > 10 * 1024 * 1024) {
-            showToast('File too large. Maximum file size is 10MB.', 'error');
-            e.target.value = '';
-            fileNameDisplay.classList.add('hidden');
-            submitBtn.disabled = true;
-            return;
-        }
-        fileNameDisplay.textContent = `Selected: ${file.name}`;
-        fileNameDisplay.classList.remove('hidden');
-        submitBtn.disabled = false;
-    } else {
-        fileNameDisplay.classList.add('hidden');
-        submitBtn.disabled = true;
-    }
-});
-
-// Modal close handlers
-document.getElementById('close-import-attendance-modal').addEventListener('click', closeImportAttendanceModal);
-document.getElementById('cancel-import-attendance').addEventListener('click', closeImportAttendanceModal);
-
-// Submit import
-document.getElementById('submit-import-attendance').addEventListener('click', async function() {
-    const fileInput = document.getElementById('import-attendance-file');
-    if (!fileInput.files[0]) {
-        showToast('Please select a file', 'error');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('import_file', fileInput.files[0]);
-
-    const progressDiv = document.getElementById('import-attendance-progress');
-    const progressBar = document.getElementById('import-attendance-progress-bar');
-    const progressPercent = document.getElementById('import-attendance-progress-percent');
-    const resultsDiv = document.getElementById('import-attendance-results');
-    const submitBtn = document.getElementById('submit-import-attendance');
-
-    progressDiv.classList.remove('hidden');
-    resultsDiv.classList.add('hidden');
-    submitBtn.disabled = true;
-
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        if (progress < 90) {
-            progress += Math.random() * 10;
-            if (progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-            progressPercent.textContent = Math.round(progress) + '%';
-        }
-    }, 200);
-
-    try {
-        const response = await fetch('/registrar/attendance-records/import/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        });
-
-        clearInterval(progressInterval);
-        progressBar.style.width = '100%';
-        progressPercent.textContent = '100%';
-
-        // tolerant response parsing: try JSON, else fall back to text
-        let data;
-        try {
-            const ct = response.headers.get('content-type') || '';
-            const text = await response.text();
-            if (ct.includes('application/json')) {
-                try { data = JSON.parse(text); } catch (e) { data = { status: 'error', message: text }; }
-            } else {
-                try { data = JSON.parse(text); } catch (e) { data = { status: 'error', message: text }; }
-            }
-        } catch (e) {
-            data = { status: 'error', message: e.message };
-        }
-        resultsDiv.classList.remove('hidden');
-
-        setTimeout(() => {
-            resultsDiv.classList.remove('hidden');
-            if (data.status === 'success') {
-                let successHTML = `
-                    <div class="bg-green-900/20 border border-green-600/50 rounded-lg p-4">
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-green-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <div class="flex-1">
-                                <h5 class="font-semibold text-green-400 mb-2">${data.message || 'Import completed!'}</h5>
-                `;
-                if (data.created_count !== undefined || data.updated_count !== undefined || data.skipped_count !== undefined) {
-                    successHTML += '<ul class="text-sm text-green-300 space-y-1">';
-                    if (data.created_count > 0) successHTML += `<li>• Created: ${data.created_count} record(s)</li>`;
-                    if (data.updated_count > 0) successHTML += `<li>• Updated: ${data.updated_count} record(s)</li>`;
-                    if (data.skipped_count > 0) successHTML += `<li>• Skipped: ${data.skipped_count} record(s) (existing IDs or errors)</li>`;
-                    successHTML += '</ul>';
-                }
-                successHTML += `
-                            </div>
-                        </div>
-                    </div>
-                `;
-                if (data.errors && data.errors.length > 0) {
-                    successHTML += `
-                        <div class="bg-yellow-900/20 border border-yellow-600/50 rounded-lg p-4 mt-3">
-                            <div class="flex items-start">
-                                <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                                <div class="flex-1">
-                                    <h6 class="font-semibold text-yellow-400 mb-2">Errors:</h6>
-                                    <ul class="text-sm text-yellow-300 space-y-1 max-h-40 overflow-y-auto">
-                                        ${data.errors.slice(0, 10).map(err => `<li>• ${err}</li>`).join('')}
-                                    </ul>
-                                    ${data.errors.length > 10 ? `<p class="text-xs text-yellow-400 mt-2">... and ${data.errors.length - 10} more errors</p>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                resultsDiv.innerHTML = successHTML;
-                showToast(data.message || 'Import completed successfully!', 'success');
-                loadAttendanceRecords(1);
-                setTimeout(() => {
-                    closeImportAttendanceModal();
-                }, 3000);
-            } else {
-                let errorHTML = `
-                    <div class="bg-red-900/20 border border-red-600/50 rounded-lg p-4">
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                            </svg>
-                            <div class="flex-1">
-                                <h5 class="font-semibold text-red-400 mb-2">Import Failed</h5>
-                                <p class="text-sm text-red-300">${data.message || data.error || 'An error occurred during import'}</p>
-                `;
-                if (data.errors && data.errors.length > 0) {
-                    errorHTML += `
-                                <div class="mt-3 border-t border-red-600/30 pt-3">
-                                    <h6 class="text-xs font-semibold text-red-400 mb-2">Errors:</h6>
-                                    <ul class="text-xs text-red-300 space-y-1 max-h-40 overflow-y-auto">
-                                        ${data.errors.slice(0, 10).map(err => `<li>• ${err}</li>`).join('')}
-                                    </ul>
-                                    ${data.errors.length > 10 ? `<p class="text-xs text-red-400 mt-2">... and ${data.errors.length - 10} more errors</p>` : ''}
-                                </div>
-                    `;
-                }
-                errorHTML += `
-                            </div>
-                        </div>
-                    </div>
-                `;
-                resultsDiv.innerHTML = errorHTML;
-                showToast(data.message || 'Import failed', 'error');
-            }
-        }, 500);
-    } catch (error) {
-        clearInterval(progressInterval);
-        resultsDiv.classList.remove('hidden');
-        resultsDiv.innerHTML = `<div class="bg-red-900/20 border border-red-600/50 rounded-lg p-4"><div class="flex items-start"><svg class="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><div class="flex-1"><h5 class="font-semibold text-red-400 mb-2">Import Failed</h5><p class="text-sm text-red-300">${error.message}</p></div></div></div>`;
-        showToast('Import failed', 'error');
-    } finally {
-        setTimeout(() => {
-            submitBtn.disabled = false;
-            progressDiv.classList.add('hidden');
-        }, 1000);
-    }
-});
 
 // Only keep one definition for each function. Remove all duplicate function definitions below this line.
 </script>
