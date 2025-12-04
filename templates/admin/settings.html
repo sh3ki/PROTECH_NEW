@@ -66,6 +66,26 @@
                 </label>
             </div>
 
+            <!-- Info Card -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                <div class="flex gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-sm text-blue-800 dark:text-blue-300">
+                        <p class="font-semibold mb-2">Important Notes:</p>
+                        <ul class="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-400">
+                            <li>Separate mode shows individual buttons for Time In and Time Out on the device selection page</li>
+                            <li>Hybrid mode shows a single button that opens a page with two camera feeds for simultaneous time in/out</li>
+                            <li>Changes will take effect immediately on all attendance devices</li>
+                            <li>Database backups are stored locally on the server in PostgreSQL format (.sql)</li>
+                            <li>Manual backups are downloaded directly to your computer</li>
+                            <li>Automatic backups run daily at midnight (00:00 Asia/Manila Time)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <!-- Save Button -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" 
@@ -140,23 +160,151 @@
         </form>
     </div>
 
-    <!-- Info Card -->
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-        <div class="flex gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <!-- Backup & Recovery Settings Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-6" x-data="backupManager()">
+        <div class="flex items-center gap-3 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary dark:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
             </svg>
-            <div class="text-sm text-blue-800 dark:text-blue-300">
-                <p class="font-semibold mb-2">Important Notes:</p>
-                <ul class="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-400">
-                    <li>Separate mode shows individual buttons for Time In and Time Out on the device selection page</li>
-                    <li>Hybrid mode shows a single button that opens a page with two camera feeds for simultaneous time in/out</li>
-                    <li>Changes will take effect immediately on all attendance devices</li>
-                </ul>
+            <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Backup & Recovery</h2>
+        </div>
+        
+        <p class="text-accent dark:text-gray-400 mb-6">
+            Manage database backups for disaster recovery. Download backups manually or rely on automatic daily backups at 00:00 Manila Time.
+        </p>
+
+        <!-- Backup Actions -->
+        <div class="space-y-4 mb-6">
+            <!-- Manual Backup Button -->
+            <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-gray-300 dark:border-gray-700">
+                <div>
+                    <h3 class="font-semibold text-primary dark:text-tertiary text-lg mb-1">Manual Backup</h3>
+                    <p class="text-sm text-accent dark:text-gray-400">Create and download a database backup now</p>
+                </div>
+                <a href="{% url 'download_database_backup' %}" 
+                   class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                   @click="downloading = true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    <span x-show="!downloading">Download Backup</span>
+                    <span x-show="downloading">Downloading...</span>
+                </a>
             </div>
+
+            <!-- Automatic Backup Info -->
+            <div class="flex items-start gap-3 p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-blue-900 dark:text-blue-300 text-lg mb-1">Automatic Backups</h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-400">
+                        Daily backups run automatically at <strong>00:00 (midnight) Asia/Manila Time</strong>
+                    </p>
+                    <p class="text-xs text-blue-600 dark:text-blue-500 mt-2">
+                        Backups are stored in the "database backup" folder on the server. The system keeps the last 30 backups automatically.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Backups List -->
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-primary dark:text-tertiary">Recent Backups</h3>
+                <button @click="loadBackups()" 
+                        class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <div x-show="loading" class="text-center py-8">
+                <svg class="animate-spin h-8 w-8 mx-auto text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+
+            <div x-show="!loading && backups.length === 0" class="text-center py-8 text-accent dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p>No backups found</p>
+            </div>
+
+            <div x-show="!loading && backups.length > 0" class="space-y-2">
+                <template x-for="backup in backups" :key="backup.filename">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <!-- Icon based on backup type -->
+                            <div class="flex-shrink-0">
+                                <svg x-show="backup.backup_type === 'Manual'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <svg x-show="backup.backup_type === 'Automatic'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-primary dark:text-tertiary" x-text="backup.filename"></p>
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full" 
+                                          :class="backup.backup_type === 'Manual' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'"
+                                          x-text="backup.backup_type"></span>
+                                </div>
+                                <p class="text-xs text-accent dark:text-gray-500 mt-1">
+                                    <span x-text="backup.created_at"></span> • 
+                                    <span x-text="backup.size_mb"></span> MB • 
+                                    <span x-text="backup.initiated_by"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <p class="text-xs text-accent dark:text-gray-500 mt-4 text-center">
+                Showing last 5 backups. Total: <span x-text="totalCount"></span> successful backup(s).
+            </p>
         </div>
     </div>
 </div>
+
+<script>
+function backupManager() {
+    return {
+        backups: [],
+        loading: false,
+        downloading: false,
+        totalCount: 0,
+        
+        init() {
+            this.loadBackups();
+        },
+        
+        async loadBackups() {
+            this.loading = true;
+            try {
+                const response = await fetch('{% url "get_backup_status" %}');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    this.backups = data.backups;
+                    this.totalCount = data.total_count;
+                }
+            } catch (error) {
+                console.error('Error loading backups:', error);
+            } finally {
+                this.loading = false;
+            }
+        }
+    }
+}
+</script>
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 {% endblock %}
