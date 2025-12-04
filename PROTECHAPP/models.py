@@ -328,3 +328,45 @@ class PasswordResetOTP(models.Model):
         ordering = ['-created_at']
         verbose_name = "Password Reset OTP"
         verbose_name_plural = "Password Reset OTPs"
+
+# 19. Database Backup Log Table
+class BackupType(models.TextChoices):
+    MANUAL = 'MANUAL', 'Manual'
+    AUTOMATIC = 'AUTOMATIC', 'Automatic'
+
+class BackupStatus(models.TextChoices):
+    SUCCESS = 'SUCCESS', 'Success'
+    FAILED = 'FAILED', 'Failed'
+
+class BackupLog(models.Model):
+    backup_type = models.CharField(
+        max_length=20,
+        choices=BackupType.choices,
+        help_text="Type of backup: Manual or Automatic"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=BackupStatus.choices,
+        help_text="Status of backup operation"
+    )
+    filename = models.CharField(max_length=255, help_text="Name of the backup file")
+    filepath = models.CharField(max_length=500, help_text="Full path to the backup file")
+    file_size_bytes = models.BigIntegerField(help_text="Size of backup file in bytes")
+    file_size_mb = models.DecimalField(max_digits=10, decimal_places=2, help_text="Size in MB")
+    error_message = models.TextField(blank=True, null=True, help_text="Error message if backup failed")
+    initiated_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="User who initiated manual backup (null for automatic)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, help_text="When the backup was created")
+    
+    def __str__(self):
+        return f"{self.get_backup_type_display()} Backup - {self.filename} ({self.get_status_display()})"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Backup Log"
+        verbose_name_plural = "Backup Logs"
