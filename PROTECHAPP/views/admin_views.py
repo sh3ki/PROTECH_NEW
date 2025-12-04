@@ -4749,6 +4749,81 @@ def save_late_time_cutoff(request):
 
 @login_required
 @user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def download_database_backup(request):
+    """Generate and download database backup"""
+    from PROTECHAPP.backup_utils import create_database_backup
+    from django.http import FileResponse
+    import mimetypes
+    
+    try:
+        # Create backup with user info
+        success, filepath, error_msg = create_database_backup(backup_type='MANUAL', user=request.user)
+        
+        if not success:
+            # Format error message for better display
+            if 'pg_dump command not found' in error_msg:
+                messages.error(
+                    request, 
+                    'Backup failed: pg_dump command not found. Please ensure PostgreSQL client tools are installed.'
+                )
+            else:
+                messages.error(request, f'Backup failed: {error_msg}')
+            return redirect('admin_settings')
+        
+        # Serve file for download
+        file_handle = open(filepath, 'rb')
+        response = FileResponse(file_handle, content_type='application/sql')
+        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+        response['Content-Length'] = os.path.getsize(filepath)
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error creating backup: {str(e)}')
+        return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["GET"])
+def get_backup_status(request):
+    """Get backup status and list of recent backups from database"""
+    from PROTECHAPP.models import BackupLog
+    
+    try:
+        # Get last 5 successful backups from database
+        backups = BackupLog.objects.filter(status='SUCCESS').order_by('-created_at')[:5]
+        
+        # Format for JSON response
+        backup_data = []
+        for backup in backups:
+            backup_data.append({
+                'filename': backup.filename,
+                'size_mb': float(backup.file_size_mb),
+                'created_at': backup.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'backup_type': backup.get_backup_type_display(),
+                'initiated_by': backup.initiated_by.get_full_name() if backup.initiated_by else 'System'
+            })
+        
+        # Get total count of all backups
+        total_count = BackupLog.objects.filter(status='SUCCESS').count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'backups': backup_data,
+            'total_count': total_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_admin)
 def admin_messages(request):
     """View for messages"""
     from django.conf import settings
