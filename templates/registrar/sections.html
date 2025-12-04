@@ -929,7 +929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('view-section-modal').classList.remove('hidden');
                 
                 // Fetch students in this section
-                fetch(`/admin/sections/${sectionId}/students/`, {
+                fetch(`/registrar/sections/${sectionId}/students/`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRFToken': csrfToken
