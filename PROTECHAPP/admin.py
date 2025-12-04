@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     CustomUser, Grade, Section, Student, Guardian, Attendance, ExcusedAbsence,
     Notification, AdvisoryAssignment, ActivityLog, UserSession, BroadcastAnnouncement,
-    Chat, Message, ChatParticipant, MessageNotification, SystemSettings
+    Chat, Message, ChatParticipant, MessageNotification, SystemSettings, BackupLog
 )
 
 class CustomUserAdmin(UserAdmin):
@@ -15,6 +15,13 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Additional Info', {'fields': ('middle_name', 'profile_pic', 'role')}),
     )
+
+class BackupLogAdmin(admin.ModelAdmin):
+    list_display = ['filename', 'backup_type', 'status', 'file_size_mb', 'initiated_by', 'created_at']
+    list_filter = ['backup_type', 'status', 'created_at']
+    search_fields = ['filename', 'error_message']
+    readonly_fields = ['filename', 'filepath', 'file_size_bytes', 'file_size_mb', 'backup_type', 'status', 'error_message', 'initiated_by', 'created_at']
+    ordering = ['-created_at']
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Grade)
@@ -33,3 +40,4 @@ admin.site.register(Message)
 admin.site.register(ChatParticipant)
 admin.site.register(MessageNotification)
 admin.site.register(SystemSettings)
+admin.site.register(BackupLog, BackupLogAdmin)
