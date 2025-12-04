@@ -160,6 +160,8 @@ urlpatterns = [
     path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
     path('admin/settings/save-attendance-mode/', admin_views.save_attendance_mode, name='save_attendance_mode'),
     path('admin/settings/save-late-time-cutoff/', admin_views.save_late_time_cutoff, name='save_late_time_cutoff'),
+    path('admin/settings/download-backup/', admin_views.download_database_backup, name='download_database_backup'),
+    path('admin/settings/backup-status/', admin_views.get_backup_status, name='get_backup_status'),
 
 
 # ==========================
