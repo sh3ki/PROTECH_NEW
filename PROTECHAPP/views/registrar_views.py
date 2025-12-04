@@ -2869,6 +2869,11 @@ def registrar_get_excused_absence(request, excused_id):
     try:
         record = get_object_or_404(ExcusedAbsence, id=excused_id)
         
+        # Extract just the filename from the excuse_letter path
+        excuse_letter_filename = record.excuse_letter
+        if excuse_letter_filename and excuse_letter_filename.startswith('private_excuse_letters/'):
+            excuse_letter_filename = excuse_letter_filename.replace('private_excuse_letters/', '')
+        
         data = {
             'id': record.id,
             'student_id': record.student.id,
@@ -2877,7 +2882,7 @@ def registrar_get_excused_absence(request, excused_id):
             'date_absent': record.date_absent.strftime('%Y-%m-%d'),
             'effective_date': record.effective_date.strftime('%Y-%m-%d'),
             'end_date': record.end_date.strftime('%Y-%m-%d'),
-            'excuse_letter': record.excuse_letter,
+            'excuse_letter': excuse_letter_filename,  # Return just the filename
             'section': record.student.section.name if record.student.section else '',
             'section_id': record.student.section.id if record.student.section else None,
             'grade': record.student.grade.name if record.student.grade else '',
