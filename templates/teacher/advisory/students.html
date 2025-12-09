@@ -267,109 +267,132 @@
 </div>
 
 <!-- Import Students Modal -->
-<div id="import-students-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
+<div id="import-students-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
         <!-- Modal Header -->
-        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                        <i class="fas fa-file-import text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">Import Students</h3>
-                        <p class="text-white/80 text-sm">Upload CSV or Excel file to import students to {{ section.grade.name }} - {{ section.name }}</p>
-                    </div>
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
                 </div>
-                <button id="close-import-students-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Students</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file to import students to {{ section.grade.name }} - {{ section.name }}</p>
+                </div>
             </div>
+            <button type="button" id="close-import-students-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
 
         <!-- Modal Body -->
-        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
-            <!-- Instructions Section -->
-            <div class="mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
-                    <a href="{% url 'download_advisory_student_template' %}" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Download Excel Template
-                    </a>
-                </div>
-                
-                <!-- Format Example -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
-                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="border-b dark:border-gray-600">
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">ID</td>
-                                    <td class="p-2">Student ID (optional, for reference only)</td>
-                                    <td class="p-2">Leave blank for new students</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">LRN</td>
-                                    <td class="p-2">Learner Reference Number (required, 12 digits)</td>
-                                    <td class="p-2">123456789012</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">First Name</td>
-                                    <td class="p-2">Student first name (required)</td>
-                                    <td class="p-2">Juan</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Middle Name</td>
-                                    <td class="p-2">Student middle name (optional)</td>
-                                    <td class="p-2">Santos</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Last Name</td>
-                                    <td class="p-2">Student last name (required)</td>
-                                    <td class="p-2">Dela Cruz</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Status</td>
-                                    <td class="p-2">Student status (required)</td>
-                                    <td class="p-2">ACTIVE or INACTIVE</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Guardian Info</td>
-                                    <td class="p-2">Guardian details (optional but recommended)</td>
-                                    <td class="p-2">Name, Email, Phone, Relationship</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Important Notes -->
-                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
-                    </h5>
-                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                        <li>• <strong>Leave ID blank for new students.</strong> Rows with existing IDs will be SKIPPED (not imported)</li>
-                        <li>• LRN must be exactly 12 digits and unique</li>
-                        <li>• Students will be automatically assigned to {{ section.grade.name }} - {{ section.name }}</li>
-                        <li>• Guardian information is optional but highly recommended</li>
-                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
-                        <li>• Maximum file size: 10MB</li>
-                    </ul>
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)]" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+            <!-- Instructions -->
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format with all required columns</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
                 </div>
             </div>
 
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Student Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'download_advisory_student_template' %}" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- Column Specifications Table -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Required Columns and Format
+                </h4>
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Column</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Format/Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">LRN</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Exactly 12 digits. Must be unique.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">First Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Student's first name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Last Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Student's last name</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Status</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Either "ACTIVE" or "INACTIVE"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Important Notes
+                </h4>
+                <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Auto Assignment:</strong> Students will be automatically assigned to {{ section.grade.name }} - {{ section.name }}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>LRN Validation:</strong> LRN must be exactly 12 digits and unique in the system</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Existing Records:</strong> If a student with the same LRN exists, that row will be skipped</span>
+                    </li>
+                </ul>
+            </div>
+
             <!-- File Upload Section -->
-            <div class="border-t dark:border-gray-700 pt-6">
+            <div class="mb-8">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                     <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
                     Upload File
@@ -409,15 +432,13 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-import-students" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
-                    Cancel
-                </button>
-                <button type="button" id="submit-import-students" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
-                    <i class="fas fa-upload mr-2"></i>Import
-                </button>
-            </div>
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <button type="button" id="cancel-import-students" class="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+            <button type="button" id="submit-import-students" class="px-6 py-2.5 bg-gradient-to-r from-primary to-tertiary text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-upload mr-2"></i> Import Students
+            </button>
         </div>
     </div>
 </div>
@@ -1138,6 +1159,44 @@ function initializeExportDropdown() {
 </script>
 
 <style>
+/* Custom scrollbar for modal */
+.modal-content::-webkit-scrollbar,
+.modal-content div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.modal-content div::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.dark .modal-content::-webkit-scrollbar-track,
+.dark .modal-content div::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.modal-content div::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-content div::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.dark .modal-content::-webkit-scrollbar-thumb,
+.dark .modal-content div::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark .modal-content::-webkit-scrollbar-thumb:hover,
+.dark .modal-content div::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
 @media print {
     /* Hide non-essential elements when printing */
     .sidebar, button, input[type="search"], .no-print {
