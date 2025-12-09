@@ -3862,33 +3862,62 @@ def export_registrar_grades(request):
 def export_registrar_sections(request):
     """Export sections to Excel, PDF, or Word"""
     try:
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-        from openpyxl.utils import get_column_letter
-    except ImportError as e:
-        return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
-    
-    export_format = request.GET.get('format', 'excel')
-    sections = Section.objects.all().select_related('grade').order_by('id')
-    
-    headers = ['ID', 'Section Name', 'Grade', 'Room Number', 'Capacity']
-    data_rows = []
-    
-    for section in sections:
-        data_rows.append([
-            section.id,
-            section.name,
-            section.grade.name if section.grade else '',
-            section.room_number or '',
-            section.capacity or ''
-        ])
-    
-    if export_format == 'pdf':
-        return export_registrar_data_to_pdf(headers, data_rows, "Sections")
-    elif export_format == 'word':
-        return export_registrar_data_to_word(headers, data_rows, "Sections")
-    else:
-        return export_registrar_data_to_excel(headers, data_rows, "Sections")
+        export_format = request.GET.get('format', 'excel')
+        search_query = request.GET.get('search', '').strip()
+        grade_filter = request.GET.get('grade', '').strip()
+        advisor_filter = request.GET.get('advisor', '').strip()
+        
+        # Use select_related for grade and prefetch advisory assignments
+        sections = Section.objects.select_related('grade').prefetch_related(
+            'advisory_assignments__teacher'
+        ).all().order_by('id')
+        
+        if search_query:
+            sections = sections.filter(
+                Q(name__icontains=search_query) |
+                Q(grade__name__icontains=search_query)
+            )
+        
+        if grade_filter:
+            sections = sections.filter(grade__id=grade_filter)
+        
+        if advisor_filter:
+            if advisor_filter == 'with_advisor':
+                sections = sections.filter(advisory_assignments__isnull=False).distinct()
+            elif advisor_filter == 'without_advisor':
+                sections = sections.filter(advisory_assignments__isnull=True)
+        
+        headers = ['Section Name', 'Grade', 'Students', 'Advisor']
+        
+        data_rows = []
+        for section in sections:
+            # Get student count
+            student_count = section.students.count()
+            
+            # Get advisor name
+            advisor = section.advisory_assignments.first()
+            advisor_name = ''
+            if advisor and advisor.teacher:
+                advisor_name = f"{advisor.teacher.first_name} {advisor.teacher.last_name}"
+
+            data_rows.append([
+                section.name,
+                section.grade.name if section.grade else "",
+                str(student_count),
+                advisor_name
+            ])
+        
+        if export_format == 'pdf':
+            return export_registrar_data_to_pdf(headers, data_rows, "Sections")
+        elif export_format == 'word':
+            return export_registrar_data_to_word(headers, data_rows, "Sections")
+        else:
+            return export_registrar_data_to_excel(headers, data_rows, "Sections")
+    except Exception as e:
+        import traceback
+        print(f"Export sections error: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_registrar)
