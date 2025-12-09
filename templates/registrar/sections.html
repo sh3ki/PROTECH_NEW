@@ -412,93 +412,175 @@
     #section-toast-container > div {
         pointer-events: auto;
     }
+
+    /* Custom scrollbar for modal */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-track {
+        background: #374151;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #6b7280;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
 </style>
 
 <!-- Import Sections Modal -->
-<div id="import-sections-modal" class="fixed inset-0 z-[9999] hidden bg-gray-900/80 backdrop-blur-sm transition-opacity overflow-hidden">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] relative overflow-hidden flex flex-col modal-content scale-95 opacity-0 transition-all duration-300">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-2xl flex justify-between items-center">
-            <h3 class="text-xl font-bold text-white">Import Sections</h3>
-            <button id="close-import-sections-modal" class="text-white hover:text-gray-200 transition-colors">
+<div id="import-sections-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Sections</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with section data</p>
+                </div>
+            </div>
+            <button type="button" id="close-import-sections-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <!-- Body -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 pb-24">
-            <!-- Instructions Section -->
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">File Format Instructions</h4>
-                    <a href="/registrar/sections/import/template/" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Download Excel Template
-                    </a>
-                </div>
-                
-                <!-- Format Example -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">Required Columns:</h5>
-                    <div class="bg-white dark:bg-gray-800 rounded border p-3 font-mono text-sm overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="border-b dark:border-gray-600">
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Column</th>
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Description</th>
-                                    <th class="p-2 text-gray-600 dark:text-gray-300">Example</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">ID</td>
-                                    <td class="p-2">Section ID (optional, for reference only)</td>
-                                    <td class="p-2">Leave blank for new sections</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Section Name</td>
-                                    <td class="p-2">Name of the section (required)</td>
-                                    <td class="p-2">Section A, Rizal, Einstein</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Grade</td>
-                                    <td class="p-2">Grade level (required, must exist)</td>
-                                    <td class="p-2">Grade 7, Grade 8</td>
-                                </tr>
-                                <tr class="border-b dark:border-gray-600">
-                                    <td class="p-2 font-medium">Room Number</td>
-                                    <td class="p-2">Classroom number (optional)</td>
-                                    <td class="p-2">Room 101, Lab 2</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 font-medium">Capacity</td>
-                                    <td class="p-2">Maximum students (required, must be positive)</td>
-                                    <td class="p-2">40, 35</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Important Notes -->
-                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h5 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:
-                    </h5>
-                    <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                        <li>• <strong>Leave ID blank for new sections.</strong> Rows with existing IDs will be SKIPPED</li>
-                        <li>• Grade must already exist in the system</li>
-                        <li>• Each section name + grade combination must be unique</li>
-                        <li>• Capacity must be a positive number</li>
-                        <li>• Supported file formats: .csv, .xlsx, .xls</li>
-                        <li>• Maximum file size: 10MB</li>
-                    </ul>
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)]" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+            <!-- Instructions -->
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format with all required columns</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
                 </div>
             </div>
 
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Section Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
+                        </div>
+                    </div>
+                    <a href="/registrar/sections/import/template/" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- Column Specifications Table -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Required Columns and Format
+                </h4>
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Column</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Format/Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">ID</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Leave blank for new sections. If provided and exists, row will be skipped.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Section Name</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Name of the section (e.g., Section A, Rizal, Einstein)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Grade</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Existing grade level (e.g., Grade 7, Grade 8)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Room Number</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">Optional</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Classroom assignment (e.g., Room 101, Lab 2)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Capacity</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded">Required</span></td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">Maximum students (positive number, e.g., 40, 35)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Important Notes
+                </h4>
+                <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Existing Records:</strong> If the ID column contains an existing section ID, that row will be skipped to prevent duplicates.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Grade Validation:</strong> The grade must already exist in the system.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Uniqueness:</strong> Each section name + grade combination must be unique.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-arrow-right text-amber-600 dark:text-amber-400 mt-1 mr-2 text-xs"></i>
+                        <span><strong>Capacity:</strong> Must be a positive whole number.</span>
+                    </li>
+                </ul>
+            </div>
+
             <!-- File Upload Section -->
-            <div class="mb-6">
+            <div class="mb-8">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                     <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
                     Upload File
@@ -536,13 +618,16 @@
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="absolute bottom-0 left-0 right-0 z-50 bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700">
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-import-sections" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
-                <button type="button" id="submit-import-sections" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-upload mr-2"></i>Import</button>
+                <button type="button" id="cancel-import-sections" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="button" id="submit-import-sections" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-upload mr-2"></i>Import
+                </button>
             </div>
-        </div>
         </div>
     </div>
 </div>
@@ -1215,19 +1300,79 @@ document.addEventListener('DOMContentLoaded', function() {
     // Export functionality
     const exportBtn = document.getElementById('export-sections-btn');
     if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
+        exportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             const dropdown = document.createElement('div');
             dropdown.className = 'absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 border border-gray-200 dark:border-gray-700 overflow-hidden';
             dropdown.innerHTML = `
-                <a href="/registrar/sections/export/?format=excel" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Excel</a>
-                <a href="/registrar/sections/export/?format=pdf" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as PDF</a>
-                <a href="/registrar/sections/export/?format=word" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Export as Word</a>
+                <button class="export-option block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="excel">Export as Excel</button>
+                <button class="export-option block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="pdf">Export as PDF</button>
+                <button class="export-option block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-format="word">Export as Word</button>
             `;
             const existing = document.querySelector('.export-dropdown');
             if (existing) existing.remove();
             dropdown.classList.add('export-dropdown');
             exportBtn.parentElement.style.position = 'relative';
             exportBtn.parentElement.appendChild(dropdown);
+            
+            // Handle export option clicks
+            dropdown.querySelectorAll('.export-option').forEach(option => {
+                option.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const format = this.dataset.format;
+                    dropdown.remove();
+                    
+                    // Get current filter values
+                    const searchValue = sectionSearch?.value || '';
+                    const gradeValue = gradeFilter?.value || '';
+                    const advisorValue = advisorFilter?.value || '';
+                    
+                    // Build URL with filter parameters
+                    const params = new URLSearchParams({
+                        format: format,
+                        search: searchValue,
+                        grade: gradeValue,
+                        advisor: advisorValue
+                    });
+                    
+                    try {
+                        showToast(`Generating ${format.toUpperCase()} export...`, 'info', 3000);
+                        
+                        const response = await fetch(`/registrar/sections/export/?${params.toString()}`);
+                        
+                        // Check if response is JSON (error) or blob (file)
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            showToast(data.error || 'Export failed', 'error');
+                            return;
+                        }
+                        
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        
+                        // Set filename based on format
+                        let filename = 'sections_list';
+                        if (format === 'excel') filename += '.xlsx';
+                        else if (format === 'pdf') filename += '.pdf';
+                        else if (format === 'word') filename += '.docx';
+                        
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        showToast(`${format.toUpperCase()} file downloaded successfully!`, 'success');
+                    } catch (error) {
+                        console.error('Export error:', error);
+                        showToast('Failed to export file', 'error');
+                    }
+                });
+            });
+            
             setTimeout(() => {
                 document.addEventListener('click', function closeDropdown(e) {
                     if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
