@@ -568,47 +568,114 @@
 <div id="guardian-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
 <!-- Import Guardians Modal -->
-<div id="import-guardians-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-3xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 flex flex-col">
-        <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-8 py-5 flex-shrink-0">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                        <i class="fas fa-file-import text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">Import Guardians</h3>
-                        <p class="text-white/80 text-sm">Upload CSV or Excel file</p>
-                    </div>
+<div id="import-guardians-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-tertiary px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-file-import text-white text-2xl"></i>
                 </div>
-                <button id="close-import-guardians-modal" class="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Import Guardians</h3>
+                    <p class="text-blue-100 text-sm mt-1">Upload Excel file with guardian data</p>
+                </div>
             </div>
+            <button type="button" id="close-import-guardians-modal" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
-        <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
-            <div class="mb-6">
-                <a href="/admin/guardians/import/template/" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                    <i class="fas fa-file-excel mr-2"></i>Download Template
-                </a>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)] custom-scrollbar">
+            <!-- Instructions -->
+            <div class="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg">
+                <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> File Format Instructions
+                </h4>
+                <div class="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Download Template:</strong> Click "Download Template" button to get the correct Excel format</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Supported Formats:</strong> Excel files (.xlsx, .xls) and CSV files (.csv)</span>
+                    </p>
+                    <p class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-600 dark:text-blue-400 mt-0.5 mr-2"></i>
+                        <span><strong>Maximum Size:</strong> 10MB per file</span>
+                    </p>
+                </div>
             </div>
-            <div class="border-t dark:border-gray-700 pt-6">
-                <form id="import-guardians-form" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input type="file" id="import-guardians-file" name="import_file" accept=".csv,.xlsx,.xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-300">
-                    <div id="import-guardians-progress" class="hidden mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                            <div id="import-guardians-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+
+            <!-- Template Download Section -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-green-100 dark:bg-green-800 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 dark:text-green-300 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Guardian Import Template</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Excel template with proper format and column headers</p>
                         </div>
                     </div>
-                    <div id="import-guardians-results" class="hidden mt-4 p-4 rounded-lg"></div>
+                    <a href="/admin/guardians/import/template/" 
+                       class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-primary mr-2"></i>
+                    Upload File
+                </h4>
+                <form id="import-guardians-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="flex items-center justify-center w-full mb-4">
+                        <label for="import-guardians-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
+                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
+                            </div>
+                            <input id="import-guardians-file" name="import_file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+                        </label>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="import-guardians-progress" class="hidden mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Importing guardians...</span>
+                            <span id="import-guardians-progress-percent" class="text-sm text-gray-500 dark:text-gray-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="import-guardians-progress-bar" class="bg-gradient-to-r from-primary to-tertiary h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import Results -->
+                    <div id="import-guardians-results" class="hidden"></div>
                 </form>
             </div>
         </div>
+
+        <!-- Modal Footer -->
         <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-import-guardians" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">Cancel</button>
-                <button type="button" id="submit-import-guardians" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"><i class="fas fa-upload mr-2"></i>Import</button>
+                <button type="button" id="cancel-import-guardians" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="button" id="submit-import-guardians" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
+                    <i class="fas fa-upload mr-2"></i>Import
+                </button>
             </div>
         </div>
     </div>
