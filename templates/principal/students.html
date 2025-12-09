@@ -218,6 +218,7 @@
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
+                        <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -1315,7 +1316,7 @@ function initializeExportDropdown() {
             params.append('format', format);
 
             // Make the export request
-            const exportUrl = `/admin/students/export/?${params.toString()}`;
+            const exportUrl = `/principal/students/export/?${params.toString()}`;
 
             fetch(exportUrl, {
                 method: 'GET',
@@ -1876,6 +1877,15 @@ function renderStudentsTable(students) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-lg text-gray-900 dark:text-white">${student.section || 'N/A'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    student.status === 'ACTIVE' ? 
+                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                }">
+                    ${student.status}
+                </span>
             </td>
         </tr>
     `).join('');
