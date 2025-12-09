@@ -3928,6 +3928,7 @@ def delete_attendance_record(request, attendance_id):
 def export_attendance_to_excel(request):
     """Export attendance records to Excel, PDF, or Word file"""
     import sys
+    import traceback
     sys.stdout.flush()  # Force flush output
     print("\n" + "="*80, flush=True)
     print("=== EXPORT ATTENDANCE CALLED ===", flush=True)
