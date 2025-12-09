@@ -799,36 +799,66 @@ def export_principal_data_to_word(data, headers, filename, title):
 @login_required
 @user_passes_test(is_principal)
 def export_principal_students(request):
-    """Export students data"""
-    format_type = request.GET.get('format', 'excel')
-    
-    students = Student.objects.select_related('section', 'section__grade').order_by('id')
-    
-    headers = ['ID', 'LRN', 'Last Name', 'First Name', 'Middle Name', 'Email', 'Grade', 'Section', 'Status']
-    data = []
-    
-    for student in students:
-        data.append([
-            student.id,
-            student.lrn or '',
-            student.last_name or '',
-            student.first_name or '',
-            student.middle_name or '',
-            student.email or '',
-            student.section.grade.name if student.section else '',
-            student.section.name if student.section else '',
-            'Active' if student.is_active else 'Inactive'
-        ])
-    
-    title = 'Students List'
-    filename = f'students_{timezone.now().strftime("%Y%m%d_%H%M%S")}'
-    
-    if format_type == 'pdf':
-        return export_principal_data_to_pdf(data, headers, f'{filename}.pdf', title)
-    elif format_type == 'word':
-        return export_principal_data_to_word(data, headers, f'{filename}.docx', title)
-    else:
-        return export_principal_data_to_excel(data, headers, f'{filename}.xlsx', title)
+    """Export students data with filter support"""
+    try:
+        # Get query parameters for filtering
+        search_query = request.GET.get('search', '').strip()
+        grade_filter = request.GET.get('grade', '')
+        section_filter = request.GET.get('section', '')
+        status_filter = request.GET.get('status', '')
+        format_type = request.GET.get('format', 'excel')
+        
+        # Base queryset
+        students = Student.objects.select_related('section', 'section__grade').order_by('id')
+        
+        # Apply search if provided
+        if search_query:
+            students = students.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(lrn__icontains=search_query)
+            )
+        
+        # Apply grade filter if provided
+        if grade_filter:
+            students = students.filter(grade_id=grade_filter)
+        
+        # Apply section filter if provided
+        if section_filter:
+            students = students.filter(section_id=section_filter)
+        
+        # Apply status filter if provided
+        if status_filter:
+            students = students.filter(status=status_filter)
+        
+        headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Grade', 'Section', 'Status']
+        data = []
+        
+        for student in students:
+            data.append([
+                student.lrn or '',
+                student.last_name or '',
+                student.first_name or '',
+                student.middle_name or '',
+                student.section.grade.name if student.section else '',
+                student.section.name if student.section else '',
+                student.get_status_display()
+            ])
+        
+        title = 'Students List'
+        filename = f'students_{timezone.now().strftime("%Y%m%d_%H%M%S")}'
+        
+        if format_type == 'pdf':
+            return export_principal_data_to_pdf(data, headers, f'{filename}.pdf', title)
+        elif format_type == 'word':
+            return export_principal_data_to_word(data, headers, f'{filename}.docx', title)
+        else:
+            return export_principal_data_to_excel(data, headers, f'{filename}.xlsx', title)
+    except Exception as e:
+        import traceback
+        print(f"Export error: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_principal)
@@ -903,22 +933,42 @@ def export_principal_guardians(request):
 @user_passes_test(is_principal)
 def export_principal_grades(request):
     """Export grades data"""
-    format_type = request.GET.get('format', 'excel')
-    
-    grades = Grade.objects.annotate(section_count=Count('section')).order_by('id')
-    
-    headers = ['ID', 'Grade Name', 'Section Count']
-    data = [[grade.id, grade.name, grade.section_count] for grade in grades]
-    
-    title = 'Grades List'
-    filename = f'grades_{timezone.now().strftime("%Y%m%d_%H%M%S")}'
-    
-    if format_type == 'pdf':
-        return export_principal_data_to_pdf(data, headers, f'{filename}.pdf', title)
-    elif format_type == 'word':
-        return export_principal_data_to_word(data, headers, f'{filename}.docx', title)
-    else:
-        return export_principal_data_to_excel(data, headers, f'{filename}.xlsx', title)
+    try:
+        format_type = request.GET.get('format', 'excel')
+        search_query = request.GET.get('search', '').strip()
+        
+        grades = Grade.objects.all().order_by('id')
+        
+        if search_query:
+            grades = grades.filter(name__icontains=search_query)
+        
+        headers = ['Grade', 'Sections', 'Students']
+        data = []
+        
+        for grade in grades:
+            section_count = grade.sections.count()
+            student_count = Student.objects.filter(grade=grade).count()
+            
+            data.append([
+                grade.name,
+                str(section_count),
+                str(student_count)
+            ])
+        
+        title = 'Grades List'
+        filename = f'grades_{timezone.now().strftime("%Y%m%d_%H%M%S")}'
+        
+        if format_type == 'pdf':
+            return export_principal_data_to_pdf(data, headers, f'{filename}.pdf', title)
+        elif format_type == 'word':
+            return export_principal_data_to_word(data, headers, f'{filename}.docx', title)
+        else:
+            return export_principal_data_to_excel(data, headers, f'{filename}.xlsx', title)
+    except Exception as e:
+        import traceback
+        print(f"Export error: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 @user_passes_test(is_principal)
