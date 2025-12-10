@@ -61,6 +61,11 @@ class CustomUser(AbstractUser):
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.get_role_display()})"
+    
+    @property
+    def is_advisory(self):
+        """Check if teacher is an advisory (has a section assigned)"""
+        return self.role == UserRole.TEACHER and self.section is not None
 
 # 2. Grades Table
 class Grade(models.Model):
