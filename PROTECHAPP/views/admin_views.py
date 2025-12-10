@@ -4666,10 +4666,16 @@ def admin_settings(request):
     
     # Create a datetime object with today's date and the stored UTC time
     if settings_obj.late_time_cutoff:
+        # Convert to time object if it's a string
+        late_time = settings_obj.late_time_cutoff
+        if isinstance(late_time, str):
+            from datetime import datetime
+            late_time = datetime.strptime(late_time, '%H:%M:%S').time()
+        
         # Combine today's date with the time and make it timezone-aware in UTC
         utc_datetime = timezone.datetime.combine(
             timezone.now().date(),
-            settings_obj.late_time_cutoff
+            late_time
         )
         utc_datetime = utc_tz.localize(utc_datetime)
         
