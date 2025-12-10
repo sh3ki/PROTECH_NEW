@@ -59,12 +59,22 @@ class Command(BaseCommand):
                 section__isnull=True  # Teachers not yet assigned to sections
             ).order_by('username')[:30]  # Get first 30 advisory teachers
             
+            # Import AdvisoryAssignment model
+            from PROTECHAPP.models import AdvisoryAssignment
+            
             teachers_assigned = 0
             for i, section in enumerate(section_objects):
                 if i < len(advisory_teachers):
                     teacher = advisory_teachers[i]
                     teacher.section = section
                     teacher.save()
+                    
+                    # Create AdvisoryAssignment record
+                    AdvisoryAssignment.objects.get_or_create(
+                        teacher=teacher,
+                        section=section
+                    )
+                    
                     teachers_assigned += 1
                     self.stdout.write(f'Assigned {teacher.first_name} {teacher.last_name} as advisor to {section.grade.name} - {section.name}')
         
