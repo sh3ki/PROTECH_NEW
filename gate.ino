@@ -5,8 +5,8 @@
 const char* ssid = "wifi";
 const char* password = "123456789";
 
-// Server URL - CHANGE THIS TO YOUR DEPLOYED SERVER IP/DOMAIN
-const char* serverUrl = "http://YOUR_SERVER_IP/api/gate/check-queue/";
+// Server URL - Using your domain
+const char* serverUrl = "http://protech.it.com/api/gate/check-queue/";
 
 // Motor control pins
 int IN1 = 26;   // Direction pin 1
