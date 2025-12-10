@@ -12,6 +12,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from threading import Thread
 from PROTECHAPP.philsms_service import send_sms
+import requests
 
 def time_in(request):
     """Time In page for face recognition attendance"""
@@ -193,6 +194,9 @@ Status: {attendance.status}
                 # Send email in background thread
                 Thread(target=send_guardian_notification).start()
                 
+                # Trigger gate opening
+                trigger_gate_opening()
+                
                 return JsonResponse({
                     'success': True,
                     'message': f'Time in recorded for {student.first_name} {student.last_name}',
@@ -296,6 +300,9 @@ Time: {manila_time.strftime('%I:%M %p')}
                 
                 # Send email in background thread
                 Thread(target=send_guardian_notification).start()
+                
+                # Trigger gate opening
+                trigger_gate_opening()
                 
                 return JsonResponse({
                     'success': True,
@@ -451,6 +458,80 @@ def get_today_timeout(request):
         
     except Exception as e:
         print(f"Error in get_today_timeout: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# Gate queue for controlling physical gate
+gate_queue = []
+
+def trigger_gate_opening():
+    """
+    Helper function to add gate trigger to queue
+    Called internally when attendance is recorded
+    """
+    global gate_queue
+    try:
+        gate_queue.append(timezone.now())
+        print(f"✅ Gate trigger added to queue. Queue length: {len(gate_queue)}")
+    except Exception as e:
+        print(f"❌ Error adding gate trigger to queue: {e}")
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def trigger_gate(request):
+    """
+    API endpoint for Arduino to trigger gate opening
+    Called when attendance is recorded
+    """
+    global gate_queue
+    
+    try:
+        # Add to queue
+        gate_queue.append(timezone.now())
+        
+        return JsonResponse({
+            'success': True,
+            'queue_length': len(gate_queue),
+            'message': 'Gate trigger added to queue'
+        })
+    except Exception as e:
+        print(f"Error in trigger_gate: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def check_gate_queue(request):
+    """
+    API endpoint for Arduino to check if there are queued gate operations
+    Returns the number of cycles to perform
+    """
+    global gate_queue
+    
+    try:
+        queue_length = len(gate_queue)
+        
+        if queue_length > 0:
+            # Clear the queue
+            gate_queue = []
+            
+            return JsonResponse({
+                'success': True,
+                'cycles': queue_length,
+                'message': f'{queue_length} gate cycle(s) to perform'
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'cycles': 0,
+                'message': 'No gate cycles in queue'
+            })
+    except Exception as e:
+        print(f"Error in check_gate_queue: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
