@@ -28,6 +28,10 @@ urlpatterns = [
     path('api/record-attendance/', face_recognition_views.record_attendance_api, name='record_attendance_api'),
     path('api/today-attendance/', face_recognition_views.get_today_attendance, name='get_today_attendance'),
     path('api/today-timeout/', face_recognition_views.get_today_timeout, name='get_today_timeout'),
+    
+    # Gate Control API routes
+    path('api/gate/trigger/', face_recognition_views.trigger_gate, name='trigger_gate'),
+    path('api/gate/check-queue/', face_recognition_views.check_gate_queue, name='check_gate_queue'),
 
     # Message API routes (used by all user types)
     # NOTE: Specific paths MUST come before parameterized paths to avoid incorrect matching
