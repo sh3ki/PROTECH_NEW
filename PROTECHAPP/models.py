@@ -64,8 +64,10 @@ class CustomUser(AbstractUser):
     
     @property
     def is_advisory(self):
-        """Check if teacher is an advisory (has a section assigned)"""
-        return self.role == UserRole.TEACHER and self.section is not None
+        """Check if teacher is an advisory (has AdvisoryAssignment record)"""
+        if self.role != UserRole.TEACHER:
+            return False
+        return self.advisory_assignments.exists()
 
 # 2. Grades Table
 class Grade(models.Model):
