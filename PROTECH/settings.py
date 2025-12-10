@@ -28,7 +28,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-v-xhcna5eyu$&gv()p=4i
 # Default to False so Django shows standard error pages instead of debug tracebacks
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '212.85.27.241', '*']  # Added * for Arduino connectivity
 
 
 # Application definition
