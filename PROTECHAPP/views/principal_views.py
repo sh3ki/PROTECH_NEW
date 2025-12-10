@@ -132,7 +132,7 @@ def principal_teachers(request):
     # Annotate each teacher in the page with section/grade info and advisory status
     for teacher in page_obj:
         section_info = teacher_sections.get(teacher.id)
-        teacher.is_advisory = bool(section_info)
+        # is_advisory is now a property that auto-calculates from teacher.section
         if section_info:
             teacher.section_name = section_info['section_name']
             teacher.grade_name = section_info['grade_name']
