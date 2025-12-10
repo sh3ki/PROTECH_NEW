@@ -52,8 +52,10 @@ class Command(BaseCommand):
                     self.stdout.write(f'Created section: {grade_obj.name} - {section_name}')
             
             # Now assign advisory teachers to sections
+            # Only get teachers with 'teacher_adv' username pattern (not 'teacher_non')
             advisory_teachers = CustomUser.objects.filter(
                 role=UserRole.TEACHER,
+                username__startswith='teacher_adv',  # Only advisory teachers
                 section__isnull=True  # Teachers not yet assigned to sections
             ).order_by('username')[:30]  # Get first 30 advisory teachers
             
