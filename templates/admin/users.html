@@ -671,8 +671,8 @@
                     </div>
                 </div>
 
-                <!-- Password Information -->
-                <div class="password-info bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <!-- Password Information (only shown when adding new user) -->
+                <div class="password-info hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                     <div class="flex items-start">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1878,6 +1878,12 @@
             resetUserModalForm(); // Reset form before populating
             currentUserId = userId;
             
+            // Hide password info section when editing
+            const passwordInfo = document.querySelector('.password-info');
+            if (passwordInfo) {
+                passwordInfo.classList.add('hidden');
+            }
+            
             // Fetch user data to populate the form
             fetch(`/admin/users/${userId}/`, {
                 headers: {
@@ -2095,6 +2101,12 @@
                 modalTitle.textContent = 'Add New User';
                 resetUserModalForm(); // Use the reset function
                 currentUserId = null;
+                
+                // Show password info section when adding new user
+                const passwordInfo = document.querySelector('.password-info');
+                if (passwordInfo) {
+                    passwordInfo.classList.remove('hidden');
+                }
                 
                 // Show the modal
                 showModalWithAnimation(userModal);
