@@ -95,6 +95,16 @@ def main():
     print(f"Successfully committed: {successful}")
     print(f"Failed: {failed}")
     print(f"{'='*60}")
+    
+    # Push to remote if there were successful commits
+    if successful > 0:
+        print("\nPushing commits to remote repository...")
+        try:
+            subprocess.run(['git', 'push'], check=True)
+            print("Successfully pushed to remote repository!")
+        except subprocess.CalledProcessError as e:
+            print(f"Error pushing to remote: {e}")
+            print("You may need to push manually using 'git push'")
 
 if __name__ == "__main__":
     main()
