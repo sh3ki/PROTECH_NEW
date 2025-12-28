@@ -186,7 +186,7 @@ def admin_users(request):
         'role_filter': role_filter,
         'status_filter': status_filter,
         'sort_by': sort_by,
-        'user_count': total_users,
+        'user_count': active_count,
         'total_filtered': total_filtered,
         'role_counts': role_counts,
         'active_count': active_count,
