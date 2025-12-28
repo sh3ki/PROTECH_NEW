@@ -16,13 +16,17 @@ def get_changed_files():
             if line:
                 # Get status code (first 2 characters)
                 status = line[:2].strip()
-                # Get the filename (starting from index 3)
-                file_path = line[3:].strip()
+                # Get the filename - split and take everything after status
+                # This handles varying whitespace better
+                parts = line.split(None, 1)  # Split on whitespace, max 1 split
+                if len(parts) < 2:
+                    continue
+                file_path = parts[1].strip()
                 
                 # Handle renamed files (they have -> in them)
                 if ' -> ' in file_path:
                     old_name, new_name = file_path.split(' -> ')
-                    file_path = new_name
+                    file_path = new_name.strip()
                     status = 'R'
                 
                 # Determine the action based on status code
