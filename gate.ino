@@ -1,12 +1,13 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 
 // WiFi credentials
 const char* ssid = "wifi";
 const char* password = "123456789";
 
-// Server URL
-const char* serverUrl = "http://protech.it.com/api/gate/check-queue/";
+// Server URL (use HTTPS; server redirects HTTP to HTTPS)
+const char* serverUrl = "https://protech.it.com/api/gate/check-queue/";
 
 // Motor control pins
 const int IN1 = 26;   // Direction pin 1 (green wire)
@@ -21,13 +22,16 @@ const int ECHO_PIN = 18;  // Blue wire
 const int GREEN_LED = 32;  // Green LED - Counter-clockwise rotation
 const int RED_LED = 33;    // Red LED - Clockwise rotation / Idle
 
-// PWM settings
-const int pwmChannel = 0;
-const int pwmFreq = 20000;       // 20 kHz
-const int pwmResolution = 8;     // 0–255
-
-// Distance threshold (in cm)
-const int DISTANCE_THRESHOLD = 40;
+// PWM settings (match motor_test.ino behavior)
+const int pwmFreq = 200;          // very low freq for more torque at crawl speeds
+const int pwmResolution = 12;     // 0–4095
+const int pwmLowCW = 3;           // low steady duty for CW
+const int pwmLowCCW = 0;          // near-zero steady duty for CCW to slow it way down
+const int pwmKick = 96;           // strong kick to break static friction
+const int kickMsCW = 80;          // CW kick duration (ms)
+const int kickMsCCW = 20;         // shorter CCW kick to reduce motion
+const int cwDurationMs = 1000;    // CW runtime (ms) per cycle
+const int ccwDurationMs = 500;    // CCW runtime (ms) per cycle
 
 // Queue checking interval (milliseconds)
 unsigned long lastCheckTime = 0;
@@ -35,6 +39,7 @@ const unsigned long checkInterval = 1000;  // Check every 1 second
 
 // Queue count
 int queueCount = 0;
+bool isProcessing = false;
 
 void setup() {
   Serial.begin(115200);
@@ -51,9 +56,8 @@ void setup() {
   pinMode(GREEN_LED, OUTPUT);
   pinMode(RED_LED, OUTPUT);
 
-  // Setup PWM
-  ledcSetup(pwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(ENA, pwmChannel);
+  // Setup PWM (New ESP32 Arduino Core 3.x API)
+  ledcAttach(ENA, pwmFreq, pwmResolution);
   
   // Initial state: Stop motor, RED LED on (idle)
   stopMotor();
@@ -102,9 +106,10 @@ void loop() {
   }
   
   // If there's a queue, process it
-  if (queueCount > 0) {
+  if (!isProcessing && queueCount > 0) {
+    isProcessing = true;
     performGateCycle();
-    queueCount--;  // Decrement queue after completing a cycle
+    isProcessing = false;
   } else {
     // Idle state: RED LED on, motor stopped
     digitalWrite(GREEN_LED, LOW);
@@ -113,12 +118,15 @@ void loop() {
 }
 
 void checkGateQueue() {
+  WiFiClientSecure client;
+  client.setInsecure();  // Allow self-signed/any cert
   HTTPClient http;
   
   Serial.println("Checking gate queue...");
   
-  http.begin(serverUrl);
+  http.begin(client, serverUrl);
   http.setTimeout(5000);  // 5 second timeout
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);  // Follow 301/302 redirects
   
   int httpCode = http.GET();
   
@@ -167,103 +175,52 @@ void performGateCycle() {
   Serial.print("Remaining in queue: ");
   Serial.println(queueCount);
   
-  // Step 1: Rotate COUNTER-CLOCKWISE for 3 seconds
-  Serial.println("→ Rotating COUNTER-CLOCKWISE (3 seconds)");
-  digitalWrite(GREEN_LED, HIGH);  // Green LED ON
-  digitalWrite(RED_LED, LOW);     // Red LED OFF
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  ledcWrite(pwmChannel, 255);     // Maximum speed
-  delay(3000);
+  // Step 1: Rotate CLOCKWISE for configured duration
+  Serial.print("→ Rotating CLOCKWISE (ms): ");
+  Serial.println(cwDurationMs);
+  digitalWrite(GREEN_LED, LOW);   // Green LED OFF
+  digitalWrite(RED_LED, HIGH);    // Red LED ON
+  stopMotor();
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  delay(150);                     // Allow direction to latch
+  softStart(cwDurationMs, pwmLowCW, pwmKick, kickMsCW);
+  stopMotor();
   
-  // Step 2: Stop and wait for ultrasonic sensor
-  Serial.println("→ Stopping - Waiting for person to pass...");
+  // Step 2: Fixed wait before reversing (no sensor)
+  Serial.println("→ Stopping - Fixed delay before reverse (6000 ms)");
   stopMotor();
   digitalWrite(GREEN_LED, LOW);
   digitalWrite(RED_LED, LOW);
+  delay(6000);
+  // Brief settle before reversing direction
+  stopMotor();
+  delay(150);
   
-  waitForPersonToPass();
-  
-  // Step 3: Rotate CLOCKWISE
-  // If there's more in queue: 1 second, else 3 seconds
-  int clockwiseTime = (queueCount > 1) ? 1000 : 3000;
-  
-  Serial.print("→ Rotating CLOCKWISE (");
-  Serial.print(clockwiseTime / 1000);
-  Serial.println(" seconds)");
-  
-  digitalWrite(GREEN_LED, LOW);   // Green LED OFF
-  digitalWrite(RED_LED, HIGH);    // Red LED ON
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  ledcWrite(pwmChannel, 255);     // Maximum speed
-  delay(clockwiseTime);
-  
-  // Step 4: If there's more in queue, go back 2 seconds counter-clockwise
-  if (queueCount > 1) {
-    Serial.println("→ Queue exists - Rotating COUNTER-CLOCKWISE (2 seconds)");
-    digitalWrite(GREEN_LED, HIGH);  // Green LED ON
-    digitalWrite(RED_LED, LOW);     // Red LED OFF
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
-    ledcWrite(pwmChannel, 255);
-    delay(2000);
-  }
+  // Step 3: Rotate COUNTER-CLOCKWISE for configured duration
+  Serial.print("→ Rotating COUNTER-CLOCKWISE (ms): ");
+  Serial.println(ccwDurationMs);
+  digitalWrite(GREEN_LED, HIGH);  // Green LED ON
+  digitalWrite(RED_LED, LOW);     // Red LED OFF
+  stopMotor();
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  delay(200);                     // Allow direction to latch
+  softStart(ccwDurationMs, pwmLowCCW, pwmKick, kickMsCCW);
+  stopMotor();
   
   // Stop motor
   stopMotor();
   Serial.println("=== Gate Cycle Complete ===\n");
+
+  // Decrement queue after full cycle completes
+  if (queueCount > 0) {
+    queueCount--;
+  }
 }
 
 void waitForPersonToPass() {
-  Serial.println("Waiting for sensor detection...");
-  
-  bool personDetected = false;
-  unsigned long waitStart = millis();
-  const unsigned long maxWaitTime = 30000;  // 30 seconds timeout
-  
-  // Wait until ultrasonic sensor detects someone (distance < 40cm)
-  while (!personDetected && (millis() - waitStart < maxWaitTime)) {
-    float distance = getDistance();
-    
-    if (distance > 0 && distance < DISTANCE_THRESHOLD) {
-      personDetected = true;
-      Serial.print("Person detected! Distance: ");
-      Serial.print(distance);
-      Serial.println(" cm");
-    }
-    
-    delay(100);  // Check every 100ms
-  }
-  
-  if (!personDetected) {
-    Serial.println("Timeout - No person detected, continuing...");
-    return;
-  }
-  
-  // Wait for person to pass (distance > 40cm again)
-  Serial.println("Waiting for person to pass...");
-  delay(500);  // Small delay to ensure person is in detection zone
-  
-  bool personPassed = false;
-  waitStart = millis();
-  
-  while (!personPassed && (millis() - waitStart < maxWaitTime)) {
-    float distance = getDistance();
-    
-    if (distance >= DISTANCE_THRESHOLD || distance == 0) {
-      personPassed = true;
-      Serial.println("Person has passed!");
-    }
-    
-    delay(100);
-  }
-  
-  if (!personPassed) {
-    Serial.println("Timeout - Assuming person passed, continuing...");
-  }
-  
-  delay(500);  // Small delay before continuing
+  // Sensor disabled per latest requirements
 }
 
 float getDistance() {
@@ -290,7 +247,21 @@ float getDistance() {
 }
 
 void stopMotor() {
-  ledcWrite(pwmChannel, 0);
+  ledcWrite(ENA, 0);
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, LOW);
+}
+
+// Kick then hold at low duty for a precise total duration
+void softStart(int totalMs, int holdDuty, int kickDuty, int kickMs) {
+  int kick = (totalMs < kickMs) ? totalMs : kickMs;
+  int hold = totalMs - kick;
+  if (kick > 0) {
+    ledcWrite(ENA, kickDuty);
+    delay(kick);
+  }
+  if (hold > 0) {
+    ledcWrite(ENA, holdDuty);
+    delay(hold);
+  }
 }
