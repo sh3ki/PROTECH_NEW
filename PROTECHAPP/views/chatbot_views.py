@@ -1,6 +1,6 @@
 """
 PROTECH AI Chatbot Views
-Handles AI assistant interactions using OpenAI API
+Handles AI assistant interactions using Google Gemini API
 """
 
 from django.http import JsonResponse
@@ -9,15 +9,67 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from decouple import config
 import json
-import openai
+import google.generativeai as genai
 from datetime import datetime
+import warnings
 
-# Initialize OpenAI with primary key
-OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-OPENAI_API_KEY_FALLBACK = config('OPENAI_API_KEY_FALLBACK', default='')
+# Suppress the deprecation warning
+warnings.filterwarnings('ignore', category=FutureWarning, module='google.generativeai')
+
+# Initialize Gemini with API key
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+# Base URL for the deployed system
+BASE_URL = "https://www.protech.it.com"
 
 # System prompt that defines PROTECH AI's behavior and knowledge
 SYSTEM_PROMPT = """You are PROTECH AI, a friendly and helpful AI assistant for the PROTECH Face Recognition Attendance Monitoring System.
+
+**IMPORTANT: Link Guidelines**
+When providing links:
+- Use proper format: "You can access it here: https://www.protech.it.com/page/"
+- Check user's role and provide role-specific URLs
+- Use complete URLs starting with https://www.protech.it.com
+
+**Role-Based URLs - CHECK USER'S ROLE:**
+
+**Administrator:**
+- Students: https://www.protech.it.com/admin/students/
+- Attendance: https://www.protech.it.com/admin/attendance/
+- Guardians: https://www.protech.it.com/admin/guardians/
+- Users: https://www.protech.it.com/admin/users/
+- Messages: https://www.protech.it.com/admin/messages/
+- Settings: https://www.protech.it.com/admin/settings/
+- Grades: https://www.protech.it.com/admin/grades/
+- Sections: https://www.protech.it.com/admin/sections/
+
+**Registrar:**
+- Students: https://www.protech.it.com/registrar/students/
+- Face Enrollment: https://www.protech.it.com/registrar/face-enroll/
+- Attendance: https://www.protech.it.com/registrar/attendance/
+- Guardians: https://www.protech.it.com/registrar/guardians/
+- Messages: https://www.protech.it.com/registrar/messages/
+- Settings: https://www.protech.it.com/registrar/settings/
+
+**Principal:**
+- Students: https://www.protech.it.com/principal/students/
+- Attendance: https://www.protech.it.com/principal/attendance/
+- Guardians: https://www.protech.it.com/principal/guardians/
+- Messages: https://www.protech.it.com/principal/messages/
+
+**Teacher:**
+- Students: https://www.protech.it.com/teacher/students/
+- Attendance: https://www.protech.it.com/teacher/attendance/
+- Guardians: https://www.protech.it.com/teacher/guardians/
+- Messages: https://www.protech.it.com/teacher/messages/
+
+**Public (no login):**
+- Login: https://www.protech.it.com/login/
+- Time In: https://www.protech.it.com/time-in/
+- Time Out: https://www.protech.it.com/time-out/
+- Hybrid: https://www.protech.it.com/hybrid-attendance/
 
 **About PROTECH System:**
 PROTECH is a comprehensive school attendance management system with face recognition capabilities. The system serves different user roles:
@@ -119,19 +171,17 @@ PROTECH is a comprehensive school attendance management system with face recogni
    - Dark/Light mode toggle
 
 **Common Navigation Paths:**
-
 - **Dashboard**: Main landing page after login showing overview and statistics
-- **Students**: `/admin/students/`, `/registrar/students/`, `/principal/students/`
-- **Attendance**: `/admin/attendance/`, `/registrar/attendance/`, `/teacher/attendance/`
-- **Guardians**: `/admin/guardians/`, `/registrar/guardians/`
-- **Users**: `/admin/users/` (Admin only)
-- **Grades & Sections**: `/admin/grades/`, `/admin/sections/`
-- **Messages**: `/admin/messages/`, `/teacher/messages/`, etc.
-- **Settings**: `/admin/settings/`, `/registrar/settings/`
-- **Face Enrollment**: `/registrar/face-enroll/` (Register student faces)
+- **Students**: Varies by role - check role and provide appropriate URL
+- **Attendance**: Varies by role - check role and provide appropriate URL
+- **Guardians**: Varies by role - check role and provide appropriate URL
+- **Users**: Admin only
+- **Messages**: Varies by role
+- **Settings**: Varies by role
+- **Face Enrollment**: Registrar only
 
 **How to Enroll a Student:**
-1. Navigate to Students page (as Admin or Registrar)
+1. Navigate to Students page (check user's role and provide correct link)
 2. Click "Add Student" button
 3. Fill in: LRN (12 digits), First Name, Middle Name (optional), Last Name, Grade, Section
 4. Upload profile picture (optional)
@@ -139,7 +189,7 @@ PROTECH is a comprehensive school attendance management system with face recogni
 6. For face recognition, use "Face Enrollment" feature to capture student's face
 
 **How to Face Enroll:**
-1. Go to Face Enrollment page (Registrar role)
+1. Go to Face Enrollment page (Registrar role - provide link based on role)
 2. Search and select the student
 3. Allow camera access
 4. Position student's face in the frame
@@ -155,15 +205,16 @@ PROTECH is a comprehensive school attendance management system with face recogni
 - **Hybrid Mode**: Single page with dual cameras for both Time In and Time Out simultaneously
 
 **System Access:**
-- Landing page: Shows "Select Device" (for attendance) and "Login" (for staff)
-- Select Device page: Buttons for Time In, Time Out, or Hybrid Attendance (depending on settings)
-- Login page: Staff login using email and password
+- Landing page: https://www.protech.it.com - Shows "Select Device" (for attendance) and "Login" (for staff)
+- Login page: https://www.protech.it.com/login/ - Staff login using email and password
 
 **Your Behavior:**
 - Be friendly, professional, and helpful
 - Provide clear, step-by-step instructions
+- When users ask "where" questions, check their role and provide the correct role-specific URL
+- If user is NOT logged in and asks about restricted pages, direct them to login first
 - If asked about features, explain them thoroughly
-- Help users navigate the system
+- Help users navigate the system with direct links
 - Answer questions about procedures, features, and workflows
 - Provide quick answers for simple questions
 - If you don't know something specific about the system, be honest and suggest contacting support
@@ -171,16 +222,17 @@ PROTECH is a comprehensive school attendance management system with face recogni
 - Always maintain a positive and supportive tone
 
 **Common Questions to Expect:**
-- "How do I add a student?"
-- "How does face recognition work?"
-- "Where can I see attendance records?"
-- "How to enroll a student's face?"
-- "What's the difference between admin and registrar?"
-- "How to approve an excused absence?"
-- "Where are the import/export features?"
-- "How to send a message?"
+- "How do I add a student?" - Explain process and provide role-specific students page link
+- "How does face recognition work?" - Explain the process
+- "Where can I see attendance records?" - Provide role-specific attendance page link
+- "How to enroll a student's face?" - Explain and provide face enrollment link if Registrar
+- "What's the difference between admin and registrar?" - Explain roles
+- "How to approve an excused absence?" - Guide with steps
+- "Where are the import/export features?" - Provide relevant page link based on role
+- "How to send a message?" - Provide messages page link based on role
+- "Where can I login?" - Provide: https://www.protech.it.com/login/
 
-Remember: You are here to assist users with navigating and understanding the PROTECH system. Be concise but informative!
+Remember: You are here to assist users with navigating and understanding the PROTECH system. Check the user's role (provided in context) and give role-appropriate links. Be concise but informative!
 """
 
 
@@ -189,7 +241,7 @@ Remember: You are here to assist users with navigating and understanding the PRO
 def chatbot_message(request):
     """
     Handle chatbot messages from users
-    Processes user queries and returns AI-generated responses
+    Processes user queries and returns AI-generated responses using Gemini
     """
     try:
         data = json.loads(request.body)
@@ -202,38 +254,96 @@ def chatbot_message(request):
                 'error': 'Message cannot be empty'
             }, status=400)
         
-        # Build messages array for OpenAI
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT}
-        ]
+        if not GEMINI_API_KEY:
+            return JsonResponse({
+                'success': False,
+                'error': 'AI service is not configured. Please contact administrator.'
+            }, status=503)
         
-        # Add conversation history (limit to last 10 messages to manage token usage)
-        for msg in conversation_history[-10:]:
-            messages.append({
-                "role": msg.get('role', 'user'),
-                "content": msg.get('content', '')
-            })
+        # Check user authentication status
+        is_authenticated = request.user.is_authenticated
+        user_role = None
+        user_email = None
+        
+        if is_authenticated:
+            user_role = getattr(request.user, 'role', 'Unknown')
+            user_email = getattr(request.user, 'email', 'Unknown')
+        
+        # Build conversation context for Gemini with detailed user status
+        conversation_context = SYSTEM_PROMPT + "\n\n"
+        
+        # Add detailed user context with clear role information
+        conversation_context += "="*70 + "\n"
+        conversation_context += "CURRENT USER INFORMATION\n"
+        conversation_context += "="*70 + "\n"
+        
+        if is_authenticated:
+            conversation_context += f"STATUS: LOGGED IN ✓\n"
+            conversation_context += f"ROLE: {user_role}\n"
+            conversation_context += f"EMAIL: {user_email}\n\n"
+            
+            conversation_context += f"IMPORTANT: This user is a {user_role}. When providing navigation links:\n"
+            
+            # Provide role-specific URL examples
+            if user_role == "Administrator":
+                conversation_context += "USE THESE ADMIN URLs:\n"
+                conversation_context += "- Students: https://www.protech.it.com/admin/students/\n"
+                conversation_context += "- Attendance: https://www.protech.it.com/admin/attendance/\n"
+                conversation_context += "- Users: https://www.protech.it.com/admin/users/\n"
+                conversation_context += "- Messages: https://www.protech.it.com/admin/messages/\n"
+            elif user_role == "Registrar":
+                conversation_context += "USE THESE REGISTRAR URLs:\n"
+                conversation_context += "- Students: https://www.protech.it.com/registrar/students/\n"
+                conversation_context += "- Face Enrollment: https://www.protech.it.com/registrar/face-enroll/\n"
+                conversation_context += "- Attendance: https://www.protech.it.com/registrar/attendance/\n"
+                conversation_context += "- Messages: https://www.protech.it.com/registrar/messages/\n"
+            elif user_role == "Principal":
+                conversation_context += "USE THESE PRINCIPAL URLs:\n"
+                conversation_context += "- Students: https://www.protech.it.com/principal/students/\n"
+                conversation_context += "- Attendance: https://www.protech.it.com/principal/attendance/\n"
+                conversation_context += "- Messages: https://www.protech.it.com/principal/messages/\n"
+            elif "Teacher" in str(user_role):
+                conversation_context += "USE THESE TEACHER URLs:\n"
+                conversation_context += "- Students: https://www.protech.it.com/teacher/students/\n"
+                conversation_context += "- Attendance: https://www.protech.it.com/teacher/attendance/\n"
+                conversation_context += "- Messages: https://www.protech.it.com/teacher/messages/\n"
+            
+            conversation_context += "\nDO NOT use generic /admin/ or /registrar/ - use the URLs shown above for this specific role!\n"
+        else:
+            conversation_context += f"STATUS: NOT LOGGED IN ✗\n"
+            conversation_context += f"ROLE: Guest/Anonymous\n\n"
+            conversation_context += "IMPORTANT: User is NOT logged in. If they ask about restricted pages:\n"
+            conversation_context += "- Direct them to login first: https://www.protech.it.com/login/\n"
+            conversation_context += "- They CAN access: Time In, Time Out, Hybrid Attendance (no login needed)\n"
+        
+        conversation_context += "="*70 + "\n\n"
+        
+        # Add conversation history (limit to last 10 messages)
+        if conversation_history:
+            conversation_context += "CONVERSATION HISTORY:\n"
+            for msg in conversation_history[-10:]:
+                role = msg.get('role', 'user')
+                content = msg.get('content', '')
+                if role == 'user':
+                    conversation_context += f"User: {content}\n"
+                else:
+                    conversation_context += f"Assistant: {content}\n"
+            conversation_context += "\n"
         
         # Add current user message
-        messages.append({
-            "role": "user",
-            "content": user_message
-        })
+        conversation_context += f"CURRENT USER MESSAGE:\n"
+        conversation_context += f"User: {user_message}\n\n"
+        conversation_context += "YOUR RESPONSE (remember to use proper role-specific links in Markdown format):\n"
+        conversation_context += "Assistant:"
         
-        # Try primary API key first
         try:
-            openai.api_key = OPENAI_API_KEY
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                max_tokens=500,
-                temperature=0.7,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
+            # Initialize Gemini model
+            model = genai.GenerativeModel('gemini-2.5-flash')
             
-            assistant_message = response.choices[0].message.content
+            # Generate response
+            response = model.generate_content(conversation_context)
+            
+            assistant_message = response.text
             
             return JsonResponse({
                 'success': True,
@@ -241,36 +351,12 @@ def chatbot_message(request):
                 'timestamp': datetime.now().isoformat()
             })
             
-        except Exception as primary_error:
-            # If primary key fails, try fallback key
-            print(f"Primary OpenAI API key failed: {primary_error}")
-            
-            try:
-                openai.api_key = OPENAI_API_KEY_FALLBACK
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    max_tokens=500,
-                    temperature=0.7,
-                    top_p=1,
-                    frequency_penalty=0,
-                    presence_penalty=0
-                )
-                
-                assistant_message = response.choices[0].message.content
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': assistant_message,
-                    'timestamp': datetime.now().isoformat()
-                })
-                
-            except Exception as fallback_error:
-                print(f"Fallback OpenAI API key also failed: {fallback_error}")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'AI service temporarily unavailable. Please try again later.'
-                }, status=503)
+        except Exception as gemini_error:
+            print(f"Gemini API error: {gemini_error}")
+            return JsonResponse({
+                'success': False,
+                'error': 'AI service temporarily unavailable. Please try again later.'
+            }, status=503)
     
     except json.JSONDecodeError:
         return JsonResponse({
