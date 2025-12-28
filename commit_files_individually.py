@@ -1,8 +1,9 @@
 import subprocess
 import sys
+import os
 
 def get_changed_files():
-    """Get list of all changed files"""
+    """Get list of all changed files with their status"""
     try:
         result = subprocess.run(
             ['git', 'status', '--porcelain'],
@@ -13,27 +14,51 @@ def get_changed_files():
         files = []
         for line in result.stdout.strip().split('\n'):
             if line:
-                # Remove the status indicators (first 3 characters) and get the filename
+                # Get status code (first 2 characters)
+                status = line[:2].strip()
+                # Get the filename (starting from index 3)
                 file_path = line[3:].strip()
+                
                 # Handle renamed files (they have -> in them)
                 if ' -> ' in file_path:
-                    file_path = file_path.split(' -> ')[1]
-                files.append(file_path)
+                    old_name, new_name = file_path.split(' -> ')
+                    file_path = new_name
+                    status = 'R'
+                
+                # Determine the action based on status code
+                if status in ['A', '??']:
+                    action = 'Added'
+                elif status == 'D':
+                    action = 'Removed'
+                elif status == 'R':
+                    action = 'Renamed'
+                elif status == 'M':
+                    action = 'Updated'
+                else:
+                    action = 'Updated'
+                
+                files.append((file_path, action))
         return files
     except subprocess.CalledProcessError as e:
         print(f"Error getting changed files: {e}")
         return []
 
-def commit_file(file_path, index, total):
-    """Commit a single file"""
+def commit_file(file_path, action, index, total):
+    """Commit a single file with smart commit message"""
     try:
+        # Get just the filename for the commit message
+        filename = os.path.basename(file_path)
+        
         # Stage the file
         subprocess.run(['git', 'add', file_path], check=True)
         
-        # Commit the file
-        subprocess.run(['git', 'commit', '-m', 'commit'], check=True)
+        # Create smart commit message
+        commit_message = f"{action} {filename}"
         
-        print(f"[{index}/{total}] Committed: {file_path}")
+        # Commit the file
+        subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+        
+        print(f"[{index}/{total}] {commit_message}")
         return True
     except subprocess.CalledProcessError as e:
         print(f"[{index}/{total}] Error committing {file_path}: {e}")
@@ -54,8 +79,8 @@ def main():
     successful = 0
     failed = 0
     
-    for index, file_path in enumerate(changed_files, 1):
-        if commit_file(file_path, index, total_files):
+    for index, (file_path, action) in enumerate(changed_files, 1):
+        if commit_file(file_path, action, index, total_files):
             successful += 1
         else:
             failed += 1
