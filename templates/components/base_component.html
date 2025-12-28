@@ -135,8 +135,17 @@
         <!-- Mobile sidebar backdrop -->
         <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-800/50 z-20 lg:hidden hidden" onclick="closeSidebar()"></div>
         
+        <script>
+        // Apply sidebar collapsed state BEFORE sidebar renders to prevent animation
+        (function() {
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                document.documentElement.style.setProperty('--sidebar-width', '4.5rem');
+            }
+        })();
+        </script>
+        
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transform -translate-x-full lg:translate-x-0 bg-primary transition-all duration-300 ease-in-out lg:static lg:inset-0 overflow-hidden flex flex-col">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transform -translate-x-full lg:translate-x-0 bg-primary lg:static lg:inset-0 overflow-hidden flex flex-col">
             {% block sidebar %}
                 <!-- This block will be overridden with the appropriate sidebar component -->
             {% endblock %}
