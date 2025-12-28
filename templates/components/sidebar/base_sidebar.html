@@ -1,10 +1,16 @@
 <div class="sidebar-wrapper h-full flex flex-col" style="background: linear-gradient(180deg, #023c82 0%, #02306e 100%);">
+    <script>
+    // Apply collapsed state before ANY rendering happens
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        document.getElementById('sidebar').classList.add('collapsed');
+    }
+    </script>
     <!-- Sidebar header with logo -->
     <div class="sidebar-header flex items-center justify-between p-4 border-b border-blue-800">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 sidebar-logo">
             {% load static %}
             <img src="{% static 'public/images/protechlogo.svg' %}" class="h-10 w-10 text-white" alt="ProTech Logo">
-            <span class="inline-block font-extrabold italic tracking-tight leading-tight text-xs text-white ml-1" style="font-family: 'Arial Black', Arial, sans-serif;">
+            <span class="sidebar-text inline-block font-extrabold italic tracking-tight leading-tight text-xs text-white ml-1" style="font-family: 'Arial Black', Arial, sans-serif;">
                 DETECT<br>TO PROTECT
             </span>
         </div>
@@ -17,9 +23,9 @@
     </div>
     
     <!-- User info section -->
-    <div class="p-4 border-b border-blue-800">
+    <div class="p-4 border-b border-blue-800 user-info-section">
         <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-tertiary/30 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full bg-tertiary/30 flex items-center justify-center flex-shrink-0">
                 {% if user.profile_pic %}
                     <img src="{{ user.profile_pic }}" alt="{{ user.username }}" class="w-full h-full rounded-full object-cover">
                 {% else %}
@@ -32,15 +38,15 @@
                     </span>
                 {% endif %}
             </div>
-            <div class="ml-3">
-                <p class="text-sm font-medium text-white">
+            <div class="ml-3 sidebar-text overflow-hidden">
+                <p class="text-sm font-medium text-white whitespace-nowrap overflow-hidden text-ellipsis">
                     {% if user.first_name %}
                         {{ user.first_name }} {{ user.last_name }}
                     {% else %}
                         {{ user.username }}
                     {% endif %}
                 </p>
-                <p class="text-xs text-blue-200">{{ user.get_role_display }}</p>
+                <p class="text-xs text-blue-200 whitespace-nowrap overflow-hidden text-ellipsis">{{ user.get_role_display }}</p>
             </div>
         </div>
     </div>
@@ -54,13 +60,20 @@
     
     <!-- Logout button - always at the bottom -->
     <div class="px-2 py-3 pt-2 mt-auto">
-        <a href="{% url 'logout' %}" class="menu-item hover:bg-red-700" data-ajax-navigation="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{% url 'logout' %}" class="menu-item hover:bg-red-700" data-ajax-navigation="false" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span>Logout</span>
+            <span class="sidebar-text">Logout</span>
         </a>
     </div>
+    
+    <!-- Desktop collapse toggle button - protruding with double chevrons -->
+    <button id="sidebar-collapse-btn" class="hidden lg:flex absolute top-4 -right-4 w-8 h-8 items-center justify-center text-white hover:bg-opacity-90 rounded-full shadow-xl" style="background: linear-gradient(180deg, #023c82 0%, #02306e 100%); z-index: 9999; transition: transform 0.3s ease;" title="Toggle sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+    </button>
 </div>
 
 <style>
@@ -93,6 +106,102 @@
     .submenu-item.active {
         @apply bg-secondary/10 dark:bg-tertiary/20 text-primary dark:text-tertiary;
     }
+    
+    /* Sidebar collapse styles */
+    #sidebar.collapsed {
+        width: 4.5rem !important;
+    }
+    
+    #sidebar.collapsed .sidebar-text {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    #sidebar.collapsed .menu-item {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+        height: 2.75rem;
+    }
+    
+    #sidebar.collapsed .menu-item svg:first-child {
+        margin-right: 0;
+    }
+    
+    #sidebar.collapsed .user-info-section .ml-3 {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    #sidebar.collapsed .sidebar-header {
+        justify-content: center;
+    }
+    
+    #sidebar.collapsed .sidebar-logo span {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    #sidebar.collapsed .sidebar-logo {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    #sidebar.collapsed #sidebar-collapse-btn {
+        transform: rotate(180deg);
+    }
+    
+    #sidebar {
+        position: relative;
+    }
+    
+    .sidebar-text {
+        white-space: nowrap;
+    }
+    
+    /* Only apply transitions when user is actively toggling */
+    body.sidebar-toggling #sidebar {
+        transition: width 0.3s ease-in-out;
+    }
+    
+    body.sidebar-toggling .sidebar-text {
+        transition: opacity 0.15s ease-in-out;
+    }
+    
+    body.sidebar-toggling #sidebar-collapse-btn {
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    /* Fixed height for menu items to prevent reflow */
+    .menu-item {
+        min-height: 2.75rem;
+        height: 2.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .menu-item svg:first-child {
+        flex-shrink: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    
+    /* Keep logo size consistent */
+    .sidebar-logo img {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+    }
+    
+    /* User avatar consistent size */
+    .user-info-section .w-10 {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+    }
 </style>
 
 <script>
@@ -103,6 +212,28 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarCloseBtn.addEventListener('click', function() {
             document.getElementById('sidebar').classList.add('-translate-x-full');
             document.getElementById('sidebar').classList.remove('translate-x-0');
+        });
+    }
+    
+    // Desktop sidebar collapse toggle
+    const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (sidebarCollapseBtn && sidebar) {
+        sidebarCollapseBtn.addEventListener('click', function() {
+            // Only add animation class when user manually clicks the button
+            document.body.classList.add('sidebar-toggling');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            // Remove animation class after transition completes
+            setTimeout(() => {
+                document.body.classList.remove('sidebar-toggling');
+            }, 300);
         });
     }
     
