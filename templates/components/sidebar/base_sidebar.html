@@ -67,13 +67,6 @@
             <span class="sidebar-text">Logout</span>
         </a>
     </div>
-    
-    <!-- Desktop collapse toggle button - protruding with double chevrons -->
-    <button id="sidebar-collapse-btn" class="hidden lg:flex absolute top-4 -right-4 w-8 h-8 items-center justify-center text-white hover:bg-opacity-90 rounded-full shadow-xl" style="background: linear-gradient(180deg, #023c82 0%, #02306e 100%); z-index: 9999; transition: transform 0.3s ease;" title="Toggle sidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-        </svg>
-    </button>
 </div>
 
 <style>
@@ -154,6 +147,11 @@
         transform: rotate(180deg);
     }
     
+    /* Position button based on sidebar state */
+    #sidebar.collapsed ~ #sidebar-collapse-btn {
+        left: 3.5rem;
+    }
+    
     #sidebar {
         position: relative;
     }
@@ -221,18 +219,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (sidebarCollapseBtn && sidebar) {
         sidebarCollapseBtn.addEventListener('click', function() {
+            const chevronIcon = document.getElementById('chevron-icon');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            
             // Only add animation class when user manually clicks the button
             document.body.classList.add('sidebar-toggling');
             
+            // Enable button transition with same timing as sidebar
+            sidebarCollapseBtn.style.transition = 'left 0.3s ease-in-out';
+            
             sidebar.classList.toggle('collapsed');
             
-            // Save state to localStorage
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            // Update button position and icon simultaneously
+            if (isCollapsed) {
+                // Expanding
+                sidebarCollapseBtn.style.left = '240px';
+                if (chevronIcon) {
+                    chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                }
+            } else {
+                // Collapsing
+                sidebarCollapseBtn.style.left = '56px';
+                if (chevronIcon) {
+                    chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                }
+            }
             
-            // Remove animation class after transition completes
+            // Save state to localStorage
+            const newCollapsedState = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', newCollapsedState);
+            
+            // Remove animation class and button transition after transition completes
             setTimeout(() => {
                 document.body.classList.remove('sidebar-toggling');
+                sidebarCollapseBtn.style.transition = '';
             }, 300);
         });
     }
