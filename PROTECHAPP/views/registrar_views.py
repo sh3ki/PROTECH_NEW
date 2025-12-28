@@ -3322,7 +3322,12 @@ def registrar_face_enroll(request):
         'not_enrolled_count': not_enrolled_count,
         'page_range': page_range,
     }
-    return render(request, 'registrar/face_enroll.html', context)
+    
+    # Check user role and render appropriate template
+    if request.user.role == 'ADMIN':
+        return render(request, 'admin/face_enroll.html', context)
+    else:
+        return render(request, 'registrar/face_enroll.html', context)
 
 
 def get_pagination_range(paginator, current_page, display_range=5):
