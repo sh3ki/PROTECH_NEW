@@ -12,8 +12,7 @@
 {% block content %}
 {% csrf_token %}
 
-<!-- Toast Container -->
-<div id="excused-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+{% include 'components/toast_notification.html' %}
 
 <!-- Dashboard Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -716,33 +715,6 @@ function closeExcuseLetterModal() {
         modal.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
-}
-
-function showToast(message, type = 'success', duration = 4000) {
-    const container = document.getElementById('excused-toast-container');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-0 ${
-        type === 'success' ? 'bg-green-500 text-white' :
-        type === 'error' ? 'bg-red-500 text-white' :
-        type === 'warning' ? 'bg-yellow-500 text-white' :
-        'bg-blue-500 text-white'
-    }`;
-    
-    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
-    toast.innerHTML = `
-        <span class="text-xl font-bold">${icon}</span>
-        <span class="font-medium">${message}</span>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
 }
 
 function renderExcusedTable(records) {
