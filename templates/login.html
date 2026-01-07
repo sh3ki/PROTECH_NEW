@@ -34,18 +34,14 @@
                 <h2 class="text-2xl font-extrabold text-primary mb-1">Login to PROTECH</h2>
                 <p class="text-accent text-base text-center">Enter your credentials to access the system</p>
             </div>
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="django-message {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} p-3 rounded-lg mb-4 animate-fade-in relative">
-                        {{ message }}
-                        <button type="button" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="this.parentElement.remove()">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+            <!-- Django Messages (hidden - will be converted to toast) -->
+            <div id="django-messages" class="hidden">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="django-message" data-message="{{ message }}" data-type="{% if message.tags == 'error' %}error{% else %}success{% endif %}"></div>
+                    {% endfor %}
+                {% endif %}
+            </div>
             <!-- Login Form -->
             <form method="post" id="loginForm" class="space-y-6 w-full max-w-sm mx-auto">
                 {% csrf_token %}
@@ -101,23 +97,6 @@
 
             <!-- Forgot Password Form - Step 1: Email Input -->
             <div id="forgotPasswordForm" class="space-y-6 w-full max-w-sm mx-auto hidden">
-                <div id="successMessage" class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 text-green-800 p-4 rounded-lg mb-4 hidden animate-fade-in shadow-sm">
-                    <div class="flex items-center">
-                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span class="font-medium">Verification code sent to your email!</span>
-                    </div>
-                    <p class="text-sm mt-1 ml-7">Please check your inbox and enter the 6-digit code below.</p>
-                </div>
-                <div id="errorMessage" class="bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 text-red-800 p-4 rounded-lg mb-4 hidden animate-fade-in shadow-sm">
-                    <div class="flex items-center">
-                        <svg class="h-5 w-5 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span class="font-medium" id="errorMessageText"></span>
-                    </div>
-                </div>
                 
                 <!-- Step 1: Email Input -->
                 <div id="emailStep">
@@ -242,6 +221,8 @@
     </div>
 </div>
 
+{% include 'components/toast_notification.html' %}
+
 <!-- Animations -->
 <style>
 @keyframes fade-in-up {
@@ -254,19 +235,6 @@
 <!-- Password Show/Hide & Forgot Password Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Auto-dismiss Django messages after 3 seconds
-    const djangoMessages = document.querySelectorAll('.django-message');
-    djangoMessages.forEach(message => {
-        setTimeout(() => {
-            message.style.transition = 'opacity 0.5s ease-out';
-            message.style.opacity = '0';
-            setTimeout(() => {
-                if (message && message.parentNode) {
-                    message.remove();
-                }
-            }, 500);
-        }, 3000);
-    });
 
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
@@ -316,9 +284,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
     const requestNewCodeBtn = document.getElementById('requestNewCodeBtn');
     
-    const successMessage = document.getElementById('successMessage');
-    const errorMessage = document.getElementById('errorMessage');
-    
     let userEmail = '';
     let verificationCode = '';
 
@@ -329,11 +294,6 @@ document.addEventListener('DOMContentLoaded', function () {
         emailStep.classList.remove('hidden');
         verificationStep.classList.add('hidden');
         newPasswordStep.classList.add('hidden');
-        successMessage.classList.add('hidden');
-        errorMessage.classList.add('hidden');
-        
-        // Hide Django messages when switching to forgot password
-        document.querySelectorAll('.django-message').forEach(msg => msg.style.display = 'none');
     });
 
     // Back to Home
@@ -345,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sendCodeBtn.addEventListener('click', function () {
         const email = document.getElementById('resetEmail').value;
         if (!email) {
-            showError('Please enter your email address');
+            showToast('Please enter your email address', 'error');
             return;
         }
 
@@ -366,16 +326,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.success) {
                 emailStep.classList.add('hidden');
                 verificationStep.classList.remove('hidden');
-                successMessage.classList.remove('hidden');
-                successMessage.textContent = data.message || 'A 6-digit verification code has been sent to your email. Please check your inbox.';
-                errorMessage.classList.add('hidden');
+                showToast(data.message || 'A 6-digit verification code has been sent to your email. Please check your inbox.', 'success');
             } else {
-                showError(data.message || 'Failed to send verification code. Please try again.');
+                showToast(data.message || 'Failed to send verification code. Please try again.', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('An error occurred. Please try again.');
+            showToast('An error occurred. Please try again.', 'error');
         })
         .finally(() => {
             sendCodeBtn.disabled = false;
@@ -387,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function () {
     requestNewCodeBtn.addEventListener('click', function () {
         verificationStep.classList.add('hidden');
         emailStep.classList.remove('hidden');
-        successMessage.classList.add('hidden');
         document.querySelectorAll('.code-input').forEach(input => input.value = '');
     });
 
@@ -421,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const enteredCode = Array.from(codeInputs).map(input => input.value).join('');
         
         if (enteredCode.length !== 6) {
-            showError('Please enter the complete 6-digit code');
+            showToast('Please enter the complete 6-digit code', 'error');
             return;
         }
 
@@ -444,15 +401,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.success) {
                 verificationStep.classList.add('hidden');
                 newPasswordStep.classList.remove('hidden');
-                successMessage.classList.add('hidden');
-                errorMessage.classList.add('hidden');
+                showToast(data.message || 'Code verified successfully!', 'success');
             } else {
-                showError(data.message || 'Invalid verification code. Please try again.');
+                showToast(data.message || 'Invalid verification code. Please try again.', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('An error occurred. Please try again.');
+            showToast('An error occurred. Please try again.', 'error');
         })
         .finally(() => {
             verifyCodeBtn.disabled = false;
@@ -466,17 +422,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const confirmPassword = document.getElementById('confirmPassword').value;
 
         if (!newPassword || !confirmPassword) {
-            showError('Please fill in both password fields');
+            showToast('Please fill in both password fields', 'error');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            showError('Passwords do not match');
+            showToast('Passwords do not match', 'error');
             return;
         }
 
         if (newPassword.length < 8) {
-            showError('Password must be at least 8 characters long');
+            showToast('Password must be at least 8 characters long', 'error');
             return;
         }
 
@@ -497,9 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                successMessage.classList.remove('hidden');
-                successMessage.textContent = data.message || 'Password reset successfully! You can now login with your new password.';
-                errorMessage.classList.add('hidden');
+                showToast(data.message || 'Password reset successfully! You can now login with your new password.', 'success', 3000);
                 
                 setTimeout(() => {
                     forgotPasswordForm.classList.add('hidden');
@@ -508,39 +462,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
                     codeInputs.forEach(input => input.value = '');
-                    successMessage.classList.add('hidden');
                     
-                    // Show success message in login form
-                    const loginSuccessMsg = document.createElement('div');
-                    loginSuccessMsg.className = 'bg-green-100 text-green-700 p-3 rounded-lg mb-4 animate-fade-in';
-                    loginSuccessMsg.textContent = 'Password reset successfully! Please login with your new password.';
-                    loginForm.insertBefore(loginSuccessMsg, loginForm.firstChild);
-                    
-                    setTimeout(() => loginSuccessMsg.remove(), 5000);
-                }, 2000);
+                    // Show success toast again on login form
+                    showToast('Password reset successfully! Please login with your new password.', 'success');
+                }, 3000);
             } else {
-                showError(data.message || 'Failed to reset password. Please try again.');
+                showToast(data.message || 'Failed to reset password. Please try again.', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('An error occurred. Please try again.');
+            showToast('An error occurred. Please try again.', 'error');
         })
         .finally(() => {
             resetPasswordBtn.disabled = false;
             resetPasswordBtn.textContent = 'Reset Password';
         });
     });
-
-    function showError(message) {
-        document.getElementById('errorMessageText').textContent = message;
-        errorMessage.classList.remove('hidden');
-        successMessage.classList.add('hidden');
-        
-        setTimeout(() => {
-            errorMessage.classList.add('hidden');
-        }, 5000);
-    }
 });
 </script>
 {% endblock %}
