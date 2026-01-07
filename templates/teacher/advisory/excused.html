@@ -11,6 +11,8 @@
 
 {% block content %}
 
+{% include 'components/toast_notification.html' %}
+
 <!-- Dashboard Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
@@ -191,40 +193,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Print button
     const printBtn = document.getElementById('excuse-print-btn');
     if (printBtn) printBtn.addEventListener('click', function() { window.print(); });
-
-    // Toast notification function
-    function showToast(message, type = 'success', duration = 5000) {
-        const toastContainer = document.createElement('div');
-        toastContainer.className = 'fixed top-5 right-5 z-50';
-        
-        const toast = document.createElement('div');
-        toast.className = `flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0 ${
-            type === 'success' ? 'bg-green-500 text-white' :
-            type === 'error' ? 'bg-red-500 text-white' :
-            type === 'warning' ? 'bg-yellow-500 text-white' :
-            'bg-blue-500 text-white'
-        }`;
-        
-        const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
-        toast.innerHTML = `
-            <span class="text-lg font-bold mr-3">${icon}</span>
-            <span class="font-medium">${message}</span>
-        `;
-        
-        document.body.appendChild(toastContainer);
-        toastContainer.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
-        }, 10);
-        
-        setTimeout(() => {
-            toast.classList.add('opacity-0', 'translate-y-[-1rem]');
-            setTimeout(() => {
-                toastContainer.remove();
-            }, 300);
-        }, duration);
-    }
 
     // Import Modal Functionality
     const importBtn = document.getElementById('import-excused-btn');
