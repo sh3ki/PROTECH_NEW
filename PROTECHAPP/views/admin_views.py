@@ -23,7 +23,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import letter, A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -5140,20 +5140,18 @@ def export_users_to_excel(request):
             elif status_filter == 'inactive':
                 users = users.filter(is_active=False)
         
-        # Define headers (include password column with [UNCHANGED] for backup/restore compatibility)
-        headers = ["ID", "Username", "Email", "Password", "First Name", "Last Name", "Middle Name", "Role", "Status", "Created Date"]
+        # Define headers (professional report format - no password for security)
+        headers = ["First Name", "Middle Name", "Last Name", "Username", "Email", "Role", "Status", "Created At"]
         
         # Prepare data rows
         data_rows = []
         for user in users:
             data_rows.append([
-                str(user.id),
+                user.first_name,
+                user.middle_name or "",
+                user.last_name,
                 user.username,
                 user.email,
-                "[UNCHANGED]",  # Password placeholder - import will skip password update
-                user.first_name,
-                user.last_name,
-                user.middle_name or "",
                 user.get_role_display(),
                 "Active" if user.is_active else "Inactive",
                 user.created_at.strftime("%Y-%m-%d %H:%M:%S") if user.created_at else ""
@@ -5193,8 +5191,8 @@ def export_users_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    # Set column widths (updated for password column)
-    column_widths = [8, 15, 25, 15, 15, 15, 15, 15, 12, 18]
+    # Set column widths for professional layout
+    column_widths = [15, 15, 15, 15, 30, 15, 12, 20]
     for col_num, width in enumerate(column_widths, 1):
         ws.column_dimensions[chr(64 + col_num)].width = width
     
@@ -5218,7 +5216,7 @@ def export_users_to_excel_format(headers, data_rows):
             cell.border = border_style
             
             # Apply alignment based on column type
-            if col_num in [1, 4, 8, 9]:  # ID, Password, Role, Status
+            if col_num in [6, 7]:  # Role, Status
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
@@ -5242,8 +5240,8 @@ def export_users_to_pdf(headers, data_rows):
     """Export users to PDF format"""
     buffer = io.BytesIO()
     
-    # Create PDF document
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    # Create PDF document with landscape orientation
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
     
     # Container for PDF elements
     elements = []
@@ -5253,23 +5251,37 @@ def export_users_to_pdf(headers, data_rows):
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=18,
+        fontSize=20,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
+        spaceAfter=8,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
     
-    # Add title
-    title = Paragraph(f"Users Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", title_style)
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=12,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add title and subtitle
+    title = Paragraph("USER MANAGEMENT REPORT", title_style)
     elements.append(title)
-    elements.append(Spacer(1, 0.2*inch))
+    
+    subtitle = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(subtitle)
+    
+    elements.append(Spacer(1, 0.3*inch))
     
     # Prepare table data
     table_data = [headers] + data_rows
     
-    # Create table with adjusted column widths for A4
-    col_widths = [0.4*inch, 0.8*inch, 1.4*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.6*inch, 1.0*inch]
+    # Create table with adjusted column widths for A4 (landscape orientation)
+    col_widths = [1.0*inch, 1.0*inch, 1.0*inch, 1.0*inch, 1.8*inch, 0.9*inch, 0.8*inch, 1.3*inch]
     table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     # Define table style
@@ -5279,42 +5291,59 @@ def export_users_to_pdf(headers, data_rows):
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
         
-        # Data cells style
+        # Data cells style - Left align text columns
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 1), (-1, -1), 'CENTER'),  # All columns centered
+        ('ALIGN', (0, 1), (4, -1), 'LEFT'),  # First 5 columns left-aligned
+        ('ALIGN', (5, 1), (-1, -1), 'CENTER'),  # Role, Status, Created At centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         
         # Grid
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('WORDWRAP', (0, 0), (-1, -1), True),
         
         # Alternating row colors
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
     ])
     
     table.setStyle(table_style)
     elements.append(table)
     
-    # Add footer
-    elements.append(Spacer(1, 0.3*inch))
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
-        fontSize=9,
-        textColor=colors.grey,
-        alignment=TA_CENTER
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
     footer = Paragraph(f"Total Users: {len(data_rows)}", footer_style)
     elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - User Management System", line_style)
+    elements.append(line)
     
     # Build PDF
     doc.build(elements)
@@ -5368,19 +5397,21 @@ def export_users_to_word(headers, data_rows):
         section.right_margin = Inches(0.5)
     
     # Add title
-    title = doc.add_heading('Users Report', 0)
+    title = doc.add_heading('USER MANAGEMENT REPORT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title.runs[0]
     title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
-    title_run.font.size = Pt(18)
+    title_run.font.size = Pt(20)
     title_run.font.bold = True
+    title_run.font.name = 'Arial'
     
     # Add timestamp
-    timestamp = doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
     timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
     timestamp_run = timestamp.runs[0]
-    timestamp_run.font.size = Pt(10)
-    timestamp_run.font.color.rgb = RGBColor(128, 128, 128)
+    timestamp_run.font.size = Pt(11)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)
+    timestamp_run.font.name = 'Arial'
     
     doc.add_paragraph()  # Add spacing
     
@@ -5404,6 +5435,7 @@ def export_users_to_word(headers, data_rows):
                 run.font.bold = True
                 run.font.size = Pt(11)
                 run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
         
         # Add padding
         cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -5427,15 +5459,16 @@ def export_users_to_word(headers, data_rows):
                 for run in paragraph.runs:
                     run.font.size = Pt(10)
                     run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
                 
-                # Center align ID, Role, and Status columns
-                if idx in [0, 6, 7]:
+                # Center align Role and Status columns
+                if idx in [5, 6]:  # Role, Status
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 else:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
-    # Set column widths
-    column_widths = [Inches(0.5), Inches(1.2), Inches(2.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(0.8), Inches(1.5)]
+    # Set column widths for landscape orientation
+    column_widths = [Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.2), Inches(2.2), Inches(1.0), Inches(0.9), Inches(1.5)]
     for row in table.rows:
         for idx, cell in enumerate(row.cells):
             if idx < len(column_widths):
@@ -5446,9 +5479,20 @@ def export_users_to_word(headers, data_rows):
     footer = doc.add_paragraph(f"Total Users: {len(data_rows)}")
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     footer_run = footer.runs[0]
-    footer_run.font.size = Pt(10)
-    footer_run.font.color.rgb = RGBColor(128, 128, 128)
-    footer_run.font.italic = True
+    footer_run.font.size = Pt(11)
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
+    
+    # Add system name
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - User Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(9)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
     
     # Save to buffer
     buffer = io.BytesIO()
