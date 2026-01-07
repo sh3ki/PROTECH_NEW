@@ -2924,7 +2924,7 @@
             });
         }
         
-        // Print users button handler - Print directly
+        // Print users button handler - Print all users
         const printUsersBtn = document.getElementById('print-users-btn');
         
         if (printUsersBtn) {
@@ -2934,10 +2934,54 @@
             });
         }
         
-        // Generate print document
+        // Generate print document - Fetch ALL users
         function generatePrintDocument() {
-            // Get current data from table
-            const tableRows = document.querySelectorAll('#users-table tbody tr');
+            showLoading();
+            
+            // Get current filter parameters to fetch all matching users
+            const searchQuery = userSearch ? userSearch.value : '';
+            const roleFilterValue = roleFilter ? roleFilter.value : '';
+            const statusFilterValue = activeFilter ? activeFilter.value : '';
+            
+            // Build query parameters (without pagination to get all results)
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (roleFilterValue) params.append('role', roleFilterValue);
+            if (statusFilterValue) params.append('status', statusFilterValue);
+            params.append('all', 'true');  // Special flag to get all users
+            
+            // Fetch all users for printing
+            fetch(`/admin/users/search/?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.status === 'success') {
+                    generatePrintHTML(data.users);
+                } else {
+                    showError('Failed to fetch users for printing');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Print error:', error);
+                showError('Failed to generate print document');
+            });
+        }
+        
+        // Generate print HTML from user data
+        function generatePrintHTML(users) {
+            // Calculate statistics
+            const totalUsers = users.length;
+            const activeUsers = users.filter(u => u.is_active).length;
+            const inactiveUsers = totalUsers - activeUsers;
+            
+            // Generate table HTML
             let tableHTML = `
                 <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
                     <thead>
@@ -2955,56 +2999,27 @@
                     <tbody>
             `;
             
-            tableRows.forEach((row, index) => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length > 0) {
-                    const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
-                    
-                    // Extract user name parts from the first cell
-                    const userCell = cells[0];
-                    const userNameDiv = userCell.querySelector('.font-medium');
-                    const fullName = userNameDiv ? userNameDiv.textContent.trim() : '';
-                    const nameParts = fullName.split(' ');
-                    
-                    // Assuming format: FirstName MiddleName LastName or FirstName LastName
-                    let firstName = '';
-                    let middleName = '';
-                    let lastName = '';
-                    
-                    if (nameParts.length === 3) {
-                        firstName = nameParts[0];
-                        middleName = nameParts[1];
-                        lastName = nameParts[2];
-                    } else if (nameParts.length === 2) {
-                        firstName = nameParts[0];
-                        lastName = nameParts[1];
-                    } else if (nameParts.length === 1) {
-                        firstName = nameParts[0];
-                    } else if (nameParts.length > 3) {
-                        firstName = nameParts[0];
-                        middleName = nameParts.slice(1, -1).join(' ');
-                        lastName = nameParts[nameParts.length - 1];
-                    }
-                    
-                    const username = userCell.querySelector('.text-xs.text-gray-500')?.textContent.trim() || '';
-                    const email = cells[1]?.textContent.trim() || '';
-                    const role = cells[2]?.textContent.trim() || '';
-                    const status = cells[3]?.textContent.trim() || '';
-                    const dateCreated = cells[4]?.textContent.trim() || '';
-                    
-                    tableHTML += `
-                        <tr style="background-color: ${bgColor};">
-                            <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${firstName}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${middleName}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${lastName}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${username}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${email}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${role}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${status}</td>
-                            <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${dateCreated}</td>
-                        </tr>
-                    `;
-                }
+            users.forEach((user, index) => {
+                const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+                const status = user.is_active ? 'Active' : 'Inactive';
+                const createdAt = new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                tableHTML += `
+                    <tr style="background-color: ${bgColor};">
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${user.first_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${user.middle_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${user.last_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${user.username}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${user.email}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${user.role_display}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${status}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${createdAt}</td>
+                    </tr>
+                `;
             });
             
             tableHTML += `
@@ -3022,7 +3037,7 @@
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>User Management Report</title>
+                    <title>User Management Report - PROTECH</title>
                     <style>
                         @page {
                             size: A4 landscape;
@@ -3040,17 +3055,30 @@
                             border-bottom: 3px solid #1F4E78;
                             padding-bottom: 15px;
                         }
-                        .header h1 {
+                        .header .institution {
                             color: #1F4E78;
                             margin: 0 0 8px 0;
-                            font-size: 24px;
+                            font-size: 18px;
+                            font-weight: bold;
+                            letter-spacing: 0.5px;
+                        }
+                        .header h1 {
+                            color: #1F4E78;
+                            margin: 0 0 6px 0;
+                            font-size: 22px;
                             font-weight: bold;
                             letter-spacing: 1px;
                         }
-                        .header p {
+                        .header .timestamp {
                             color: #666;
+                            margin: 0 0 6px 0;
+                            font-size: 11px;
+                        }
+                        .header .summary {
+                            color: #333;
                             margin: 0;
-                            font-size: 13px;
+                            font-size: 11px;
+                            font-weight: 500;
                         }
                         table {
                             width: 100%;
@@ -3115,12 +3143,14 @@
                 </head>
                 <body>
                     <div class="header">
+                        <div class="institution">PROTECH - DETECT TO PROTECT</div>
                         <h1>USER MANAGEMENT REPORT</h1>
-                        <p>Generated on ${formattedDate}</p>
+                        <p class="timestamp">Generated on ${formattedDate}</p>
+                        <p class="summary">Total Users: ${totalUsers} | Active: ${activeUsers} | Inactive: ${inactiveUsers}</p>
                     </div>
                     ${tableHTML}
                     <div class="footer">
-                        <div class="total">Total Users: ${tableRows.length}</div>
+                        <div class="total">Total Users: ${totalUsers}</div>
                         <div class="system-name">PROTECH - User Management System</div>
                     </div>
                 </body>
