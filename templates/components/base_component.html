@@ -128,8 +128,7 @@
     <meta name="ajax-navigation" content="enabled">
 </head>
 <body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
-    <!-- Toast Notifications Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-4"></div>
+    {% include 'components/toast_notification.html' %}
     
     <div class="flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
@@ -329,131 +328,6 @@
             document.getElementById('sidebar').classList.add('-translate-x-full');
             document.getElementById('sidebar').classList.remove('translate-x-0');
             document.getElementById('sidebar-backdrop').classList.add('hidden');
-        }
-        
-        // Toast Notification System
-        const toastContainer = document.getElementById('toast-container');
-        
-        // Toast notification function
-        function showNotification(message, type = 'success', duration = 5000) {
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 transform transition-all duration-300 ease-out opacity-0 translate-y-2`;
-            
-            // Set border color based on notification type
-            let iconSvg, borderColor, iconColor, bgColor;
-            
-            switch(type) {
-                case 'success':
-                    borderColor = 'border-green-500';
-                    iconColor = 'text-green-500';
-                    bgColor = 'bg-green-50 dark:bg-green-900/20';
-                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>`;
-                    break;
-                case 'error':
-                    borderColor = 'border-red-500';
-                    iconColor = 'text-red-500';
-                    bgColor = 'bg-red-50 dark:bg-red-900/20';
-                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>`;
-                    break;
-                case 'warning':
-                    borderColor = 'border-yellow-500';
-                    iconColor = 'text-yellow-500';
-                    bgColor = 'bg-yellow-50 dark:bg-yellow-900/20';
-                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>`;
-                    break;
-                case 'info':
-                    borderColor = 'border-blue-500';
-                    iconColor = 'text-blue-500';
-                    bgColor = 'bg-blue-50 dark:bg-blue-900/20';
-                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>`;
-                    break;
-                default:
-                    borderColor = 'border-gray-500';
-                    iconColor = 'text-gray-500';
-                    bgColor = 'bg-gray-50 dark:bg-gray-900/20';
-                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>`;
-            }
-            
-            toast.classList.add('border-l-4', borderColor);
-            
-            // Set toast content with improved message wrapping
-            toast.innerHTML = `
-                <div class="p-4 w-full">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0 ${iconColor}">
-                            ${iconSvg}
-                        </div>
-                        <div class="ml-3 flex-1 pt-0.5">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white break-words">${message}</p>
-                        </div>
-                        <div class="ml-4 flex-shrink-0 flex">
-                            <button class="bg-white dark:bg-transparent rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
-                                <span class="sr-only">Close</span>
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Add to container
-            toastContainer.appendChild(toast);
-            
-            // Add animation
-            setTimeout(() => {
-                toast.classList.remove('opacity-0', 'translate-y-2');
-                toast.classList.add('opacity-100', 'translate-y-0');
-            }, 10);
-            
-            // Close button functionality
-            const closeButton = toast.querySelector('button');
-            closeButton.addEventListener('click', () => {
-                removeToast(toast);
-            });
-            
-            // Auto remove after duration
-            setTimeout(() => {
-                removeToast(toast);
-            }, duration);
-            
-            return toast;
-        }
-        
-        function removeToast(toast) {
-            toast.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => {
-                toast.remove();
-            }, 300); // Match the CSS transition duration
-        }
-        
-        // Aliases for different notification types
-        function showSuccess(message, duration) {
-            return showNotification(message, 'success', duration);
-        }
-        
-        function showError(message, duration) {
-            return showNotification(message, 'error', duration);
-        }
-        
-        function showWarning(message, duration) {
-            return showNotification(message, 'warning', duration);
-        }
-        
-        function showInfo(message, duration) {
-            return showNotification(message, 'info', duration);
         }
         
         document.addEventListener('DOMContentLoaded', function() {
