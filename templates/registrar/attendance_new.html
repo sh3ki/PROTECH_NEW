@@ -11,8 +11,7 @@
 {% block content %}
 {% csrf_token %}
 
-<!-- Toast Container -->
-<div id="attendance-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+{% include 'components/toast_notification.html' %}
 
 <!-- Dashboard Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -595,74 +594,6 @@ function debounce(func, wait) {
 }
 
 // Toast notification (keep only one definition)
-function showToast(message, type = 'success', duration = 4000) {
-    const toastContainer = document.getElementById('attendance-toast-container');
-    const toast = document.createElement('div');
-    toast.className = 'flex items-center w-full max-w-xs p-4 mb-2 rounded-lg shadow-lg transition-all duration-300 transform translate-y-[-1rem] opacity-0';
-
-    let iconHTML = '';
-    switch (type) {
-        case 'success':
-            toast.classList.add('bg-green-100', 'dark:bg-green-800', 'text-green-800', 'dark:text-green-100', 'border-l-4', 'border-green-500');
-            iconHTML = `<svg class="w-5 h-5 text-green-500 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
-            break;
-        case 'error':
-            toast.classList.add('bg-red-100', 'dark:bg-red-800', 'text-red-800', 'dark:text-red-100', 'border-l-4', 'border-red-500');
-            iconHTML = `<svg class="w-5 h-5 text-red-500 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
-            break;
-        case 'warning':
-            toast.classList.add('bg-yellow-100', 'dark:bg-yellow-800', 'text-yellow-800', 'dark:text-yellow-100', 'border-l-4', 'border-yellow-500');
-            iconHTML = `<svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
-            break;
-        case 'info':
-        default:
-            toast.classList.add('bg-blue-100', 'dark:bg-blue-800', 'text-blue-800', 'dark:text-blue-100', 'border-l-4', 'border-blue-500');
-            iconHTML = `<svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 4a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
-            break;
-    }
-
-    toast.innerHTML = `
-        <div class="flex items-center justify-between w-full">
-            <div class="flex items-center">
-                ${iconHTML}
-                <div class="ml-3 text-sm font-normal">${message}</div>
-            </div>
-            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-6 w-6 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
-                <span class="sr-only">Close</span>
-                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
-                </svg>
-            </button>
-        </div>
-    `;
-
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        toast.classList.remove('translate-y-[-1rem]', 'opacity-0');
-    }, 10);
-
-    const closeButton = toast.querySelector('button');
-    if (closeButton) {
-        closeButton.addEventListener('click', () => {
-            removeToast(toast);
-        });
-    }
-
-    if (duration > 0) {
-        setTimeout(() => {
-            removeToast(toast);
-        }, duration);
-    }
-
-    function removeToast(toast) {
-        toast.classList.add('opacity-0', 'translate-y-[-1rem]');
-        setTimeout(() => {
-            if (toast && toast.parentNode)
-                toast.parentNode.removeChild(toast);
-        }, 300);
-    }
-}
 
 // Function to load attendance records
 function loadAttendanceRecords(page = 1) {
