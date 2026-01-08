@@ -1702,167 +1702,246 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Generate print document for teachers
     function generateTeacherPrintDocument() {
-        // Get current filter values
-        const searchQuery = teacherSearch ? teacherSearch.value.trim() : '';
-        const advisoryValue = advisoryFilter ? advisoryFilter.value : '';
-        const statusValue = statusFilter ? statusFilter.value : '';
-        const sectionValue = sectionFilter ? sectionFilter.value : '';
+        showLoading();
         
-        // Build filter info string
-        let filterInfo = '';
-        const filters = [];
-        if (searchQuery) filters.push(`Search: ${searchQuery}`);
-        if (advisoryValue) filters.push(`Advisory: ${advisoryValue}`);
-        if (statusValue) filters.push(`Status: ${statusValue}`);
-        if (sectionValue) filters.push(`Section: ${sectionValue}`);
-        if (filters.length > 0) {
-            filterInfo = filters.join(', ');
-        }
+        // Get current filter parameters
+        const searchQuery = teacherSearch ? teacherSearch.value : '';
+        const advisoryFilterValue = advisoryFilter ? advisoryFilter.value : '';
+        const statusFilterValue = statusFilter ? statusFilter.value : '';
         
-        // Get table rows and clean them for printing
-        const tableBody = teachersTable ? teachersTable.querySelector('tbody') : null;
-        if (!tableBody) {
-            showToast('No data available to print', 'warning');
-            return;
-        }
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (advisoryFilterValue) params.append('advisory', advisoryFilterValue);
+        if (statusFilterValue) params.append('status', statusFilterValue);
+        params.append('all', 'true'); // Request all records for printing
         
-        const rows = tableBody.querySelectorAll('tr');
-        if (rows.length === 0) {
-            showToast('No data available to print', 'warning');
-            return;
-        }
-        
-        let printRows = '';
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length > 0) {
-                printRows += '<tr>';
-                // Username
-                printRows += `<td>${cells[0]?.textContent.trim() || ''}</td>`;
-                // Full Name (skip profile image cell)
-                printRows += `<td>${cells[2]?.textContent.trim() || ''}</td>`;
-                // Email
-                printRows += `<td>${cells[3]?.textContent.trim() || ''}</td>`;
-                // Advisory Section
-                printRows += `<td>${cells[4]?.textContent.trim() || ''}</td>`;
-                // Status
-                printRows += `<td>${cells[5]?.textContent.trim() || ''}</td>`;
-                printRows += '</tr>';
+        // Fetch all teachers data (without pagination for printing)
+        fetch(`/admin/teachers/search/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        });
-        
-        // Create hidden iframe for printing
-        const printFrame = document.createElement('iframe');
-        printFrame.style.position = 'fixed';
-        printFrame.style.right = '0';
-        printFrame.style.bottom = '0';
-        printFrame.style.width = '0';
-        printFrame.style.height = '0';
-        printFrame.style.border = '0';
-        document.body.appendChild(printFrame);
-        
-        const printDocument = printFrame.contentWindow.document;
-        printDocument.open();
-        printDocument.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Teachers Report</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 20px;
-                        color: #333;
-                    }
-                    h1 {
-                        text-align: center;
-                        color: #1f2937;
-                        margin-bottom: 10px;
-                    }
-                    .header-info {
-                        text-align: center;
-                        margin-bottom: 20px;
-                        color: #6b7280;
-                        font-size: 14px;
-                    }
-                    .filter-info {
-                        background: #f3f4f6;
-                        padding: 10px;
-                        border-radius: 8px;
-                        margin-bottom: 20px;
-                        font-size: 12px;
-                        color: #4b5563;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }
-                    th {
-                        background-color: #1f2937;
-                        color: white;
-                        padding: 12px 8px;
-                        text-align: left;
-                        font-size: 12px;
-                        border: 1px solid #374151;
-                    }
-                    td {
-                        padding: 10px 8px;
-                        border: 1px solid #e5e7eb;
-                        font-size: 11px;
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f9fafb;
-                    }
-                    .print-date {
-                        text-align: right;
-                        margin-top: 30px;
-                        font-size: 12px;
-                        color: #6b7280;
-                    }
-                    @media print {
-                        body { margin: 0; }
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>Teachers Report</h1>
-                <div class="header-info">
-                    <strong>PROTECH School Management System</strong><br>
-                    Generated on: ${new Date().toLocaleString()}
-                </div>
-                ${filterInfo ? `<div class="filter-info"><strong>Applied Filters:</strong> ${filterInfo}</div>` : ''}
-                <table>
-                    <thead>
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            
+            if (!data.teachers || data.teachers.length === 0) {
+                showToast('No teachers available to print', 'warning');
+                return;
+            }
+            
+            const teachers = data.teachers;
+            const totalTeachers = teachers.length;
+            const activeTeachers = teachers.filter(t => t.is_active).length;
+            const inactiveTeachers = totalTeachers - activeTeachers;
+            const advisoryTeachers = teachers.filter(t => t.advisory).length;
+            
+            // Build table HTML
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead style="background-color: #1F4E78; color: white;">
                         <tr>
-                            <th>Username</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Advisory Section</th>
-                            <th>Status</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">First Name</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Middle Name</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Last Name</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Username</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Email</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Advisory Type</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Grade Level</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Section</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${printRows}
+            `;
+            
+            teachers.forEach((teacher, index) => {
+                const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+                const status = teacher.is_active ? 'Active' : 'Inactive';
+                const advisory = teacher.advisory ? 'Advisory' : 'Non-Advisory';
+                
+                tableHTML += `
+                    <tr style="background-color: ${bgColor};">
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${teacher.first_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${teacher.middle_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${teacher.last_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${teacher.username}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${teacher.email}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${advisory}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${teacher.grade || '-'}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${teacher.section || '-'}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${status}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
                     </tbody>
                 </table>
-                <div class="print-date">
-                    <p>Report printed on: ${new Date().toLocaleString()}</p>
-                </div>
-            </body>
-            </html>
-        `);
-        printDocument.close();
-        
-        // Wait for content to load, then print
-        printFrame.contentWindow.focus();
-        setTimeout(() => {
-            printFrame.contentWindow.print();
-            // Remove iframe after printing
+            `;
+            
+            // Format date nicely
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+            const formattedDate = now.toLocaleString('en-US', options);
+            
+            // Create hidden iframe for printing
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Teacher Management Report - PROTECH</title>
+                    <style>
+                        @page {
+                            size: A4 landscape;
+                            margin: 0.5in;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 25px;
+                            border-bottom: 3px solid #1F4E78;
+                            padding-bottom: 15px;
+                        }
+                        .header .institution {
+                            color: #1F4E78;
+                            margin: 0 0 8px 0;
+                            font-size: 18px;
+                            font-weight: bold;
+                            letter-spacing: 0.5px;
+                        }
+                        .header h1 {
+                            color: #1F4E78;
+                            margin: 0 0 6px 0;
+                            font-size: 22px;
+                            font-weight: bold;
+                            letter-spacing: 1px;
+                        }
+                        .header .timestamp {
+                            color: #666;
+                            margin: 0 0 6px 0;
+                            font-size: 11px;
+                        }
+                        .header .summary {
+                            color: #333;
+                            margin: 0;
+                            font-size: 11px;
+                            font-weight: 500;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 15px;
+                        }
+                        thead {
+                            background-color: #1F4E78;
+                            color: white;
+                        }
+                        th {
+                            border: 1px solid #CCCCCC;
+                            padding: 12px 10px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 11px;
+                        }
+                        th:nth-child(6), th:nth-child(7), th:nth-child(8), th:nth-child(9) {
+                            text-align: center;
+                        }
+                        td {
+                            border: 1px solid #DDD;
+                            padding: 10px;
+                            font-size: 10px;
+                        }
+                        td:nth-child(6), td:nth-child(7), td:nth-child(8), td:nth-child(9) {
+                            text-align: center;
+                        }
+                        tbody tr:nth-child(even) {
+                            background-color: #F9F9F9;
+                        }
+                        tbody tr:hover {
+                            background-color: #E8F4F8;
+                        }
+                        .footer {
+                            margin-top: 25px;
+                            text-align: center;
+                            border-top: 2px solid #DDD;
+                            padding-top: 15px;
+                        }
+                        .footer .total {
+                            font-size: 12px;
+                            color: #333;
+                            font-weight: bold;
+                            margin-bottom: 8px;
+                        }
+                        .footer .system-name {
+                            font-size: 10px;
+                            color: #999;
+                            font-style: italic;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 15px;
+                            }
+                            tbody tr:hover {
+                                background-color: transparent;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="institution">PROTECH - DETECT TO PROTECT</div>
+                        <h1>TEACHER MANAGEMENT REPORT</h1>
+                        <p class="timestamp">Generated on ${formattedDate}</p>
+                        <p class="summary">Total Teachers: ${totalTeachers} | Active: ${activeTeachers} | Inactive: ${inactiveTeachers} | Advisory: ${advisoryTeachers}</p>
+                    </div>
+                    ${tableHTML}
+                    <div class="footer">
+                        <div class="total">Total Teachers: ${totalTeachers}</div>
+                        <div class="system-name">PROTECH - Teacher Management System</div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create or reuse hidden iframe
+            let printFrame = document.getElementById('print-frame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'print-frame';
+                printFrame.style.position = 'fixed';
+                printFrame.style.right = '0';
+                printFrame.style.bottom = '0';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+            }
+            
+            // Write content to iframe and print
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+            
+            // Wait for content to load then print
             setTimeout(() => {
-                document.body.removeChild(printFrame);
-            }, 1000);
-        }, 250);
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Print error:', error);
+            showToast('Failed to generate print document', 'error');
+        });
     }
     
     if (addTeacherProfilePicInput) {
