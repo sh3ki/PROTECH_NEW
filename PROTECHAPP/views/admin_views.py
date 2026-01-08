@@ -5143,8 +5143,8 @@ def export_users_to_excel(request):
         status_filter = request.GET.get('status', '')
         export_format = request.GET.get('format', 'excel').lower()
         
-        # Base queryset (ordered by ID ascending: 1, 2, 3... 140)
-        users = CustomUser.objects.all().order_by('id')
+        # Base queryset - order by created_at descending (latest to oldest) to match table display
+        users = CustomUser.objects.all().order_by('-created_at')
         
         # Apply search if provided
         if search_query:
