@@ -2783,17 +2783,22 @@
                 // Upload file
                 fetch('{% url "import_users" %}', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || `HTTP ${response.status}: ${response.statusText}`);
-                        }).catch(() => {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        });
-                    }
-                    return response.json();
+                    // Always try to parse JSON response
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            // Throw error with the parsed data
+                            const error = new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                            error.data = data; // Attach the full error data
+                            throw error;
+                        }
+                        return data;
+                    });
                 })
                 .then(data => {
                     clearInterval(progressInterval);
@@ -2815,11 +2820,11 @@
                                 let resultsHTML = `
                                     <div class="flex items-start">
                                         <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
-                                        <div>
+                                        <div class="w-full">
                                             <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${data.message}</h5>
                                             <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
                                                 ${data.created_count > 0 ? `<li>• Created: ${data.created_count} user(s)</li>` : ''}
-                                                ${data.updated_count > 0 ? `<li>• Updated: ${data.updated_count} user(s)</li>` : ''}
+                                                ${data.emails_sent > 0 ? `<li>• Emails sent: ${data.emails_sent}</li>` : ''}
                                                 ${data.skipped_count > 0 ? `<li>• Skipped: ${data.skipped_count} user(s)</li>` : ''}
                                             </ul>
                                 `;
@@ -2827,11 +2832,14 @@
                                 if (data.errors && data.errors.length > 0) {
                                     resultsHTML += `
                                         <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                                            <h6 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Errors:</h6>
-                                            <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                            <h6 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                Errors Found:
+                                            </h6>
+                                            <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 max-h-60 overflow-y-auto">
                                                 ${data.errors.map(err => `<li>• ${err}</li>`).join('')}
                                             </ul>
-                                            ${data.additional_errors ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2">...and ${data.additional_errors} more error(s)</p>` : ''}
+                                            ${data.additional_errors ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2 font-medium">...and ${data.additional_errors} more error(s)</p>` : ''}
                                         </div>
                                     `;
                                 }
@@ -2853,16 +2861,23 @@
                                 let errorHTML = `
                                     <div class="flex items-start">
                                         <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
-                                        <div>
+                                        <div class="w-full">
                                             <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
-                                            <p class="text-sm text-red-700 dark:text-red-300">${data.message}</p>
+                                            <p class="text-sm text-red-700 dark:text-red-300 mb-2">${data.message}</p>
                                 `;
                                 
                                 if (data.errors && data.errors.length > 0) {
                                     errorHTML += `
-                                        <ul class="text-sm text-red-700 dark:text-red-300 space-y-1 mt-2">
-                                            ${data.errors.map(err => `<li>• ${err}</li>`).join('')}
-                                        </ul>
+                                        <div class="mt-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded">
+                                            <h6 class="font-semibold text-red-900 dark:text-red-200 mb-2 text-sm">
+                                                <i class="fas fa-list mr-1"></i>
+                                                Detailed Errors (${data.errors.length}):
+                                            </h6>
+                                            <ul class="text-xs text-red-800 dark:text-red-300 space-y-1 max-h-60 overflow-y-auto">
+                                                ${data.errors.map(err => `<li class="py-1">• ${err}</li>`).join('')}
+                                            </ul>
+                                            ${data.additional_errors ? `<p class="text-xs text-red-700 dark:text-red-400 mt-2 font-medium">...and ${data.additional_errors} more error(s)</p>` : ''}
+                                        </div>
                                     `;
                                 }
                                 
@@ -2887,22 +2902,48 @@
                     
                     if (importProgress) importProgress.classList.add('hidden');
                     
+                    // Extract error data if available
+                    const errorData = error.data || {};
+                    const errorMessage = error.message || 'An error occurred while importing users. Please try again.';
+                    
                     // Show error
                     if (importResults && importResultsContent) {
                         importResults.classList.remove('hidden');
                         importResults.className = 'mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800';
-                        importResultsContent.innerHTML = `
+                        
+                        let errorHTML = `
                             <div class="flex items-start">
                                 <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
-                                <div>
+                                <div class="w-full">
                                     <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
-                                    <p class="text-sm text-red-700 dark:text-red-300">${error.message || 'An error occurred while importing users. Please try again.'}</p>
+                                    <p class="text-sm text-red-700 dark:text-red-300 mb-2">${errorMessage}</p>
+                        `;
+                        
+                        // Show detailed errors if available
+                        if (errorData.errors && errorData.errors.length > 0) {
+                            errorHTML += `
+                                <div class="mt-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded">
+                                    <h6 class="font-semibold text-red-900 dark:text-red-200 mb-2 text-sm">
+                                        <i class="fas fa-list mr-1"></i>
+                                        Detailed Errors (${errorData.errors.length}):
+                                    </h6>
+                                    <ul class="text-xs text-red-800 dark:text-red-300 space-y-1 max-h-60 overflow-y-auto">
+                                        ${errorData.errors.map(err => `<li class="py-1">• ${err}</li>`).join('')}
+                                    </ul>
+                                    ${errorData.additional_errors ? `<p class="text-xs text-red-700 dark:text-red-400 mt-2 font-medium">...and ${errorData.additional_errors} more error(s)</p>` : ''}
+                                </div>
+                            `;
+                        }
+                        
+                        errorHTML += `
                                 </div>
                             </div>
                         `;
+                        
+                        importResultsContent.innerHTML = errorHTML;
                     }
                     
-                    showToast(error.message || 'Failed to import users. Please try again.', 'error');
+                    showToast(errorMessage, 'error');
                     
                     // Re-enable button
                     confirmImportBtn.disabled = false;
