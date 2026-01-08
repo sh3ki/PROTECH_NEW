@@ -854,187 +854,254 @@ function initializePrintButton() {
     if (printBtn) {
         printBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            generateGuardianPrintDocument();
+            printPage();
         });
     }
 }
 
-// Generate print document for guardians
-function generateGuardianPrintDocument() {
-    // Get current filter values
-    const searchQuery = searchInput ? searchInput.value.trim() : '';
+// Print page function - fetch all guardians with current filters
+function printPage() {
+    showLoading();
+    
+    // Get current filter parameters
+    const searchQuery = searchInput ? searchInput.value : '';
     const gradeValue = gradeFilter ? gradeFilter.value : '';
     const sectionValue = sectionFilter ? sectionFilter.value : '';
     const relationshipValue = relationshipFilter ? relationshipFilter.value : '';
     
-    // Build filter info string
-    let filterInfo = '';
-    const filters = [];
-    if (searchQuery) filters.push(`Search: ${searchQuery}`);
-    if (gradeValue) {
-        const gradeText = gradeFilter.options[gradeFilter.selectedIndex].text;
-        filters.push(`Grade: ${gradeText}`);
-    }
-    if (sectionValue) {
-        const sectionText = sectionFilter.options[sectionFilter.selectedIndex].text;
-        filters.push(`Section: ${sectionText}`);
-    }
-    if (relationshipValue) filters.push(`Relationship: ${relationshipValue}`);
-    if (filters.length > 0) {
-        filterInfo = filters.join(', ');
-    }
+    // Build query parameters (without pagination to get all results)
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('search', searchQuery);
+    if (gradeValue) params.append('grade', gradeValue);
+    if (sectionValue) params.append('section', sectionValue);
+    if (relationshipValue) params.append('relationship', relationshipValue);
+    params.append('all', 'true');  // Special flag to get all guardians
     
-    // Get table rows and clean them for printing
-    if (!guardianTableBody) {
-        showToast('No data available to print', 'warning');
-        return;
-    }
-    
-    const rows = guardianTableBody.querySelectorAll('tr');
-    if (rows.length === 0) {
-        showToast('No data available to print', 'warning');
-        return;
-    }
-    
-    let printRows = '';
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-            // Extract data from cells (skip action buttons column)
-            const guardianName = cells[0] ? cells[0].querySelector('.font-bold')?.textContent.trim() : '';
-            const relationship = cells[1] ? cells[1].textContent.trim() : '';
-            const contact = cells[2] ? cells[2].textContent.trim() : '';
-            const children = cells[3] ? cells[3].textContent.trim() : '';
-            
-            printRows += `
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #ddd;">${guardianName}</td>
-                    <td style="padding: 12px; border: 1px solid #ddd;">${relationship}</td>
-                    <td style="padding: 12px; border: 1px solid #ddd;">${contact}</td>
-                    <td style="padding: 12px; border: 1px solid #ddd;">${children}</td>
-                </tr>
-            `;
+    // Fetch all guardians for printing
+    fetch(`/admin/guardians/search/?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            generatePrintHTML(data.guardians);
+        } else {
+            showToast('Failed to fetch guardians for printing', 'error');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Print error:', error);
+        showToast('Failed to generate print document', 'error');
+    });
+}
+
+// Generate print HTML from guardian data
+function generatePrintHTML(guardians) {
+    // Calculate statistics
+    const totalGuardians = guardians.length;
+    const withChildren = guardians.filter(g => g.children_count > 0).length;
+    const mothers = guardians.filter(g => g.relationship_to_student === 'MOTHER').length;
+    const fathers = guardians.filter(g => g.relationship_to_student === 'FATHER').length;
+    
+    // Generate table HTML
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+            <thead>
+                <tr style="background-color: #1F4E78; color: white;">
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">First Name</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Middle Name</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Last Name</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Relationship</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Email</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Phone</th>
+                    <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Children</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    guardians.forEach((guardian, index) => {
+        const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+        const relationship = guardian.relationship_to_student || '';
+        
+        tableHTML += `
+            <tr style="background-color: ${bgColor};">
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${guardian.first_name || ''}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${guardian.middle_name || ''}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${guardian.last_name || ''}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${relationship}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${guardian.email || ''}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${guardian.phone_number || ''}</td>
+                <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${guardian.children_count || 0}</td>
+            </tr>
+        `;
     });
     
-    // Create hidden iframe for printing
-    const printFrame = document.createElement('iframe');
-    printFrame.style.position = 'fixed';
-    printFrame.style.right = '0';
-    printFrame.style.bottom = '0';
-    printFrame.style.width = '0';
-    printFrame.style.height = '0';
-    printFrame.style.border = '0';
-    document.body.appendChild(printFrame);
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
     
-    const printDocument = printFrame.contentWindow.document;
-    printDocument.open();
-    printDocument.write(`
+    // Format date nicely
+    const now = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+    const formattedDate = now.toLocaleString('en-US', options);
+    
+    // Create hidden iframe for printing
+    const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Guardians Report</title>
+            <title>Guardian Management Report - PROTECH</title>
             <style>
+                @page {
+                    size: A4 landscape;
+                    margin: 0.5in;
+                }
                 body {
+                    margin: 0;
+                    padding: 20px;
                     font-family: Arial, sans-serif;
-                    margin: 20px;
-                    color: #333;
+                    background: white;
                 }
                 .header {
                     text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 2px solid #333;
-                    padding-bottom: 10px;
+                    margin-bottom: 25px;
+                    border-bottom: 3px solid #1F4E78;
+                    padding-bottom: 15px;
+                }
+                .header .institution {
+                    color: #1F4E78;
+                    margin: 0 0 8px 0;
+                    font-size: 18px;
+                    font-weight: bold;
+                    letter-spacing: 0.5px;
                 }
                 .header h1 {
+                    color: #1F4E78;
+                    margin: 0 0 6px 0;
+                    font-size: 22px;
+                    font-weight: bold;
+                    letter-spacing: 1px;
+                }
+                .header .timestamp {
+                    color: #666;
+                    margin: 0 0 6px 0;
+                    font-size: 11px;
+                }
+                .header .summary {
+                    color: #333;
                     margin: 0;
-                    font-size: 24px;
-                    color: #1a202c;
-                }
-                .header h2 {
-                    margin: 5px 0 0 0;
-                    font-size: 16px;
-                    color: #4a5568;
-                    font-weight: normal;
-                }
-                .info {
-                    margin-bottom: 20px;
-                }
-                .info p {
-                    margin: 5px 0;
-                    font-size: 14px;
+                    font-size: 11px;
+                    font-weight: 500;
                 }
                 table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin-top: 20px;
+                    margin-top: 15px;
+                }
+                thead {
+                    background-color: #1F4E78;
+                    color: white;
                 }
                 th {
-                    background-color: #f7fafc;
-                    padding: 12px;
+                    border: 1px solid #CCCCCC;
+                    padding: 12px 10px;
                     text-align: left;
-                    border: 1px solid #ddd;
                     font-weight: bold;
-                    color: #2d3748;
+                    font-size: 11px;
+                }
+                th:nth-child(7) {
+                    text-align: center;
                 }
                 td {
-                    padding: 12px;
-                    border: 1px solid #ddd;
+                    border: 1px solid #DDD;
+                    padding: 10px;
+                    font-size: 10px;
                 }
-                tr:nth-child(even) {
-                    background-color: #f9fafb;
+                td:nth-child(7) {
+                    text-align: center;
+                }
+                tbody tr:nth-child(even) {
+                    background-color: #F9F9F9;
+                }
+                tbody tr:hover {
+                    background-color: #E8F4F8;
                 }
                 .footer {
-                    margin-top: 30px;
+                    margin-top: 25px;
                     text-align: center;
+                    border-top: 2px solid #DDD;
+                    padding-top: 15px;
+                }
+                .footer .total {
                     font-size: 12px;
-                    color: #718096;
+                    color: #333;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                }
+                .footer .system-name {
+                    font-size: 10px;
+                    color: #999;
+                    font-style: italic;
                 }
                 @media print {
-                    body { margin: 15px; }
-                    .header { margin-bottom: 20px; }
+                    body {
+                        margin: 0;
+                        padding: 15px;
+                    }
+                    tbody tr:hover {
+                        background-color: transparent;
+                    }
                 }
             </style>
         </head>
         <body>
             <div class="header">
-                <h1>PROTECH: DETECT TO PROTECT</h1>
-                <h2>Face Recognition Attendance Monitoring System</h2>
+                <div class="institution">PROTECH - DETECT TO PROTECT</div>
+                <h1>GUARDIAN MANAGEMENT REPORT</h1>
+                <p class="timestamp">Generated on ${formattedDate}</p>
+                <p class="summary">Total Guardians: ${totalGuardians} | With Children: ${withChildren} | Mothers: ${mothers} | Fathers: ${fathers}</p>
             </div>
-            <div class="info">
-                <p><strong>Report:</strong> Guardians List</p>
-                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-                ${filterInfo ? `<p><strong>Filters Applied:</strong> ${filterInfo}</p>` : ''}
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Guardian Name</th>
-                        <th>Relationship</th>
-                        <th>Contact</th>
-                        <th>Children</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${printRows}
-                </tbody>
-            </table>
+            ${tableHTML}
             <div class="footer">
-                <p>PROTECH System - Generated on ${new Date().toLocaleDateString()}</p>
+                <div class="total">Total Guardians: ${totalGuardians}</div>
+                <div class="system-name">PROTECH - Guardian Management System</div>
             </div>
         </body>
         </html>
-    `);
-    printDocument.close();
+    `;
     
-    // Wait for content to load, then print
-    printFrame.contentWindow.focus();
+    // Create or reuse hidden iframe
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+    }
+    
+    // Write content to iframe and print
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(printContent);
+    frameDoc.close();
+    
+    // Wait for content to load then print
     setTimeout(() => {
+        printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
-        // Remove iframe after printing
-        setTimeout(() => {
-            document.body.removeChild(printFrame);
-        }, 1000);
     }, 250);
 }
 
