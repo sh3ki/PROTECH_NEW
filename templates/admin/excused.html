@@ -859,162 +859,267 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Print Functionality
     function generateExcusedPrintDocument() {
-        // Get filter values
+        showLoading();
+        
+        // Get current filter parameters
         const searchQuery = document.getElementById('excused-search')?.value || '';
         const gradeFilter = document.getElementById('excused-grade-filter');
         const sectionFilter = document.getElementById('excused-section-filter');
         const statusFilter = document.getElementById('excused-status-filter');
-        const dateFilter = document.getElementById('excused-date-filter')?.value || '';
-
-        const gradeFilterText = gradeFilter?.options[gradeFilter.selectedIndex]?.text || 'All Grades';
-        const sectionFilterText = sectionFilter?.options[sectionFilter.selectedIndex]?.text || 'All Sections';
-        const statusFilterText = statusFilter?.options[statusFilter.selectedIndex]?.text || 'All Status';
-
-        // Build filter info string
-        let filterInfo = '';
-        if (searchQuery) filterInfo += `Search: "${searchQuery}" | `;
-        filterInfo += `Grade: ${gradeFilterText} | `;
-        filterInfo += `Section: ${sectionFilterText} | `;
-        filterInfo += `Status: ${statusFilterText}`;
-        if (dateFilter) filterInfo += ` | Date: ${dateFilter}`;
-
-        // Get table data
-        const tableBody = document.getElementById('excused-table-body');
-        if (!tableBody || tableBody.children.length === 0) {
-            showToast('No data available to print', 'warning');
-            return;
-        }
-
-        const rows = Array.from(tableBody.querySelectorAll('tr'));
-        let tableContent = '';
-
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length > 0) {
-                // Extract: LRN, Name, Grade, Section, Date Absent, Effective Date, End Date, Status
-                // Skip Profile (index 1) and Excuse Letter (index 8) and Actions (index 10)
-                const lrn = cells[0]?.textContent.trim() || '';
-                const name = cells[2]?.textContent.trim() || '';
-                const grade = cells[3]?.textContent.trim() || '';
-                const section = cells[4]?.textContent.trim() || '';
-                const dateAbsent = cells[5]?.textContent.trim() || '';
-                const effectiveDate = cells[6]?.textContent.trim() || '';
-                const endDate = cells[7]?.textContent.trim() || '';
-                const status = cells[9]?.textContent.trim() || '';
-
-                tableContent += `
-                    <tr>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${lrn}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${name}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${grade}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${section}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${dateAbsent}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${effectiveDate}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${endDate}</td>
-                        <td style="padding: 12px; border: 1px solid #ddd;">${status}</td>
-                    </tr>
-                `;
+        const dateValue = document.getElementById('excused-date-filter')?.value || '';
+        
+        const gradeValue = gradeFilter?.value || '';
+        const sectionValue = sectionFilter?.value || '';
+        const statusValue = statusFilter?.value || '';
+        
+        // Build query parameters (without pagination to get all results)
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (gradeValue) params.append('grade', gradeValue);
+        if (sectionValue) params.append('section', sectionValue);
+        if (statusValue) params.append('status', statusValue);
+        if (dateValue) params.append('date', dateValue);
+        params.append('all', 'true');  // Special flag to get all excused records
+        
+        // Fetch all excused records for printing
+        fetch(`/admin/excused/search/?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.status === 'success') {
+                generatePrintHTML(data.excused_records);
+            } else {
+                showToast('Failed to fetch excused records for printing', 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Print error:', error);
+            showToast('Failed to generate print document', 'error');
         });
+    }
 
-        // Create print document
-        const printWindow = document.createElement('iframe');
-        printWindow.style.position = 'fixed';
-        printWindow.style.width = '0';
-        printWindow.style.height = '0';
-        printWindow.style.border = '0';
-        document.body.appendChild(printWindow);
-
-        const printDocument = `
+    // Generate print HTML from excused data
+    function generatePrintHTML(records) {
+        // Calculate statistics
+        const totalExcused = records.length;
+        const activeExcused = records.filter(r => r.is_active).length;
+        const upcomingExcused = records.filter(r => {
+            const today = new Date();
+            const startDate = new Date(r.effective_date);
+            return startDate > today;
+        }).length;
+        const expiredExcused = records.filter(r => {
+            const today = new Date();
+            const endDate = new Date(r.end_date);
+            return endDate < today;
+        }).length;
+        
+        // Generate table HTML
+        let tableHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                <thead>
+                    <tr style="background-color: #1F4E78; color: white;">
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">LRN</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Student Name</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Grade</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Section</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Date Absent</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Effective Date</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">End Date</th>
+                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        records.forEach((record, index) => {
+            const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+            const studentName = `${record.student_first_name || ''} ${record.student_middle_name || ''} ${record.student_last_name || ''}`.trim();
+            const dateAbsent = record.date_absent ? new Date(record.date_absent).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+            const effectiveDate = record.effective_date ? new Date(record.effective_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+            const endDate = record.end_date ? new Date(record.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+            const status = record.is_active ? 'Active' : 'Inactive';
+            
+            tableHTML += `
+                <tr style="background-color: ${bgColor};">
+                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${record.student_lrn || ''}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${studentName}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${record.grade || ''}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${record.section || ''}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${dateAbsent}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${effectiveDate}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${endDate}</td>
+                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${status}</td>
+                </tr>
+            `;
+        });
+        
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+        
+        // Format date nicely
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+        const formattedDate = now.toLocaleString('en-US', options);
+        
+        // Create hidden iframe for printing
+        const printContent = `
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Excused Absences Report</title>
+                <title>Excused Absences Report - PROTECH</title>
                 <style>
+                    @page {
+                        size: A4 landscape;
+                        margin: 0.5in;
+                    }
                     body {
-                        font-family: Arial, sans-serif;
+                        margin: 0;
                         padding: 20px;
+                        font-family: Arial, sans-serif;
+                        background: white;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 25px;
+                        border-bottom: 3px solid #1F4E78;
+                        padding-bottom: 15px;
+                    }
+                    .header .institution {
+                        color: #1F4E78;
+                        margin: 0 0 8px 0;
+                        font-size: 18px;
+                        font-weight: bold;
+                        letter-spacing: 0.5px;
+                    }
+                    .header h1 {
+                        color: #1F4E78;
+                        margin: 0 0 6px 0;
+                        font-size: 22px;
+                        font-weight: bold;
+                        letter-spacing: 1px;
+                    }
+                    .header .timestamp {
+                        color: #666;
+                        margin: 0 0 6px 0;
+                        font-size: 11px;
+                    }
+                    .header .summary {
                         color: #333;
-                    }
-                    h1 {
-                        text-align: center;
-                        color: #2c3e50;
-                        margin-bottom: 10px;
-                    }
-                    .filter-info {
-                        text-align: center;
-                        color: #7f8c8d;
-                        margin-bottom: 20px;
-                        font-size: 14px;
+                        margin: 0;
+                        font-size: 11px;
+                        font-weight: 500;
                     }
                     table {
                         width: 100%;
                         border-collapse: collapse;
-                        margin-top: 20px;
+                        margin-top: 15px;
+                    }
+                    thead {
+                        background-color: #1F4E78;
+                        color: white;
                     }
                     th {
-                        background-color: #34495e;
-                        color: white;
-                        padding: 12px;
+                        border: 1px solid #CCCCCC;
+                        padding: 12px 10px;
                         text-align: left;
-                        border: 1px solid #2c3e50;
                         font-weight: bold;
+                        font-size: 11px;
                     }
-                    tr:nth-child(even) {
-                        background-color: #f8f9fa;
+                    th:nth-child(5), th:nth-child(6), th:nth-child(7), th:nth-child(8) {
+                        text-align: center;
+                    }
+                    td {
+                        border: 1px solid #DDD;
+                        padding: 10px;
+                        font-size: 10px;
+                    }
+                    td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8) {
+                        text-align: center;
+                    }
+                    tbody tr:nth-child(even) {
+                        background-color: #F9F9F9;
+                    }
+                    tbody tr:hover {
+                        background-color: #E8F4F8;
+                    }
+                    .footer {
+                        margin-top: 25px;
+                        text-align: center;
+                        border-top: 2px solid #DDD;
+                        padding-top: 15px;
+                    }
+                    .footer .total {
+                        font-size: 12px;
+                        color: #333;
+                        font-weight: bold;
+                        margin-bottom: 8px;
+                    }
+                    .footer .system-name {
+                        font-size: 10px;
+                        color: #999;
+                        font-style: italic;
                     }
                     @media print {
                         body {
-                            padding: 10px;
+                            margin: 0;
+                            padding: 15px;
                         }
-                        table {
-                            page-break-inside: auto;
-                        }
-                        tr {
-                            page-break-inside: avoid;
-                            page-break-after: auto;
+                        tbody tr:hover {
+                            background-color: transparent;
                         }
                     }
                 </style>
             </head>
             <body>
-                <h1>Excused Absences Report</h1>
-                <div class="filter-info">${filterInfo}</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>LRN</th>
-                            <th>Name</th>
-                            <th>Grade</th>
-                            <th>Section</th>
-                            <th>Date Absent</th>
-                            <th>Effective Date</th>
-                            <th>End Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableContent}
-                    </tbody>
-                </table>
+                <div class="header">
+                    <div class="institution">PROTECH - DETECT TO PROTECT</div>
+                    <h1>EXCUSED ABSENCES REPORT</h1>
+                    <p class="timestamp">Generated on ${formattedDate}</p>
+                    <p class="summary">Total Excused: ${totalExcused} | Active: ${activeExcused} | Upcoming: ${upcomingExcused} | Expired: ${expiredExcused}</p>
+                </div>
+                ${tableHTML}
+                <div class="footer">
+                    <div class="total">Total Excused: ${totalExcused}</div>
+                    <div class="system-name">PROTECH - Excused Absences Management System</div>
+                </div>
             </body>
             </html>
         `;
-
-        const doc = printWindow.contentWindow.document;
-        doc.open();
-        doc.write(printDocument);
-        doc.close();
-
-        // Wait for content to load, then print
+        
+        // Create or reuse hidden iframe
+        let printFrame = document.getElementById('print-frame');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-frame';
+            printFrame.style.position = 'fixed';
+            printFrame.style.right = '0';
+            printFrame.style.bottom = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = '0';
+            document.body.appendChild(printFrame);
+        }
+        
+        // Write content to iframe and print
+        const frameDoc = printFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(printContent);
+        frameDoc.close();
+        
+        // Wait for content to load then print
         setTimeout(() => {
-            printWindow.contentWindow.focus();
-            printWindow.contentWindow.print();
-
-            // Remove iframe after printing
-            setTimeout(() => {
-                document.body.removeChild(printWindow);
-            }, 1000);
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
         }, 250);
     }
 
