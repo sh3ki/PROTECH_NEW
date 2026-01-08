@@ -718,12 +718,13 @@ def import_users(request):
                 except Exception:
                     df = pd.read_csv(io.BytesIO(file_bytes), encoding='latin1')
             else:
-                # Use openpyxl for xlsx
+                # Use openpyxl for xlsx - skip first 4 rows (title, instructions, notes)
+                # The actual header is in row 5 (index 4)
                 try:
-                    df = pd.read_excel(bio, engine='openpyxl')
+                    df = pd.read_excel(bio, engine='openpyxl', header=4)
                 except Exception:
                     bio.seek(0)
-                    df = pd.read_excel(bio)
+                    df = pd.read_excel(bio, header=4)
         except Exception as e:
             read_error = str(e)
 
