@@ -681,8 +681,12 @@ def search_users(request):
 @user_passes_test(is_admin)
 @require_http_methods(["POST"])
 def import_users(request):
-    """API endpoint to import users from CSV/Excel file - matches export format"""
+    """Import users from CSV/Excel file with automatic password generation and email sending"""
     try:
+        import pandas as pd
+        from django.contrib.auth.hashers import make_password
+        import io
+        
         # Accept both legacy 'file' and newer 'import_file' form keys
         if 'file' in request.FILES:
             uploaded_file = request.FILES['file']
@@ -696,22 +700,16 @@ def import_users(request):
         if file_extension not in ['csv', 'xlsx', 'xls']:
             return JsonResponse({'status': 'error', 'message': 'Invalid file type. Only CSV and Excel files are allowed.'}, status=400)
 
-        # Validate file size (10MB max to match modal description)
+        # Validate file size (10MB max)
         if uploaded_file.size > 10 * 1024 * 1024:
             return JsonResponse({'status': 'error', 'message': 'File too large. Maximum file size is 10MB.'}, status=400)
 
-        # Read file content robustly
-        import pandas as pd
-        import re
-        import re
-        import re
-        import re
-        import io
-
+        # Read file content
         file_bytes = uploaded_file.read()
         bio = io.BytesIO(file_bytes)
         df = None
         read_error = None
+        
         try:
             if file_extension == 'csv':
                 # Try utf-8 then fallback to latin1
@@ -720,11 +718,10 @@ def import_users(request):
                 except Exception:
                     df = pd.read_csv(io.BytesIO(file_bytes), encoding='latin1')
             else:
-                # Prefer openpyxl for xlsx
+                # Use openpyxl for xlsx
                 try:
                     df = pd.read_excel(bio, engine='openpyxl')
                 except Exception:
-                    # Retry with default engine/bytes buffer
                     bio.seek(0)
                     df = pd.read_excel(bio)
         except Exception as e:
@@ -733,168 +730,116 @@ def import_users(request):
         if df is None:
             return JsonResponse({'status': 'error', 'message': f'Error reading file: {read_error or "Could not parse file"}'}, status=400)
 
-        # Normalize column names (strip whitespace)
+        # Normalize column names (strip whitespace and lowercase)
         df.columns = df.columns.str.strip()
-        # Map common header variants case-insensitively
         column_mapping = {
-            'username': 'username',
-            'user name': 'username',
-            'user': 'username',
-            'email': 'email',
             'first name': 'first_name',
-            'firstname': 'first_name',
-            'last name': 'last_name',
-            'lastname': 'last_name',
+            'First Name': 'first_name',
             'middle name': 'middle_name',
-            'middlename': 'middle_name',
+            'Middle Name': 'middle_name',
+            'last name': 'last_name',
+            'Last Name': 'last_name',
+            'username': 'username',
+            'Username': 'username',
+            'email': 'email',
+            'Email': 'email',
             'role': 'role',
-            'status': 'status',
-            'password': 'password',
-            'lrn': 'lrn',
-            'id': 'id',
-            'created date': 'created_date'
+            'Role': 'role'
         }
 
         # Build a mapping from existing df columns to canonical names
         new_columns = {}
         for col in df.columns:
-            key = str(col).strip().lower()
-            if key in column_mapping:
-                new_columns[col] = column_mapping[key]
+            if col in column_mapping:
+                new_columns[col] = column_mapping[col]
             else:
                 # Keep original column name for unknowns
                 new_columns[col] = col
 
         df.rename(columns=new_columns, inplace=True)
         
-        # Validate required columns (password is optional for updating existing users)
-        required_columns = ['username', 'email', 'first_name', 'last_name', 'role']
+        # Validate required columns
+        required_columns = ['first_name', 'last_name', 'username', 'email', 'role']
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
             return JsonResponse({
                 'status': 'error', 
-                'message': f'Missing required columns: {", ".join(missing_columns)}. The file must include at least: Username, Email, First Name, Last Name, Role'
+                'message': f'Missing required columns: {", ".join([c.replace("_", " ").title() for c in missing_columns])}'
             }, status=400)
         
-        # Check if password column exists
-        has_password_column = 'password' in df.columns
+        # Remove empty rows
+        df = df.dropna(how='all')
         
         # Process data
         created_count = 0
-        updated_count = 0
         skipped_count = 0
-        skipped_rows = []
         errors = []
-        skipped_rows = []
-        skipped_rows = []
         emails_sent = 0
+        
+        # Role mapping
+        role_mapping = {
+            'ADMIN': UserRole.ADMIN,
+            'ADMINISTRATOR': UserRole.ADMIN,
+            'TEACHER': UserRole.TEACHER,
+            'PRINCIPAL': UserRole.PRINCIPAL,
+            'REGISTRAR': UserRole.REGISTRAR,
+        }
         
         for index, row in df.iterrows():
             try:
                 # Clean and validate data
-                username = str(row['username']).strip() if pd.notna(row['username']) else ''
-                email = str(row['email']).strip() if pd.notna(row['email']) else ''
                 first_name = str(row['first_name']).strip() if pd.notna(row['first_name']) else ''
-                last_name = str(row['last_name']).strip() if pd.notna(row['last_name']) else ''
-                role = str(row['role']).strip().upper() if pd.notna(row['role']) else ''
                 middle_name = str(row['middle_name']).strip() if 'middle_name' in row and pd.notna(row['middle_name']) else ''
-                lrn = str(row['lrn']).strip() if 'lrn' in row and pd.notna(row['lrn']) else ''
+                last_name = str(row['last_name']).strip() if pd.notna(row['last_name']) else ''
+                username = str(row['username']).strip() if pd.notna(row['username']) else ''
+                email = str(row['email']).strip().lower() if pd.notna(row['email']) else ''
+                role_str = str(row['role']).strip().upper() if pd.notna(row['role']) else ''
                 
-                # Handle Status column (export format: "Active" or "Inactive")
-                is_active = True
-                if 'status' in row and pd.notna(row['status']):
-                    status_value = str(row['status']).strip().upper()
-                    is_active = status_value in ['ACTIVE', 'TRUE', '1', 'YES']
-                elif 'is_active' in row and pd.notna(row['is_active']):  # Support old format
-                    is_active_value = str(row['is_active']).strip().upper()
-                    is_active = is_active_value in ['TRUE', '1', 'YES', 'ACTIVE']
-                
-                # Validate required fields
-                if not all([username, email, first_name, last_name, role]):
-                    errors.append(f'Row {index + 2}: Missing required field(s)')
+                # Validate required fields with specific error messages
+                if not first_name:
+                    errors.append(f'Row {index + 2}, Column "First Name": Cannot be empty')
                     skipped_count += 1
                     continue
                 
-                # Validate and normalize role (handle both display names and codes)
-                role_mapping = {
-                    'ADMIN': UserRole.ADMIN,
-                    'TEACHER': UserRole.TEACHER,
-                    'PRINCIPAL': UserRole.PRINCIPAL,
-                    'REGISTRAR': UserRole.REGISTRAR,
-                    'ADMINISTRATOR': UserRole.ADMIN,
-                }
+                if not last_name:
+                    errors.append(f'Row {index + 2}, Column "Last Name": Cannot be empty')
+                    skipped_count += 1
+                    continue
                 
-                role_upper = role.upper()
-                if role_upper in role_mapping:
-                    role = role_mapping[role_upper]
-                else:
-                    valid_roles = [choice[0] for choice in UserRole.choices]
-                    if role not in valid_roles:
-                        errors.append(f'Row {index + 2}: Invalid role "{role}". Valid roles: ADMIN, TEACHER, PRINCIPAL, REGISTRAR')
-                        skipped_count += 1
-                        continue
+                if not username:
+                    errors.append(f'Row {index + 2}, Column "Username": Cannot be empty')
+                    skipped_count += 1
+                    continue
                 
-                # Check if ID is provided in Excel
-                user_id = row.get('id') if 'id' in row and pd.notna(row['id']) else None
+                if not email or '@' not in email:
+                    errors.append(f'Row {index + 2}, Column "Email": Invalid or empty email address')
+                    skipped_count += 1
+                    continue
                 
-                if user_id:
-                    # Skip rows with existing ID - don't import or update
-                    try:
-                        if CustomUser.objects.filter(id=int(user_id)).exists():
-                            skipped_count += 1
-                            skipped_rows.append({
-                                'row': index + 2,
-                                'id': user_id,
-                                'username': username,
-                                'email': email,
-                                'lrn': lrn,
-                                'reason': 'Existing ID'
-                            })
-                            continue
-                    except ValueError:
-                        pass
-
-                # If LRN column is present and matches an existing student, skip the row
-                if lrn:
-                    if Student.objects.filter(lrn=lrn).exists():
-                        skipped_count += 1
-                        skipped_rows.append({
-                            'row': index + 2,
-                            'username': username,
-                            'email': email,
-                            'lrn': lrn,
-                            'reason': 'LRN already exists'
-                        })
-                        continue
+                # Validate and normalize role
+                if role_str not in role_mapping:
+                    errors.append(f'Row {index + 2}, Column "Role": Invalid role "{role_str}". Valid options: Administrator, Teacher, Principal, Registrar')
+                    skipped_count += 1
+                    continue
                 
-                # Only import new users (blank ID)
+                role = role_mapping[role_str]
+                
                 # Check if username or email already exists
                 if CustomUser.objects.filter(username=username).exists():
+                    errors.append(f'Row {index + 2}, Column "Username": Username "{username}" already exists')
                     skipped_count += 1
-                    skipped_rows.append({
-                        'row': index + 2,
-                        'username': username,
-                        'email': email,
-                        'lrn': lrn,
-                        'reason': 'Username already exists'
-                    })
                     continue
+                
                 if CustomUser.objects.filter(email=email).exists():
+                    errors.append(f'Row {index + 2}, Column "Email": Email "{email}" already exists')
                     skipped_count += 1
-                    skipped_rows.append({
-                        'row': index + 2,
-                        'username': username,
-                        'email': email,
-                        'lrn': lrn,
-                        'reason': 'Email already exists'
-                    })
                     continue
                 
                 # Generate random password for new user
                 generated_password = generate_random_password()
                 
-                # Create new user
+                # Create new user with active status
                 user = CustomUser(
                     username=username,
                     email=email,
@@ -902,7 +847,7 @@ def import_users(request):
                     last_name=last_name,
                     middle_name=middle_name,
                     role=role,
-                    is_active=is_active
+                    is_active=True  # All imported users are automatically active
                 )
                 user.password = make_password(generated_password)
                 user.save()
@@ -921,11 +866,11 @@ def import_users(request):
         # Prepare response message
         message_parts = []
         if created_count > 0:
-            message_parts.append(f'{created_count} user(s) created')
-            if emails_sent > 0:
-                message_parts.append(f'{emails_sent} password email(s) sent')
+            message_parts.append(f'{created_count} user(s) created successfully')
+        if emails_sent > 0:
+            message_parts.append(f'{emails_sent} password email(s) sent')
         if skipped_count > 0:
-            message_parts.append(f'{skipped_count} user(s) skipped (existing IDs or errors)')
+            message_parts.append(f'{skipped_count} row(s) skipped due to errors')
         
         message = 'Import completed! ' + ', '.join(message_parts) + '.'
         
@@ -938,15 +883,11 @@ def import_users(request):
             'total_processed': created_count + skipped_count
         }
         
-        # Include errors if any (limit to first 10 errors)
+        # Include errors if any (limit to first 20 errors)
         if errors:
-            response_data['errors'] = errors[:10]
-            if len(errors) > 10:
-                response_data['additional_errors'] = len(errors) - 10
-
-        # Include skipped row details for the UI to display which rows were ignored
-        if skipped_rows:
-            response_data['skipped_rows'] = skipped_rows
+            response_data['errors'] = errors[:20]
+            if len(errors) > 20:
+                response_data['additional_errors'] = len(errors) - 20
         
         return JsonResponse(response_data)
         
@@ -964,10 +905,11 @@ def import_users(request):
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
 def download_import_template(request):
-    """Generate and download a properly formatted Excel template for user import"""
+    """Generate and download a simple Excel template for bulk user import with dropdown for roles"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
     import io
     
     # Create workbook
@@ -975,74 +917,127 @@ def download_import_template(request):
     ws = wb.active
     ws.title = "Users Import Template"
     
-    # Define styles (matching export format)
+    # Define styles
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     
+    instruction_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    instruction_font = Font(bold=True, size=10, color="D9534F")
+    instruction_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
     border_style = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
     )
     
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    # Set column widths
-    column_widths = [8, 15, 30, 15, 15, 15, 15, 12]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    # Set column widths for better readability
+    column_widths = {
+        'A': 18,  # First Name
+        'B': 15,  # Middle Name
+        'C': 18,  # Last Name
+        'D': 20,  # Username
+        'E': 35,  # Email (wider for full email addresses)
+        'F': 15   # Role
+    }
+    for col_letter, width in column_widths.items():
+        ws.column_dimensions[col_letter].width = width
     
-    # Headers (with ID column)
-    headers = ["ID", "Username", "Email", "First Name", "Last Name", "Middle Name", "Role", "Status"]
+    # Headers
+    headers = ["First Name", "Middle Name", "Last Name", "Username", "Email", "Role"]
     
-    # Add headers with styling
+    # Add instructions at the top (rows 1-4)
+    ws.merge_cells('A1:F1')
+    instruction_cell_1 = ws['A1']
+    instruction_cell_1.value = "📋 BULK USER IMPORT TEMPLATE"
+    instruction_cell_1.font = Font(bold=True, size=13, color="1F4E78")
+    instruction_cell_1.alignment = Alignment(horizontal="center", vertical="center")
+    instruction_cell_1.fill = instruction_fill
+    ws.row_dimensions[1].height = 28
+    
+    ws.merge_cells('A2:F2')
+    instruction_cell_2 = ws['A2']
+    instruction_cell_2.value = "📝 Instructions: Fill in user details below. All users will be created with 'Active' status and receive auto-generated passwords via email."
+    instruction_cell_2.font = Font(size=9, italic=True, color="333333")
+    instruction_cell_2.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    instruction_cell_2.fill = instruction_fill
+    ws.row_dimensions[2].height = 32
+    
+    ws.merge_cells('A3:F3')
+    instruction_cell_3 = ws['A3']
+    instruction_cell_3.value = "✅ Required: First Name, Last Name, Username, Email, Role  |  ⚪ Optional: Middle Name"
+    instruction_cell_3.font = Font(size=9, color="555555")
+    instruction_cell_3.alignment = Alignment(horizontal="left", vertical="center")
+    instruction_cell_3.fill = instruction_fill
+    ws.row_dimensions[3].height = 22
+    
+    ws.merge_cells('A4:F4')
+    instruction_cell_4 = ws['A4']
+    instruction_cell_4.value = "⚠️ Username and Email must be unique. Use the Role dropdown in each cell!"
+    instruction_cell_4.font = Font(size=9, bold=True, color="C0504D")
+    instruction_cell_4.alignment = Alignment(horizontal="left", vertical="center")
+    instruction_cell_4.fill = instruction_fill
+    ws.row_dimensions[4].height = 22
+    
+    # Add headers on row 5
     ws.append(headers)
-    ws.row_dimensions[1].height = 25
+    ws.row_dimensions[5].height = 30
     
-    for cell in ws[1]:
+    for cell in ws[5]:
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    # Add instruction row
-    instruction_row = ["Instructions:", "Leave ID blank for new users (auto-generates password & sends email). Rows with existing IDs will be SKIPPED (not imported).", "", "", "", "", "", ""]
-    ws.append(instruction_row)
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
-    instruction_cell = ws.cell(row=2, column=1)
-    instruction_cell.font = Font(italic=True, color="666666", size=10)
-    instruction_cell.alignment = left_alignment
-    ws.row_dimensions[2].height = 30
+    # Add role dropdown validation for column F (Role) - rows 6 to 1000
+    role_validation = DataValidation(
+        type="list",
+        formula1='"Administrator,Teacher,Principal,Registrar"',
+        allow_blank=False
+    )
+    role_validation.error = 'Please select a valid role from the dropdown'
+    role_validation.errorTitle = 'Invalid Role'
+    ws.add_data_validation(role_validation)
+    role_validation.add('F6:F1000')
     
-    # Sample data rows (ID, Username, Email, First Name, Last Name, Middle Name, Role, Status)
+    # Sample data rows (First Name, Middle Name, Last Name, Username, Email, Role)
     sample_data = [
-        ["", "john.teacher", "john.teacher@protech.com", "John", "Teacher", "M", "Teacher", "Active"],
-        ["", "jane.admin", "jane.admin@protech.com", "Jane", "Admin", "S", "Administrator", "Active"],
-        ["", "robert.principal", "robert.principal@protech.com", "Robert", "Principal", "K", "Principal", "Active"],
-        ["", "mary.registrar", "mary.registrar@protech.com", "Mary", "Registrar", "L", "Registrar", "Active"],
+        ["John", "M", "Doe", "john.doe", "john.doe@protech.com", "Teacher"],
+        ["Jane", "", "Smith", "jane.smith", "jane.smith@protech.com", "Administrator"],
+        ["Robert", "K", "Wilson", "robert.wilson", "robert.wilson@protech.com", "Principal"],
     ]
     
-    # Add data rows with styling
+    # Add sample data rows with styling
     for row_data in sample_data:
         ws.append(row_data)
     
     # Apply formatting to data rows
-    for row_idx in range(3, ws.max_row + 1):
+    for row_idx in range(6, ws.max_row + 1):
+        ws.row_dimensions[row_idx].height = 20
         for col_idx in range(1, len(headers) + 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             cell.border = border_style
+            cell.font = Font(size=10)
             
-            # Apply alignment (ID, Role, Status - center, rest left)
-            if col_idx in [1, 7, 8]:
+            # Apply alignment (Role - center, rest left)
+            if col_idx == 6:  # Role column
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
+        
+        # Add alternating row colors for better readability
+        if row_idx % 2 == 0:
+            for col_idx in range(1, len(headers) + 1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.fill = PatternFill(start_color="F8F9FA", end_color="F8F9FA", fill_type="solid")
     
-    # Freeze header row
-    ws.freeze_panes = ws['A2']
+    # Freeze rows 1-5 (instructions and header)
+    ws.freeze_panes = ws['A6']
     
     # Save to buffer
     buffer = io.BytesIO()
