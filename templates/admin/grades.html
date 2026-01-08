@@ -1048,161 +1048,231 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!printBtn) return;
 
         printBtn.addEventListener('click', () => {
-            const printContent = generateGradePrintDocument();
-            
-            // Create hidden iframe for printing
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-            
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(printContent);
-            doc.close();
-            
-            // Wait for content to load before printing
-            iframe.contentWindow.focus();
-            setTimeout(() => {
-                iframe.contentWindow.print();
-                // Remove iframe after printing
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 1000);
-            }, 250);
+            generateGradePrintDocument();
         });
     }
 
     function generateGradePrintDocument() {
+        showToast('Preparing print document...', 'info');
+        
         // Get current search value
-        const searchValue = document.getElementById('grade-search')?.value || '';
+        const searchQuery = document.getElementById('grade-search')?.value || '';
         
-        // Get the visible table rows
-        const tableRows = document.querySelectorAll('#grades-table tbody tr');
-        let tableRowsHtml = '';
-        let rowCount = 0;
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        params.append('all', 'true');
         
-        tableRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length >= 3) {
-                rowCount++;
-                
-                // Extract Grade Name (cell 0)
-                const nameCell = cells[0].querySelector('.text-lg.font-medium');
-                const name = nameCell ? nameCell.textContent.trim() : cells[0].textContent.trim();
-                
-                // Extract Total Sections (cell 1)
-                const sectionsCell = cells[1].querySelector('.text-lg.font-semibold');
-                const sections = sectionsCell ? sectionsCell.textContent.trim() : cells[1].textContent.trim();
-                
-                // Extract Total Students (cell 2)
-                const studentsCell = cells[2].querySelector('.text-lg.font-semibold');
-                const students = studentsCell ? studentsCell.textContent.trim() : cells[2].textContent.trim();
-                
-                tableRowsHtml += `
-                    <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">${name}</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; text-align: center;">${sections}</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; text-align: center;">${students}</td>
-                    </tr>
-                `;
+        // Fetch all grades data (without pagination for printing)
+        fetch(`/admin/grades/search/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        });
-
-        const currentDate = new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-
-        return `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Grades List - PROTECH</title>
-                <style>
-                    @media print {
-                        body { margin: 0; padding: 20px; }
-                        @page { margin: 1cm; }
-                    }
-                    body {
-                        font-family: Arial, sans-serif;
-                        padding: 20px;
-                    }
-                    .header {
-                        text-align: center;
-                        margin-bottom: 30px;
-                        border-bottom: 3px solid #2563eb;
-                        padding-bottom: 20px;
-                    }
-                    .header h1 {
-                        color: #1e40af;
-                        margin: 0 0 10px 0;
-                        font-size: 28px;
-                    }
-                    .header h2 {
-                        color: #374151;
-                        margin: 0;
-                        font-size: 20px;
-                        font-weight: normal;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }
-                    th {
-                        background-color: #2563eb;
-                        color: white;
-                        padding: 12px;
-                        text-align: left;
-                        font-weight: 600;
-                    }
-                    th:nth-child(2), th:nth-child(3) {
-                        text-align: center;
-                    }
-                    td {
-                        padding: 12px;
-                        border-bottom: 1px solid #e5e7eb;
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f9fafb;
-                    }
-                    .footer {
-                        margin-top: 30px;
-                        text-align: center;
-                        color: #6b7280;
-                        font-size: 14px;
-                        border-top: 1px solid #e5e7eb;
-                        padding-top: 15px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>PROTECH Attendance System</h1>
-                    <h2>Grades List</h2>
-                </div>
-                
-                <table>
-                    <thead>
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.grades || data.grades.length === 0) {
+                showToast('No grades available to print', 'warning');
+                return;
+            }
+            
+            const grades = data.grades;
+            const totalGrades = grades.length;
+            const totalSections = grades.reduce((sum, g) => sum + (g.sections_count || 0), 0);
+            const totalStudents = grades.reduce((sum, g) => sum + (g.students_count || 0), 0);
+            
+            // Build table HTML
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead style="background-color: #1F4E78; color: white;">
                         <tr>
-                            <th>Grade Name</th>
-                            <th>Total Sections</th>
-                            <th>Total Students</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Grade Name</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Total Sections</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Total Students</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Date Created</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${tableRowsHtml || '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #6b7280;">No grades found</td></tr>'}
+            `;
+            
+            grades.forEach((grade, index) => {
+                const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+                
+                tableHTML += `
+                    <tr style="background-color: ${bgColor};">
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${grade.name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${grade.sections_count || 0}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${grade.students_count || 0}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${grade.created_at_display || ''}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
                     </tbody>
                 </table>
-                
-                <div class="footer">
-                    <p>Generated on ${currentDate}</p>
-                    <p>PROTECH Attendance System</p>
-                </div>
-            </body>
-            </html>
-        `;
+            `;
+            
+            // Format date nicely
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+            const formattedDate = now.toLocaleString('en-US', options);
+            
+            // Create hidden iframe for printing
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Grade Level Management Report - PROTECH</title>
+                    <style>
+                        @page {
+                            size: A4 portrait;
+                            margin: 0.5in;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 25px;
+                            border-bottom: 3px solid #1F4E78;
+                            padding-bottom: 15px;
+                        }
+                        .header .institution {
+                            color: #1F4E78;
+                            margin: 0 0 8px 0;
+                            font-size: 18px;
+                            font-weight: bold;
+                            letter-spacing: 0.5px;
+                        }
+                        .header h1 {
+                            color: #1F4E78;
+                            margin: 0 0 6px 0;
+                            font-size: 22px;
+                            font-weight: bold;
+                            letter-spacing: 1px;
+                        }
+                        .header .timestamp {
+                            color: #666;
+                            margin: 0 0 6px 0;
+                            font-size: 11px;
+                        }
+                        .header .summary {
+                            color: #333;
+                            margin: 0;
+                            font-size: 11px;
+                            font-weight: 500;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 15px;
+                        }
+                        thead {
+                            background-color: #1F4E78;
+                            color: white;
+                        }
+                        th {
+                            border: 1px solid #CCCCCC;
+                            padding: 12px 10px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 11px;
+                        }
+                        th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+                            text-align: center;
+                        }
+                        td {
+                            border: 1px solid #DDD;
+                            padding: 10px;
+                            font-size: 10px;
+                        }
+                        td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+                            text-align: center;
+                        }
+                        tbody tr:nth-child(even) {
+                            background-color: #F9F9F9;
+                        }
+                        tbody tr:hover {
+                            background-color: #E8F4F8;
+                        }
+                        .footer {
+                            margin-top: 25px;
+                            text-align: center;
+                            border-top: 2px solid #DDD;
+                            padding-top: 15px;
+                        }
+                        .footer .total {
+                            font-size: 12px;
+                            color: #333;
+                            font-weight: bold;
+                            margin-bottom: 8px;
+                        }
+                        .footer .system-name {
+                            font-size: 10px;
+                            color: #999;
+                            font-style: italic;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 15px;
+                            }
+                            tbody tr:hover {
+                                background-color: transparent;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="institution">PROTECH - DETECT TO PROTECT</div>
+                        <h1>GRADE LEVEL MANAGEMENT REPORT</h1>
+                        <p class="timestamp">Generated on ${formattedDate}</p>
+                        <p class="summary">Total Grades: ${totalGrades} | Total Sections: ${totalSections} | Total Students: ${totalStudents}</p>
+                    </div>
+                    ${tableHTML}
+                    <div class="footer">
+                        <div class="total">Total Grades: ${totalGrades}</div>
+                        <div class="system-name">PROTECH - Grade Level Management System</div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create or reuse hidden iframe
+            let printFrame = document.getElementById('print-frame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'print-frame';
+                printFrame.style.position = 'fixed';
+                printFrame.style.right = '0';
+                printFrame.style.bottom = '0';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+            }
+            
+            // Write content to iframe and print
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+            
+            // Wait for content to load then print
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        })
+        .catch(error => {
+            console.error('Print error:', error);
+            showToast('Failed to generate print document', 'error');
+        });
     }
     
     // Initialize print button
