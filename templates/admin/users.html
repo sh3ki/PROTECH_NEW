@@ -391,7 +391,6 @@
         </div>
     </div>
 
-    {% include 'components/toast_notification.html' %}
 </div>
 
 <!-- User Modal: Enhanced design matching student modal -->
@@ -1132,37 +1131,6 @@
 
     .highlight-row {
         animation: highlightRow 2s ease-out;
-    }
-    
-    /* Toast notification animations */
-    @keyframes slideIn {
-        from {
-            transform: translateY(1rem);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateY(1rem);
-            opacity: 0;
-        }
-    }
-    
-    #toast-container {
-        pointer-events: none;
-    }
-    
-    #toast-container > div {
-        pointer-events: auto;
     }
     
     #role-filter, #active-filter {
