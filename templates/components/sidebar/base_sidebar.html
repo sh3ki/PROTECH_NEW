@@ -25,11 +25,11 @@
     <!-- User info section -->
     <div class="p-4 border-b border-blue-800 user-info-section">
         <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-tertiary/30 flex items-center justify-center flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-tertiary/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {% if user.profile_pic %}
-                    <img src="{{ user.profile_pic }}" alt="{{ user.username }}" class="w-full h-full rounded-full object-cover">
+                    <img src="{% url 'serve_profile_pic' path=user.profile_pic %}" alt="{{ user.get_full_name }}" class="w-full h-full rounded-full object-cover">
                 {% else %}
-                    <span class="text-white font-bold">
+                    <span class="text-white font-bold text-sm">
                         {% if user.first_name %}
                             {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                         {% else %}
