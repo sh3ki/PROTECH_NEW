@@ -1523,6 +1523,7 @@ def search_teachers(request):
         section_filter = request.GET.get('section', '')
         page_number = request.GET.get('page', 1)
         items_per_page = request.GET.get('items_per_page', 10)
+        get_all = request.GET.get('all', 'false').lower() == 'true'
 
         teachers = CustomUser.objects.filter(role=UserRole.TEACHER).order_by('-created_at')
 
@@ -1566,11 +1567,18 @@ def search_teachers(request):
             except Exception:
                 pass
 
-        paginator = Paginator(teachers, items_per_page)
-        page_obj = paginator.get_page(page_number)
+        # If 'all' parameter is true, return all records without pagination
+        if get_all:
+            teacher_list = teachers
+            paginator = None
+            page_obj = None
+        else:
+            paginator = Paginator(teachers, items_per_page)
+            page_obj = paginator.get_page(page_number)
+            teacher_list = page_obj
 
         teacher_data = []
-        for teacher in page_obj:
+        for teacher in teacher_list:
             section_info = teacher_sections.get(teacher.id)
             grade = None
             section = None
@@ -1600,23 +1608,31 @@ def search_teachers(request):
                 'status': 'Active' if teacher.is_active else 'Inactive'
             })
 
-        pagination = {
-            'current_page': page_obj.number,
-            'num_pages': paginator.num_pages,
-            'has_next': page_obj.has_next(),
-            'has_previous': page_obj.has_previous(),
-            'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
-            'start_index': page_obj.start_index(),
-            'end_index': page_obj.end_index(),
-            'total_count': paginator.count,
-        }
+        # Build response based on whether pagination is used
+        if get_all:
+            return JsonResponse({
+                'status': 'success',
+                'teachers': teacher_data,
+                'total_count': len(teacher_data),
+            })
+        else:
+            pagination = {
+                'current_page': page_obj.number,
+                'num_pages': paginator.num_pages,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+                'start_index': page_obj.start_index(),
+                'end_index': page_obj.end_index(),
+                'total_count': paginator.count,
+            }
 
-        return JsonResponse({
-            'status': 'success',
-            'teachers': teacher_data,
-            'pagination': pagination,
-            'total_count': paginator.count,
-        })
+            return JsonResponse({
+                'status': 'success',
+                'teachers': teacher_data,
+                'pagination': pagination,
+                'total_count': paginator.count,
+            })
     except Exception as e:
         return JsonResponse({
             'status': 'error',
@@ -1690,68 +1706,100 @@ def admin_grades(request):
 @require_GET
 def search_grades(request):
     """AJAX search/filter for grades"""
-    search_query = request.GET.get('search', '')
-    page_number = request.GET.get('page', 1)
-    items_per_page = request.GET.get('items_per_page', 10)
-    
-    # Base queryset - order by created_at DESC (newest first)
-    grades = Grade.objects.all().order_by('-created_at')
-    
-    # Apply search if provided
-    if search_query:
-        grades = grades.filter(name__icontains=search_query)
-    
-    # Annotate with counts (fix: use distinct for sections_count)
-    grades = grades.annotate(
-        sections_count=Count('sections', distinct=True),
-        students_count=Count('sections__students', distinct=True)
-    )
-    
-    # Get total count for pagination
-    total_count = grades.count()
-    
-    # Parse page number and items_per_page
     try:
-        page_number = int(page_number)
-        items_per_page = int(items_per_page)
-    except (ValueError, TypeError):
-        page_number = 1
-        items_per_page = 10
-    
-    # Create paginator
-    paginator = Paginator(grades, items_per_page)
-    page_obj = paginator.get_page(page_number)
-    
-    # Prepare grade data for JSON response
-    grade_data = []
-    for grade in page_obj:
-        grade_data.append({
-            'id': grade.id,
-            'name': grade.name,
-            'sections_count': grade.sections_count,
-            'students_count': grade.students_count,
-            'created_at': grade.created_at.strftime('%Y-%m-%d'),
-            'created_at_display': grade.created_at.strftime('%b %d, %Y'),
-        })
-    
-    # Prepare pagination data
-    pagination = {
-        'current_page': page_obj.number,
-        'num_pages': paginator.num_pages,
-        'has_next': page_obj.has_next(),
-        'has_previous': page_obj.has_previous(),
-        'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
-        'start_index': page_obj.start_index(),
-        'end_index': page_obj.end_index(),
-        'total_count': total_count,
-    }
-    
-    return JsonResponse({
-        'status': 'success',
-        'grades': grade_data,
-        'pagination': pagination,
-        'total_count': total_count,
-    })
+        search_query = request.GET.get('search', '')
+        page_number = request.GET.get('page', 1)
+        items_per_page = request.GET.get('items_per_page', 10)
+        get_all = request.GET.get('all', 'false').lower() == 'true'
+        
+        # Base queryset - order by created_at DESC (newest first)
+        grades = Grade.objects.all().order_by('-created_at')
+        
+        # Apply search if provided
+        if search_query:
+            grades = grades.filter(name__icontains=search_query)
+        
+        # Annotate with counts
+        grades = grades.annotate(
+            sections_count=Count('sections'),
+            students_count=Count('sections__students', distinct=True)
+        )
+        
+        # Get total count for pagination
+        total_count = grades.count()
+        
+        # If 'all' parameter is true, return all records without pagination
+        if get_all:
+            grade_list = grades
+        else:
+            # Parse page number and items_per_page
+            try:
+                page_number = int(page_number)
+                items_per_page = int(items_per_page)
+            except (ValueError, TypeError):
+                page_number = 1
+                items_per_page = 10
+            
+            # Create paginator
+            paginator = Paginator(grades, items_per_page)
+            page_obj = paginator.get_page(page_number)
+            grade_list = page_obj
+        
+        # Prepare grade data for JSON response
+        grade_data = []
+        for grade in grade_list:
+            grade_data.append({
+                'id': grade.id,
+                'name': grade.name,
+                'sections_count': grade.sections_count,
+                'students_count': grade.students_count,
+                'created_at': grade.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': grade.created_at.strftime('%b %d, %Y'),
+            })
+        
+        # Build response based on whether pagination is used
+        if get_all:
+            return JsonResponse({
+                'status': 'success',
+                'grades': grade_data,
+                'total_count': len(grade_data),
+            })
+        else:
+            # Prepare pagination data
+            pagination = {
+                'current_page': page_obj.number,
+                'num_pages': paginator.num_pages,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'page_range': list(get_pagination_range(paginator, page_obj.number, 5)),
+                'start_index': page_obj.start_index(),
+                'end_index': page_obj.end_index(),
+                'total_count': total_count,
+            }
+            
+            return JsonResponse({
+                'status': 'success',
+                'grades': grade_data,
+                'pagination': pagination,
+                'total_count': total_count,
+            })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'grades': [],
+            'pagination': {
+                'current_page': 1,
+                'num_pages': 1,
+                'has_next': False,
+                'has_previous': False,
+                'page_range': [1],
+                'start_index': 0,
+                'end_index': 0,
+                'total_count': 0,
+            },
+            'total_count': 0
+        }, status=500)
 
 @login_required
 @user_passes_test(is_admin)
@@ -2903,6 +2951,7 @@ def export_students(request):
 
 def export_students_to_excel_format(headers, data_rows):
     """Export students to Excel format"""
+    # Create a workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Students"
@@ -2919,92 +2968,249 @@ def export_students_to_excel_format(headers, data_rows):
         bottom=Side(style='thin')
     )
     
-    # Add headers
+    center_alignment = Alignment(horizontal="center", vertical="center")
+    left_alignment = Alignment(horizontal="left", vertical="center")
+    
+    # Set column widths for professional layout
+    column_widths = [15, 15, 15, 15, 12, 15, 12, 12]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + col_num)].width = width
+    
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+    ws.row_dimensions[1].height = 25
+    
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "STUDENT MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_students = len(data_rows)
+    active_count = sum(1 for row in data_rows if row[6].upper() == 'ACTIVE')
+    inactive_count = total_students - active_count
+    face_enrolled_count = sum(1 for row in data_rows if str(row[7]).upper() in ['YES', '✓', 'TRUE'])
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Students: {total_students} | Active: {active_count} | Inactive: {inactive_count} | Face Enrolled: {face_enrolled_count}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
     for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num, value=header)
+        cell = ws.cell(row=header_row, column=col_num)
+        cell.value = header
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    # Add data rows
-    for row_num, row_data in enumerate(data_rows, 2):
-        for col_num, cell_value in enumerate(row_data, 1):
-            cell = ws.cell(row=row_num, column=col_num, value=cell_value)
+    # Set header row height
+    ws.row_dimensions[header_row].height = 25
+    
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
             cell.border = border_style
-            cell.alignment = Alignment(vertical="center")
+            
+            # Apply alignment based on column type
+            if col_num in [5, 6, 7, 8]:  # Grade, Section, Status, Face Enrolled
+                cell.alignment = center_alignment
+            else:  # LRN, Names
+                cell.alignment = left_alignment
     
-    # Auto-adjust column widths
-    for col in ws.columns:
-        max_length = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = min(max_length + 2, 50)
-        ws.column_dimensions[col_letter].width = adjusted_width
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
-    # Create response
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    filename = f'students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-    print(f"DEBUG: Excel filename: {filename}")
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    # Create HTTP response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    # Save workbook to response
     wb.save(response)
+    
     return response
 
 def export_students_to_pdf(headers, data_rows):
     """Export students to PDF format"""
-    from docx.oxml import OxmlElement
-    from docx.oxml.ns import qn
-    
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    
+    # Create PDF document with landscape orientation (many columns)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    
+    # Container for PDF elements
     elements = []
     
-    # Add title
+    # Define styles
     styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
-        alignment=TA_CENTER
+        spaceAfter=6,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
-    title = Paragraph(f"Students Report - {datetime.now().strftime('%B %d, %Y')}", title_style)
+    
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
+    # Add title
+    title = Paragraph("STUDENT MANAGEMENT REPORT", title_style)
     elements.append(title)
-    elements.append(Spacer(1, 12))
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_students = len(data_rows)
+    active_count = sum(1 for row in data_rows if str(row[6]).upper() == 'ACTIVE')
+    inactive_count = total_students - active_count
+    face_enrolled_count = sum(1 for row in data_rows if str(row[7]).upper() in ['YES', '✓', 'TRUE'])
+    summary = Paragraph(f"Total Students: {total_students} | Active: {active_count} | Inactive: {inactive_count} | Face Enrolled: {face_enrolled_count}", info_style)
+    elements.append(summary)
+    
+    elements.append(Spacer(1, 0.2*inch))
     
     # Prepare table data
     table_data = [headers] + data_rows
     
-    # Create table
-    table = Table(table_data, repeatRows=1)
-    table.setStyle(TableStyle([
+    # Create table with adjusted column widths for A4 (landscape orientation)
+    col_widths = [1.0*inch, 1.0*inch, 1.0*inch, 1.0*inch, 0.8*inch, 1.0*inch, 0.8*inch, 0.9*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Define table style
+    table_style = TableStyle([
+        # Header style
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
+        
+        # Data cells style - Left align text columns
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (3, -1), 'LEFT'),    # LRN and Names left-aligned
+        ('ALIGN', (4, 1), (-1, -1), 'CENTER'), # Grade, Section, Status, Face Enrolled centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F0F0F0')]),
-    ]))
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        
+        # Grid
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('WORDWRAP', (0, 0), (-1, -1), True),
+        
+        # Alternating row colors
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+    ])
     
+    table.setStyle(table_style)
     elements.append(table)
+    
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    footer = Paragraph(f"Total Students: {len(data_rows)}", footer_style)
+    elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Student Management System", line_style)
+    elements.append(line)
+    
+    # Build PDF
     doc.build(elements)
     
-    buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    filename = f'students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
-    print(f"DEBUG: PDF filename: {filename}")
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    # Get PDF from buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create HTTP response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response.write(pdf)
+    
     return response
 
 def export_students_to_word(headers, data_rows):
@@ -3012,50 +3218,206 @@ def export_students_to_word(headers, data_rows):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     
+    def set_cell_background(cell, fill_color):
+        """Set cell background color"""
+        shading_elm = OxmlElement('w:shd')
+        shading_elm.set(qn('w:fill'), fill_color)
+        cell._element.get_or_add_tcPr().append(shading_elm)
+    
+    def set_cell_border(cell, **kwargs):
+        """Set cell borders with more visible styling to match PDF"""
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcBorders = OxmlElement('w:tcBorders')
+        for edge in ('top', 'left', 'bottom', 'right'):
+            edge_elm = OxmlElement(f'w:{edge}')
+            edge_elm.set(qn('w:val'), 'single')
+            edge_elm.set(qn('w:sz'), '12')  # Increased from 4 to 12 for more visible borders
+            edge_elm.set(qn('w:space'), '0')
+            edge_elm.set(qn('w:color'), 'CCCCCC')  # Light gray border to match PDF
+            tcBorders.append(edge_elm)
+        tcPr.append(tcBorders)
+    
+    # Create Word document
     doc = Document()
     
-    # Add title
-    title = doc.add_heading(f'Students Report - {datetime.now().strftime("%B %d, %Y")}', 0)
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Set narrow margins and landscape orientation (many columns)
+    sections = doc.sections
+    for section in sections:
+        section.orientation = WD_ORIENTATION.LANDSCAPE
+        section.page_width = Inches(11.69)  # A4 landscape width
+        section.page_height = Inches(8.27)  # A4 landscape height
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
     
-    # Add spacing
+    # Add institution header
+    institution = doc.add_paragraph('PROTECH - DETECT TO PROTECT')
+    institution.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    institution_run = institution.runs[0]
+    institution_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    institution_run.font.size = Pt(16)
+    institution_run.font.bold = True
+    institution_run.font.name = 'Arial'
+    
+    # Add title
+    title = doc.add_heading('STUDENT MANAGEMENT REPORT', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.runs[0]
+    title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    title_run.font.size = Pt(18)
+    title_run.font.bold = True
+    title_run.font.name = 'Arial'
+    
+    # Add timestamp
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
+    timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    timestamp_run = timestamp.runs[0]
+    timestamp_run.font.size = Pt(10)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    timestamp_run.font.name = 'Arial'
+    
+    # Add summary statistics
+    total_students = len(data_rows)
+    active_count = sum(1 for row in data_rows if str(row[6]).upper() == 'ACTIVE')
+    inactive_count = total_students - active_count
+    face_enrolled_count = sum(1 for row in data_rows if str(row[7]).upper() in ['YES', '✓', 'TRUE'])
+    summary = doc.add_paragraph(f"Total Students: {total_students} | Active: {active_count} | Inactive: {inactive_count} | Face Enrolled: {face_enrolled_count}")
+    summary.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_run = summary.runs[0]
+    summary_run.font.size = Pt(10)
+    summary_run.font.color.rgb = RGBColor(51, 51, 51)  # #333333
+    summary_run.font.name = 'Arial'
+    summary_run.font.bold = False
+    
+    # Add spacing before table
+    doc.add_paragraph()
     doc.add_paragraph()
     
-    # Create table
+    # Create table with professional styling to match PDF
     table = doc.add_table(rows=1, cols=len(headers))
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
     
-    # Add headers
-    hdr_cells = table.rows[0].cells
-    for i, header in enumerate(headers):
-        hdr_cells[i].text = header
-        hdr_cells[i].paragraphs[0].runs[0].font.bold = True
-        hdr_cells[i].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Add headers with EXACT styling as PDF
+    header_cells = table.rows[0].cells
+    for idx, header in enumerate(headers):
+        cell = header_cells[idx]
+        cell.text = header
         
-        # Set header background color
-        shading_elm = OxmlElement('w:shd')
-        shading_elm.set(qn('w:fill'), '1F4E78')
-        hdr_cells[i]._element.get_or_add_tcPr().append(shading_elm)
+        # Set cell background color to match PDF exactly (#1F4E78)
+        set_cell_background(cell, '1F4E78')
         
-        # Set header text color to white
-        hdr_cells[i].paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
+        # Style header text to match PDF
+        for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_before = Pt(0)
+            paragraph.paragraph_format.space_after = Pt(0)
+            for run in paragraph.runs:
+                run.font.bold = True
+                run.font.size = Pt(11)
+                run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
+        
+        # Add cell border with visible styling
+        set_cell_border(cell)
+        
+        # Add padding and alignment
+        cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set cell margins for proper padding
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        for margin_name in ['top', 'left', 'bottom', 'right']:
+            node = OxmlElement(f'w:{margin_name}')
+            node.set(qn('w:w'), '100')
+            node.set(qn('w:type'), 'dxa')
+            tcMar.append(node)
+        tcPr.append(tcMar)
     
     # Add data rows
-    for row_data in data_rows:
+    for row_idx, row_data in enumerate(data_rows):
         row_cells = table.add_row().cells
-        for i, cell_value in enumerate(row_data):
-            row_cells[i].text = str(cell_value)
-            row_cells[i].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Set alternating row colors to match PDF exactly (#F9F9F9)
+        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F9F9F9'
+        
+        for idx, value in enumerate(row_data):
+            cell = row_cells[idx]
+            cell.text = str(value)
+            
+            # Set row background color
+            set_cell_background(cell, row_color)
+            
+            # Add cell border to match PDF
+            set_cell_border(cell)
+            
+            # Set cell margins for proper padding
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcMar = OxmlElement('w:tcMar')
+            for margin_name in ['top', 'left', 'bottom', 'right']:
+                node = OxmlElement(f'w:{margin_name}')
+                node.set(qn('w:w'), '100')
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+            tcPr.append(tcMar)
+            
+            # Style data cells
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
+                for run in paragraph.runs:
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
+                
+                # Center align Grade, Section, Status, Face Enrolled columns
+                if idx in [4, 5, 6, 7]:  # Grade, Section, Status, Face Enrolled
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:  # LRN, Names
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    # Set column widths to match PDF layout
+    column_widths = [Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(0.8), Inches(1.0), Inches(0.8), Inches(0.9)]
+    for row in table.rows:
+        for idx, cell in enumerate(row.cells):
+            if idx < len(column_widths):
+                cell.width = column_widths[idx]
+    
+    # Add footer to match PDF exactly
+    doc.add_paragraph()
+    footer = doc.add_paragraph(f"Total Students: {len(data_rows)}")
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.runs[0]
+    footer_run.font.size = Pt(10)
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
+    
+    # Add separator line
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - Student Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(8)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)  # #999999
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
     
     # Save to buffer
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     
-    response = HttpResponse(buffer.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    filename = f'students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
-    print(f"DEBUG: Word filename: {filename}")
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = f'attachment; filename=students_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+    
     return response
 
 @login_required
@@ -4097,14 +4459,54 @@ def export_attendance_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    # Set column widths
-    column_widths = [8, 20, 15, 10, 15, 12, 12, 12, 12, 25]
+    # Set column widths for professional layout
+    column_widths = [15, 25, 12, 15, 15, 12, 12, 15]
     for col_num, width in enumerate(column_widths, 1):
         ws.column_dimensions[chr(64 + col_num)].width = width
     
-    # Add headers
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+    ws.row_dimensions[1].height = 25
+    
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "ATTENDANCE MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_records = len(data_rows)
+    present_count = sum(1 for row in data_rows if str(row[7]).upper() == 'PRESENT')
+    absent_count = sum(1 for row in data_rows if str(row[7]).upper() == 'ABSENT')
+    excused_count = sum(1 for row in data_rows if str(row[7]).upper() == 'EXCUSED')
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Records: {total_records} | Present: {present_count} | Absent: {absent_count} | Excused: {excused_count}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
     for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num)
+        cell = ws.cell(row=header_row, column=col_num)
         cell.value = header
         cell.fill = header_fill
         cell.font = header_font
@@ -4112,132 +4514,193 @@ def export_attendance_to_excel_format(headers, data_rows):
         cell.border = border_style
     
     # Set header row height
-    ws.row_dimensions[1].height = 25
+    ws.row_dimensions[header_row].height = 25
     
-    # Add data rows
-    for row_num, row_data in enumerate(data_rows, 2):
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
         for col_num, value in enumerate(row_data, 1):
             cell = ws.cell(row=row_num, column=col_num)
             cell.value = value
             cell.border = border_style
             
-            # Apply alignment based on column
-            if col_num in [1, 4, 5, 6, 7, 8, 9]:  # ID, Grade, Section, Date, Times, Status - center
+            # Apply alignment based on column type
+            if col_num in [3, 4, 5, 6, 7, 8]:  # Grade, Section, Date, Times, Status
                 cell.alignment = center_alignment
-            else:  # Name, LRN, Notes - left
+            else:  # LRN, Name
                 cell.alignment = left_alignment
     
-    # Create response
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
-    from datetime import datetime as dt
+    # Create HTTP response
     response = HttpResponse(
-        output.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename=attendance_{dt.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=attendance_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    # Save workbook to response
+    wb.save(response)
     
     return response
 
 
 def export_attendance_to_pdf(headers, data_rows):
     """Export attendance to PDF format"""
-    print("=== PDF Export Function Called ===")
-    print(f"Received {len(headers)} headers and {len(data_rows)} data rows")
+    buffer = io.BytesIO()
     
-    try:
-        print("Importing reportlab modules...")
-        try:
-            from reportlab.lib.pagesizes import letter, landscape
-            from reportlab.lib import colors
-            from reportlab.lib.units import inch
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-            print("Reportlab modules imported successfully")
-        except ImportError as import_err:
-            print(f"!!! REPORTLAB IMPORT ERROR: {import_err}")
-            raise Exception(f"reportlab library not installed or not found: {import_err}")
+    # Create PDF document with landscape orientation (many columns)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    
+    # Container for PDF elements
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=6,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
+    # Add title
+    title = Paragraph("ATTENDANCE MANAGEMENT REPORT", title_style)
+    elements.append(title)
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_records = len(data_rows)
+    present_count = sum(1 for row in data_rows if str(row[7]).upper() == 'PRESENT')
+    absent_count = sum(1 for row in data_rows if str(row[7]).upper() == 'ABSENT')
+    excused_count = sum(1 for row in data_rows if str(row[7]).upper() == 'EXCUSED')
+    summary = Paragraph(f"Total Records: {total_records} | Present: {present_count} | Absent: {absent_count} | Excused: {excused_count}", info_style)
+    elements.append(summary)
+    
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Prepare table data
+    table_data = [headers] + data_rows
+    
+    # Create table with adjusted column widths for A4 (landscape orientation)
+    col_widths = [1.0*inch, 1.5*inch, 0.8*inch, 1.0*inch, 1.0*inch, 0.9*inch, 0.9*inch, 1.0*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Define table style
+    table_style = TableStyle([
+        # Header style
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
         
-        # Ensure all data is string and handle None values
-        print("Converting data to strings...")
-        headers = [str(h) if h is not None else "" for h in headers]
-        data_rows = [[str(cell) if cell is not None else "" for cell in row] for row in data_rows]
+        # Data cells style - Left align text columns
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (1, -1), 'LEFT'),    # LRN, Name left-aligned
+        ('ALIGN', (2, 1), (-1, -1), 'CENTER'), # Grade, Section, Date, Times, Status centered
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         
-        # If no data, add a message row
-        if not data_rows:
-            print("No data rows found, adding placeholder")
-            data_rows = [["No attendance records found"] + [""] * (len(headers) - 1)]
+        # Grid
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('WORDWRAP', (0, 0), (-1, -1), True),
         
-        print(f"Processing {len(data_rows)} data rows")
-        
-        # Create PDF in memory
-        print("Creating PDF buffer...")
-        buffer = io.BytesIO()
-        
-        # Create simple PDF with landscape orientation for more width
-        print("Creating PDF document...")
-        doc = SimpleDocTemplate(
-            buffer, 
-            pagesize=landscape(letter),
-            rightMargin=30,
-            leftMargin=30,
-            topMargin=30,
-            bottomMargin=18
-        )
-        
-        elements = []
-        
-        # Prepare table data
-        print("Preparing table data...")
-        table_data = [headers] + data_rows
-        
-        # Create table without fixed column widths (let it auto-size)
-        print("Creating table...")
-        table = Table(table_data, repeatRows=1)
-        
-        # Simple table style
-        print("Applying table style...")
-        table_style = TableStyle([
-            # Header styling
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            
-            # Data rows styling
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ])
-        
-        table.setStyle(table_style)
-        elements.append(table)
-        
-        # Build PDF
-        print("Building PDF document...")
-        doc.build(elements)
-        print("PDF built successfully")
-        
-        buffer.seek(0)
-        
-        print("Creating HTTP response...")
-        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-        from datetime import datetime as dt
-        response['Content-Disposition'] = f'attachment; filename="attendance_{dt.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-        
-        print("PDF export completed successfully!")
-        return response
-        
-    except Exception as e:
-        error_trace = traceback.format_exc()
-        print(f"!!! PDF export error !!!")
-        print(error_trace)
-        # Re-raise the exception to be caught by the parent function
-        raise
+        # Alternating row colors
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+    ])
+    
+    table.setStyle(table_style)
+    elements.append(table)
+    
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    footer = Paragraph(f"Total Records: {len(data_rows)}", footer_style)
+    elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Attendance Management System", line_style)
+    elements.append(line)
+    
+    # Build PDF
+    doc.build(elements)
+    
+    # Get PDF from buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create HTTP response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=attendance_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response.write(pdf)
+    
+    return response
 
 
 def export_attendance_to_word(headers, data_rows):
@@ -5701,8 +6164,8 @@ def export_teachers_to_excel(request):
             elif status_filter == 'inactive':
                 teachers = teachers.filter(is_active=False)
         
-        # Define headers (include password column with [UNCHANGED] for backup/restore)
-        headers = ["ID", "Username", "Email", "Password", "First Name", "Last Name", "Middle Name", "Advisory Status", "Grade", "Section", "Active Status", "Created Date"]
+        # Define headers
+        headers = ["First Name", "Middle Name", "Last Name", "Username", "Email", "Advisory Type", "Grade Level", "Section", "Status"]
         
         # Get all advisory assignments for quick lookup
         advisory_assignments = AdvisoryAssignment.objects.values_list('teacher_id', flat=True).distinct()
@@ -5717,18 +6180,15 @@ def export_teachers_to_excel(request):
             section_name = teacher.section.name if teacher.section else "-"
             
             data_rows.append([
-                str(teacher.id),
+                teacher.first_name,
+                teacher.middle_name or "",
+                teacher.last_name,
                 teacher.username,
                 teacher.email,
-                "[UNCHANGED]",  # Password placeholder
-                teacher.first_name,
-                teacher.last_name,
-                teacher.middle_name or "",
                 advisory_status,
                 grade_name,
                 section_name,
-                "Active" if teacher.is_active else "Inactive",
-                teacher.created_at.strftime("%Y-%m-%d %H:%M:%S") if teacher.created_at else ""
+                "Active" if teacher.is_active else "Inactive"
             ])
         
         # Export based on format
@@ -5745,6 +6205,7 @@ def export_teachers_to_excel(request):
 
 def export_teachers_to_excel_format(headers, data_rows):
     """Export teachers to Excel format"""
+    # Create a workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Teachers"
@@ -5764,37 +6225,77 @@ def export_teachers_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    # Set column widths (updated for password column)
-    column_widths = [8, 15, 25, 15, 15, 15, 15, 15, 12, 15, 12, 18]
+    # Set column widths for professional layout
+    column_widths = [12, 15, 15, 15, 25, 15, 12, 10, 12]
     for col_num, width in enumerate(column_widths, 1):
         ws.column_dimensions[chr(64 + col_num)].width = width
     
-    # Add headers
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+    ws.row_dimensions[1].height = 25
+    
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "TEACHER MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_teachers = len(data_rows)
+    active_count = sum(1 for row in data_rows if row[8] == 'Active')
+    inactive_count = total_teachers - active_count
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Teachers: {total_teachers} | Active: {active_count} | Inactive: {inactive_count}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
     for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num)
+        cell = ws.cell(row=header_row, column=col_num)
         cell.value = header
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    ws.row_dimensions[1].height = 25
+    # Set header row height
+    ws.row_dimensions[header_row].height = 25
     
-    # Add data rows
-    for row_num, row_data in enumerate(data_rows, 2):
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
         for col_num, value in enumerate(row_data, 1):
             cell = ws.cell(row=row_num, column=col_num)
             cell.value = value
             cell.border = border_style
             
             # Apply alignment based on column type
-            if col_num in [1, 4, 8, 10, 11]:  # ID, Password, Advisory Status, Section, Active Status
+            if col_num in [6, 7, 8]:  # Advisory Type, Grade Level, Section
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
     
-    # Freeze the header row
-    ws.freeze_panes = "A2"
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
     # Create HTTP response
     response = HttpResponse(
@@ -5812,34 +6313,82 @@ def export_teachers_to_pdf(headers, data_rows):
     """Export teachers to PDF format"""
     buffer = io.BytesIO()
     
-    # Create PDF document
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=50, bottomMargin=30)
+    # Create PDF document with landscape orientation
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
     
     # Container for PDF elements
     elements = []
     
     # Define styles
     styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=18,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
+        spaceAfter=6,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
     
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
     # Add title
-    title = Paragraph(f"Teachers Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", title_style)
+    title = Paragraph("TEACHER MANAGEMENT REPORT", title_style)
     elements.append(title)
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_teachers = len(data_rows)
+    active_count = sum(1 for row in data_rows if row[8] == 'Active')
+    inactive_count = total_teachers - active_count
+    summary = Paragraph(f"Total Teachers: {total_teachers} | Active: {active_count} | Inactive: {inactive_count}", info_style)
+    elements.append(summary)
+    
     elements.append(Spacer(1, 0.2*inch))
     
     # Prepare table data
     table_data = [headers] + data_rows
     
-    # Create table with adjusted column widths for A4 - smaller for more columns
-    col_widths = [0.3*inch, 0.7*inch, 1.2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.8*inch, 0.5*inch, 0.6*inch, 0.6*inch, 0.9*inch]
+    # Create table with adjusted column widths for A4 landscape orientation
+    col_widths = [1.0*inch, 0.9*inch, 1.0*inch, 1.0*inch, 1.8*inch, 1.0*inch, 0.9*inch, 0.9*inch, 0.7*inch]
     table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     # Define table style
@@ -5849,42 +6398,59 @@ def export_teachers_to_pdf(headers, data_rows):
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
         
-        # Data cells style
+        # Data cells style - Left align text columns
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 1), (-1, -1), 'CENTER'),  # All columns centered
+        ('ALIGN', (0, 1), (4, -1), 'LEFT'),  # First 5 columns left-aligned
+        ('ALIGN', (5, 1), (-1, -1), 'CENTER'),  # Advisory Type, Grade, Section, Status centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 7),
-        ('TOPPADDING', (0, 1), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         
         # Grid
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('WORDWRAP', (0, 0), (-1, -1), True),
         
         # Alternating row colors
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
     ])
     
     table.setStyle(table_style)
     elements.append(table)
     
-    # Add footer
-    elements.append(Spacer(1, 0.3*inch))
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
-        fontSize=9,
-        textColor=colors.grey,
-        alignment=TA_CENTER
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
     footer = Paragraph(f"Total Teachers: {len(data_rows)}", footer_style)
     elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Teacher Management System", line_style)
+    elements.append(line)
     
     # Build PDF
     doc.build(elements)
@@ -5912,61 +6478,124 @@ def export_teachers_to_word(headers, data_rows):
         shading_elm.set(qn('w:fill'), fill_color)
         cell._element.get_or_add_tcPr().append(shading_elm)
     
+    def set_cell_border(cell, **kwargs):
+        """Set cell borders with more visible styling to match PDF"""
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcBorders = OxmlElement('w:tcBorders')
+        for edge in ('top', 'left', 'bottom', 'right'):
+            edge_elm = OxmlElement(f'w:{edge}')
+            edge_elm.set(qn('w:val'), 'single')
+            edge_elm.set(qn('w:sz'), '12')
+            edge_elm.set(qn('w:space'), '0')
+            edge_elm.set(qn('w:color'), 'CCCCCC')
+            tcBorders.append(edge_elm)
+        tcPr.append(tcBorders)
+    
     # Create Word document
     doc = Document()
     
-    # Set narrow margins
+    # Set narrow margins and landscape orientation to match PDF
     sections = doc.sections
     for section in sections:
+        section.orientation = WD_ORIENTATION.LANDSCAPE
+        section.page_width = Inches(11.69)  # A4 landscape width
+        section.page_height = Inches(8.27)  # A4 landscape height
         section.top_margin = Inches(0.5)
         section.bottom_margin = Inches(0.5)
         section.left_margin = Inches(0.5)
         section.right_margin = Inches(0.5)
     
+    # Add institution header
+    institution = doc.add_paragraph('PROTECH - DETECT TO PROTECT')
+    institution.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    institution_run = institution.runs[0]
+    institution_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    institution_run.font.size = Pt(16)
+    institution_run.font.bold = True
+    institution_run.font.name = 'Arial'
+    
     # Add title
-    title = doc.add_heading('Teachers Report', 0)
+    title = doc.add_heading('TEACHER MANAGEMENT REPORT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title.runs[0]
-    title_run.font.color.rgb = RGBColor(31, 78, 120)
+    title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
     title_run.font.size = Pt(18)
     title_run.font.bold = True
+    title_run.font.name = 'Arial'
     
     # Add timestamp
-    timestamp = doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
     timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
     timestamp_run = timestamp.runs[0]
     timestamp_run.font.size = Pt(10)
-    timestamp_run.font.color.rgb = RGBColor(128, 128, 128)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    timestamp_run.font.name = 'Arial'
     
-    doc.add_paragraph()  # Add spacing
+    # Add summary statistics
+    total_teachers = len(data_rows)
+    active_count = sum(1 for row in data_rows if row[8] == 'Active')
+    inactive_count = total_teachers - active_count
+    summary = doc.add_paragraph(f"Total Teachers: {total_teachers} | Active: {active_count} | Inactive: {inactive_count}")
+    summary.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_run = summary.runs[0]
+    summary_run.font.size = Pt(10)
+    summary_run.font.color.rgb = RGBColor(51, 51, 51)  # #333333
+    summary_run.font.name = 'Arial'
+    summary_run.font.bold = False
     
-    # Create table
+    # Add spacing before table
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # Create table with professional styling to match PDF
     table = doc.add_table(rows=1, cols=len(headers))
     table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
     
-    # Add headers
+    # Add headers with EXACT styling as PDF
     header_cells = table.rows[0].cells
     for idx, header in enumerate(headers):
         cell = header_cells[idx]
         cell.text = header
         
-        # Set cell background color
+        # Set cell background color to match PDF exactly (#1F4E78)
         set_cell_background(cell, '1F4E78')
         
-        # Style header text
+        # Style header text to match PDF
         for paragraph in cell.paragraphs:
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_before = Pt(0)
+            paragraph.paragraph_format.space_after = Pt(0)
             for run in paragraph.runs:
                 run.font.bold = True
-                run.font.size = Pt(10)
-                run.font.color.rgb = RGBColor(255, 255, 255)
+                run.font.size = Pt(11)
+                run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
+        
+        # Add cell border with visible styling
+        set_cell_border(cell)
+        
+        # Add padding and alignment
+        cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set cell margins for proper padding
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        for margin_name in ['top', 'left', 'bottom', 'right']:
+            node = OxmlElement(f'w:{margin_name}')
+            node.set(qn('w:w'), '100')
+            node.set(qn('w:type'), 'dxa')
+            tcMar.append(node)
+        tcPr.append(tcMar)
     
     # Add data rows
     for row_idx, row_data in enumerate(data_rows):
         row_cells = table.add_row().cells
         
-        # Set alternating row colors
-        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F5F5F5'
+        # Set alternating row colors to match PDF exactly (#F9F9F9)
+        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F9F9F9'
         
         for idx, value in enumerate(row_data):
             cell = row_cells[idx]
@@ -5975,33 +6604,61 @@ def export_teachers_to_word(headers, data_rows):
             # Set row background color
             set_cell_background(cell, row_color)
             
+            # Add cell border to match PDF
+            set_cell_border(cell)
+            
+            # Set cell margins for proper padding
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcMar = OxmlElement('w:tcMar')
+            for margin_name in ['top', 'left', 'bottom', 'right']:
+                node = OxmlElement(f'w:{margin_name}')
+                node.set(qn('w:w'), '100')
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+            tcPr.append(tcMar)
+            
             # Style data cells
             for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
                 for run in paragraph.runs:
-                    run.font.size = Pt(9)
+                    run.font.size = Pt(10)
                     run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
                 
-                # Center align ID, Advisory Status, and Active Status columns
-                if idx in [0, 6, 9]:
-                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                else:
+                # Left align first 5 columns, center align the rest
+                if idx < 5:
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                else:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Set column widths
-    column_widths = [Inches(0.4), Inches(1.0), Inches(1.5), Inches(0.9), Inches(0.9), Inches(0.9), Inches(1.0), Inches(0.6), Inches(0.9), Inches(0.8), Inches(1.2)]
+    # Set column widths to match PDF layout
+    column_widths = [Inches(1.1), Inches(1.0), Inches(1.1), Inches(1.1), Inches(2.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(0.8)]
     for row in table.rows:
         for idx, cell in enumerate(row.cells):
             if idx < len(column_widths):
                 cell.width = column_widths[idx]
     
-    # Add footer
+    # Add footer to match PDF exactly
     doc.add_paragraph()
     footer = doc.add_paragraph(f"Total Teachers: {len(data_rows)}")
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     footer_run = footer.runs[0]
     footer_run.font.size = Pt(10)
-    footer_run.font.color.rgb = RGBColor(128, 128, 128)
-    footer_run.font.italic = True
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
+    
+    # Add separator line
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - Teacher Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(8)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)  # #999999
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
     
     # Save to buffer
     buffer = io.BytesIO()
@@ -6036,7 +6693,7 @@ def export_grades(request):
         if search_query:
             grades = grades.filter(name__icontains=search_query)
         
-        headers = ["ID", "Grade Name", "Total Sections", "Total Students", "Created Date"]
+        headers = ["Grade Name", "Total Sections", "Total Students", "Date Created"]
         
         data_rows = []
         for grade in grades:
@@ -6044,7 +6701,6 @@ def export_grades(request):
             student_count = Student.objects.filter(grade=grade).count()
             
             data_rows.append([
-                str(grade.id),
                 grade.name,
                 str(section_count),
                 str(student_count),
@@ -6214,10 +6870,12 @@ def download_grades_template(request):
 
 def export_grades_to_excel_format(headers, data_rows):
     """Export grades to Excel format"""
+    # Create a workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Grades"
     
+    # Define styles
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -6232,43 +6890,86 @@ def export_grades_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    column_widths = [8, 20, 18, 18, 20]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    # Set column widths for professional layout
+    column_widths = [20, 18, 18, 20]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + col_num)].width = width
     
-    ws.append(headers)
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
     ws.row_dimensions[1].height = 25
     
-    for cell in ws[1]:
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "GRADE LEVEL MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_grades = len(data_rows)
+    total_sections = sum(int(row[1]) for row in data_rows if row[1])
+    total_students = sum(int(row[2]) for row in data_rows if row[2])
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Grades: {total_grades} | Total Sections: {total_sections} | Total Students: {total_students}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=header_row, column=col_num)
+        cell.value = header
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    for row_data in data_rows:
-        ws.append(row_data)
+    # Set header row height
+    ws.row_dimensions[header_row].height = 25
     
-    for row_idx in range(2, ws.max_row + 1):
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
             cell.border = border_style
             
-            if col_idx in [1, 3, 4]:
+            # Apply alignment based on column type
+            if col_num in [2, 3]:  # Total Sections, Total Students - center
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
     
-    ws.freeze_panes = ws['A2']
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
+    # Create HTTP response
     response = HttpResponse(
-        buffer.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename=grades_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    # Save workbook to response
+    wb.save(response)
     
     return response
 
@@ -6276,50 +6977,158 @@ def export_grades_to_excel_format(headers, data_rows):
 def export_grades_to_pdf(headers, data_rows):
     """Export grades to PDF format"""
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    
+    # Create PDF document with portrait orientation (fewer columns)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    
+    # Container for PDF elements
     elements = []
     
+    # Define styles
     styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
-        alignment=1
+        spaceAfter=6,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
     
-    elements.append(Paragraph("Grades Report", title_style))
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
+    # Add title
+    title = Paragraph("GRADE LEVEL MANAGEMENT REPORT", title_style)
+    elements.append(title)
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_grades = len(data_rows)
+    total_sections = sum(int(row[2]) for row in data_rows if str(row[2]).isdigit())
+    total_students = sum(int(row[3]) for row in data_rows if str(row[3]).isdigit())
+    summary = Paragraph(f"Total Grades: {total_grades} | Total Sections: {total_sections} | Total Students: {total_students}", info_style)
+    elements.append(summary)
+    
     elements.append(Spacer(1, 0.2*inch))
     
+    # Prepare table data
     table_data = [headers] + data_rows
-    table = Table(table_data, colWidths=[0.5*inch, 1.5*inch, 1.2*inch, 1.2*inch, 1.5*inch])
     
-    table.setStyle(TableStyle([
+    # Create table with adjusted column widths for A4 (portrait orientation)
+    col_widths = [1.2*inch, 2.5*inch, 1.3*inch, 1.3*inch, 1.5*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Define table style
+    table_style = TableStyle([
+        # Header style
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
+        
+        # Data cells style - Left align text columns
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # ID centered
+        ('ALIGN', (1, 1), (1, -1), 'LEFT'),    # Grade Name left-aligned
+        ('ALIGN', (2, 1), (-1, -1), 'CENTER'), # Counts and Date centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        
+        # Grid
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('WORDWRAP', (0, 0), (-1, -1), True),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
-    ]))
+        
+        # Alternating row colors
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+    ])
     
+    table.setStyle(table_style)
     elements.append(table)
-    elements.append(Spacer(1, 0.3*inch))
-    elements.append(Paragraph(f"Total Grades: {len(data_rows)}", styles['Normal']))
     
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    footer = Paragraph(f"Total Grades: {len(data_rows)}", footer_style)
+    elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Grade Management System", line_style)
+    elements.append(line)
+    
+    # Build PDF
     doc.build(elements)
-    buffer.seek(0)
     
-    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    # Get PDF from buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create HTTP response
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=grades_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response.write(pdf)
     
     return response
 
@@ -6335,48 +7144,189 @@ def export_grades_to_word(headers, data_rows):
         shading_elm.set(qn('w:fill'), fill_color)
         cell._element.get_or_add_tcPr().append(shading_elm)
     
+    def set_cell_border(cell, **kwargs):
+        """Set cell borders with more visible styling to match PDF"""
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcBorders = OxmlElement('w:tcBorders')
+        for edge in ('top', 'left', 'bottom', 'right'):
+            edge_elm = OxmlElement(f'w:{edge}')
+            edge_elm.set(qn('w:val'), 'single')
+            edge_elm.set(qn('w:sz'), '12')  # Increased from 4 to 12 for more visible borders
+            edge_elm.set(qn('w:space'), '0')
+            edge_elm.set(qn('w:color'), 'CCCCCC')  # Light gray border to match PDF
+            tcBorders.append(edge_elm)
+        tcPr.append(tcBorders)
+    
+    # Create Word document
     doc = Document()
     
-    title = doc.add_heading('Grades Report', 0)
+    # Set narrow margins and portrait orientation (fewer columns)
+    sections = doc.sections
+    for section in sections:
+        section.orientation = WD_ORIENTATION.PORTRAIT
+        section.page_width = Inches(8.27)  # A4 portrait width
+        section.page_height = Inches(11.69)  # A4 portrait height
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+    
+    # Add institution header
+    institution = doc.add_paragraph('PROTECH - DETECT TO PROTECT')
+    institution.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    institution_run = institution.runs[0]
+    institution_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    institution_run.font.size = Pt(16)
+    institution_run.font.bold = True
+    institution_run.font.name = 'Arial'
+    
+    # Add title
+    title = doc.add_heading('GRADE LEVEL MANAGEMENT REPORT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.runs[0]
+    title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    title_run.font.size = Pt(18)
+    title_run.font.bold = True
+    title_run.font.name = 'Arial'
+    
+    # Add timestamp
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
+    timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    timestamp_run = timestamp.runs[0]
+    timestamp_run.font.size = Pt(10)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    timestamp_run.font.name = 'Arial'
+    
+    # Add summary statistics
+    total_grades = len(data_rows)
+    total_sections = sum(int(row[2]) for row in data_rows if str(row[2]).isdigit())
+    total_students = sum(int(row[3]) for row in data_rows if str(row[3]).isdigit())
+    summary = doc.add_paragraph(f"Total Grades: {total_grades} | Total Sections: {total_sections} | Total Students: {total_students}")
+    summary.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_run = summary.runs[0]
+    summary_run.font.size = Pt(10)
+    summary_run.font.color.rgb = RGBColor(51, 51, 51)  # #333333
+    summary_run.font.name = 'Arial'
+    summary_run.font.bold = False
+    
+    # Add spacing before table
+    doc.add_paragraph()
     doc.add_paragraph()
     
+    # Create table with professional styling to match PDF
     table = doc.add_table(rows=1, cols=len(headers))
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
     
+    # Add headers with EXACT styling as PDF
     header_cells = table.rows[0].cells
-    for idx, header_text in enumerate(headers):
+    for idx, header in enumerate(headers):
         cell = header_cells[idx]
-        cell.text = header_text
+        cell.text = header
+        
+        # Set cell background color to match PDF exactly (#1F4E78)
         set_cell_background(cell, '1F4E78')
+        
+        # Style header text to match PDF
         for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_before = Pt(0)
+            paragraph.paragraph_format.space_after = Pt(0)
             for run in paragraph.runs:
                 run.font.bold = True
                 run.font.size = Pt(11)
-                run.font.color.rgb = RGBColor(255, 255, 255)
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
+        
+        # Add cell border with visible styling
+        set_cell_border(cell)
+        
+        # Add padding and alignment
+        cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set cell margins for proper padding
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        for margin_name in ['top', 'left', 'bottom', 'right']:
+            node = OxmlElement(f'w:{margin_name}')
+            node.set(qn('w:w'), '100')
+            node.set(qn('w:type'), 'dxa')
+            tcMar.append(node)
+        tcPr.append(tcMar)
     
+    # Add data rows
     for row_idx, row_data in enumerate(data_rows):
         row_cells = table.add_row().cells
-        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F5F5F5'
+        
+        # Set alternating row colors to match PDF exactly (#F9F9F9)
+        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F9F9F9'
         
         for idx, value in enumerate(row_data):
             cell = row_cells[idx]
             cell.text = str(value)
+            
+            # Set row background color
             set_cell_background(cell, row_color)
             
+            # Add cell border to match PDF
+            set_cell_border(cell)
+            
+            # Set cell margins for proper padding
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcMar = OxmlElement('w:tcMar')
+            for margin_name in ['top', 'left', 'bottom', 'right']:
+                node = OxmlElement(f'w:{margin_name}')
+                node.set(qn('w:w'), '100')
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+            tcPr.append(tcMar)
+            
+            # Style data cells
             for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
                 for run in paragraph.runs:
-                    run.font.size = Pt(9)
-                if idx in [0, 2, 3]:
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
+                
+                # Center align ID and numeric columns
+                if idx in [0, 2, 3, 4]:  # ID, Sections, Students, Date
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                else:
+                else:  # Grade Name
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
+    # Set column widths to match PDF layout
+    column_widths = [Inches(1.2), Inches(2.5), Inches(1.3), Inches(1.3), Inches(1.5)]
+    for row in table.rows:
+        for idx, cell in enumerate(row.cells):
+            if idx < len(column_widths):
+                cell.width = column_widths[idx]
+    
+    # Add footer to match PDF exactly
     doc.add_paragraph()
     footer = doc.add_paragraph(f"Total Grades: {len(data_rows)}")
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.runs[0]
+    footer_run.font.size = Pt(10)
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
     
+    # Add separator line
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - Grade Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(8)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)  # #999999
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
+    
+    # Save to buffer
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -6458,10 +7408,12 @@ def export_sections(request):
 
 def export_sections_to_excel_format(headers, data_rows):
     """Export sections to Excel format"""
+    # Create a workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Sections"
     
+    # Define styles
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -6476,43 +7428,87 @@ def export_sections_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    column_widths = [8, 20, 15, 12, 10]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    # Set column widths for professional layout
+    column_widths = [15, 20, 15, 15, 20, 20]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + col_num)].width = width
     
-    ws.append(headers)
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
     ws.row_dimensions[1].height = 25
     
-    for cell in ws[1]:
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "SECTION MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_sections = len(data_rows)
+    sections_with_students = sum(1 for row in data_rows if str(row[2]) != '0' and str(row[2]) != '')
+    sections_with_advisors = sum(1 for row in data_rows if str(row[3]) not in ['', 'None', 'No Advisor'])
+    total_students = sum(int(row[2]) for row in data_rows if str(row[2]).isdigit())
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Sections: {total_sections} | With Students: {sections_with_students} | With Advisors: {sections_with_advisors} | Total Students: {total_students}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=header_row, column=col_num)
+        cell.value = header
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    for row_data in data_rows:
-        ws.append(row_data)
+    # Set header row height
+    ws.row_dimensions[header_row].height = 25
     
-    for row_idx in range(2, ws.max_row + 1):
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
             cell.border = border_style
             
-            if col_idx in [1, 5]:
+            # Apply alignment based on column type
+            if col_num in [1, 2, 5]:  # ID, Students, Date
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
     
-    ws.freeze_panes = ws['A2']
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
+    # Create HTTP response
     response = HttpResponse(
-        buffer.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename=sections_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    # Save workbook to response
+    wb.save(response)
     
     return response
 
@@ -6520,50 +7516,162 @@ def export_sections_to_excel_format(headers, data_rows):
 def export_sections_to_pdf(headers, data_rows):
     """Export sections to PDF format"""
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    
+    # Create PDF document with portrait orientation (fewer columns)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    
+    # Container for PDF elements
     elements = []
     
+    # Define styles
     styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
-        alignment=1
+        spaceAfter=6,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
     
-    elements.append(Paragraph("Sections Report", title_style))
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
+    # Add title
+    title = Paragraph("SECTION MANAGEMENT REPORT", title_style)
+    elements.append(title)
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_sections = len(data_rows)
+    sections_with_students = sum(1 for row in data_rows if str(row[2]) != '0' and str(row[2]) != '')
+    sections_with_advisors = sum(1 for row in data_rows if str(row[3]) not in ['', 'None', 'No Advisor'])
+    total_students = sum(int(row[2]) for row in data_rows if str(row[2]).isdigit())
+    summary = Paragraph(f"Total Sections: {total_sections} | With Students: {sections_with_students} | With Advisors: {sections_with_advisors} | Total Students: {total_students}", info_style)
+    elements.append(summary)
+    
     elements.append(Spacer(1, 0.2*inch))
     
+    # Prepare table data
     table_data = [headers] + data_rows
-    table = Table(table_data, colWidths=[0.4*inch, 1.2*inch, 0.8*inch, 1.5*inch, 1*inch, 1.2*inch])
     
-    table.setStyle(TableStyle([
+    # Create table with adjusted column widths for A4 (portrait orientation)
+    col_widths = [0.8*inch, 1.5*inch, 1.0*inch, 0.8*inch, 1.5*inch, 1.2*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Define table style
+    table_style = TableStyle([
+        # Header style
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
+        
+        # Data cells style - Left align text columns
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # ID centered
+        ('ALIGN', (1, 1), (1, -1), 'LEFT'),    # Section Name left-aligned
+        ('ALIGN', (2, 1), (2, -1), 'LEFT'),    # Grade left-aligned
+        ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Total Students centered
+        ('ALIGN', (4, 1), (4, -1), 'LEFT'),    # Advisor left-aligned
+        ('ALIGN', (5, 1), (-1, -1), 'CENTER'), # Date centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        
+        # Grid
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('WORDWRAP', (0, 0), (-1, -1), True),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
-    ]))
+        
+        # Alternating row colors
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+    ])
     
+    table.setStyle(table_style)
     elements.append(table)
-    elements.append(Spacer(1, 0.3*inch))
-    elements.append(Paragraph(f"Total Sections: {len(data_rows)}", styles['Normal']))
     
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    footer = Paragraph(f"Total Sections: {len(data_rows)}", footer_style)
+    elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Section Management System", line_style)
+    elements.append(line)
+    
+    # Build PDF
     doc.build(elements)
-    buffer.seek(0)
     
-    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    # Get PDF from buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create HTTP response
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=sections_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response.write(pdf)
     
     return response
 
@@ -6579,48 +7687,190 @@ def export_sections_to_word(headers, data_rows):
         shading_elm.set(qn('w:fill'), fill_color)
         cell._element.get_or_add_tcPr().append(shading_elm)
     
+    def set_cell_border(cell, **kwargs):
+        """Set cell borders with more visible styling to match PDF"""
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcBorders = OxmlElement('w:tcBorders')
+        for edge in ('top', 'left', 'bottom', 'right'):
+            edge_elm = OxmlElement(f'w:{edge}')
+            edge_elm.set(qn('w:val'), 'single')
+            edge_elm.set(qn('w:sz'), '12')  # Increased from 4 to 12 for more visible borders
+            edge_elm.set(qn('w:space'), '0')
+            edge_elm.set(qn('w:color'), 'CCCCCC')  # Light gray border to match PDF
+            tcBorders.append(edge_elm)
+        tcPr.append(tcBorders)
+    
+    # Create Word document
     doc = Document()
     
-    title = doc.add_heading('Sections Report', 0)
+    # Set narrow margins and portrait orientation (fewer columns)
+    sections = doc.sections
+    for section in sections:
+        section.orientation = WD_ORIENTATION.PORTRAIT
+        section.page_width = Inches(8.27)  # A4 portrait width
+        section.page_height = Inches(11.69)  # A4 portrait height
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+    
+    # Add institution header
+    institution = doc.add_paragraph('PROTECH - DETECT TO PROTECT')
+    institution.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    institution_run = institution.runs[0]
+    institution_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    institution_run.font.size = Pt(16)
+    institution_run.font.bold = True
+    institution_run.font.name = 'Arial'
+    
+    # Add title
+    title = doc.add_heading('SECTION MANAGEMENT REPORT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.runs[0]
+    title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    title_run.font.size = Pt(18)
+    title_run.font.bold = True
+    title_run.font.name = 'Arial'
+    
+    # Add timestamp
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
+    timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    timestamp_run = timestamp.runs[0]
+    timestamp_run.font.size = Pt(10)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    timestamp_run.font.name = 'Arial'
+    
+    # Add summary statistics
+    total_sections = len(data_rows)
+    sections_with_students = sum(1 for row in data_rows if str(row[2]) != '0' and str(row[2]) != '')
+    sections_with_advisors = sum(1 for row in data_rows if str(row[3]) not in ['', 'None', 'No Advisor'])
+    total_students = sum(int(row[2]) for row in data_rows if str(row[2]).isdigit())
+    summary = doc.add_paragraph(f"Total Sections: {total_sections} | With Students: {sections_with_students} | With Advisors: {sections_with_advisors} | Total Students: {total_students}")
+    summary.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_run = summary.runs[0]
+    summary_run.font.size = Pt(10)
+    summary_run.font.color.rgb = RGBColor(51, 51, 51)  # #333333
+    summary_run.font.name = 'Arial'
+    summary_run.font.bold = False
+    
+    # Add spacing before table
+    doc.add_paragraph()
     doc.add_paragraph()
     
+    # Create table with professional styling to match PDF
     table = doc.add_table(rows=1, cols=len(headers))
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
     
+    # Add headers with EXACT styling as PDF
     header_cells = table.rows[0].cells
-    for idx, header_text in enumerate(headers):
+    for idx, header in enumerate(headers):
         cell = header_cells[idx]
-        cell.text = header_text
+        cell.text = header
+        
+        # Set cell background color to match PDF exactly (#1F4E78)
         set_cell_background(cell, '1F4E78')
+        
+        # Style header text to match PDF
         for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_before = Pt(0)
+            paragraph.paragraph_format.space_after = Pt(0)
             for run in paragraph.runs:
                 run.font.bold = True
                 run.font.size = Pt(11)
-                run.font.color.rgb = RGBColor(255, 255, 255)
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
+        
+        # Add cell border with visible styling
+        set_cell_border(cell)
+        
+        # Add padding and alignment
+        cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set cell margins for proper padding
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        for margin_name in ['top', 'left', 'bottom', 'right']:
+            node = OxmlElement(f'w:{margin_name}')
+            node.set(qn('w:w'), '100')
+            node.set(qn('w:type'), 'dxa')
+            tcMar.append(node)
+        tcPr.append(tcMar)
     
+    # Add data rows
     for row_idx, row_data in enumerate(data_rows):
         row_cells = table.add_row().cells
-        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F5F5F5'
+        
+        # Set alternating row colors to match PDF exactly (#F9F9F9)
+        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F9F9F9'
         
         for idx, value in enumerate(row_data):
             cell = row_cells[idx]
             cell.text = str(value)
+            
+            # Set row background color
             set_cell_background(cell, row_color)
             
+            # Add cell border to match PDF
+            set_cell_border(cell)
+            
+            # Set cell margins for proper padding
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcMar = OxmlElement('w:tcMar')
+            for margin_name in ['top', 'left', 'bottom', 'right']:
+                node = OxmlElement(f'w:{margin_name}')
+                node.set(qn('w:w'), '100')
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+            tcPr.append(tcMar)
+            
+            # Style data cells
             for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
                 for run in paragraph.runs:
-                    run.font.size = Pt(9)
-                if idx in [0, 4]:
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
+                
+                # Center align ID, Students, Date columns
+                if idx in [0, 3, 5]:  # ID, Total Students, Date
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                else:
+                else:  # Section Name, Grade, Advisor
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
+    # Set column widths to match PDF layout
+    column_widths = [Inches(0.8), Inches(1.5), Inches(1.0), Inches(0.8), Inches(1.5), Inches(1.2)]
+    for row in table.rows:
+        for idx, cell in enumerate(row.cells):
+            if idx < len(column_widths):
+                cell.width = column_widths[idx]
+    
+    # Add footer to match PDF exactly
     doc.add_paragraph()
     footer = doc.add_paragraph(f"Total Sections: {len(data_rows)}")
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.runs[0]
+    footer_run.font.size = Pt(10)
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
     
+    # Add separator line
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - Section Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(8)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)  # #999999
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
+    
+    # Save to buffer
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -6896,10 +8146,12 @@ def export_guardians(request):
 
 def export_guardians_to_excel_format(headers, data_rows):
     """Export guardians to Excel format"""
+    # Create a workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Guardians"
     
+    # Define styles
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -6914,43 +8166,87 @@ def export_guardians_to_excel_format(headers, data_rows):
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    column_widths = [8, 25, 30, 18, 18, 18, 20]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    # Set column widths for professional layout
+    column_widths = [15, 15, 15, 15, 25, 18, 20]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + col_num)].width = width
     
-    ws.append(headers)
+    # Add institution header (row 1)
+    institution_cell = ws.cell(row=1, column=1)
+    institution_cell.value = "PROTECH - DETECT TO PROTECT"
+    institution_cell.font = Font(bold=True, color="1F4E78", size=14)
+    institution_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
     ws.row_dimensions[1].height = 25
     
-    for cell in ws[1]:
+    # Add report title (row 2)
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "GUARDIAN MANAGEMENT REPORT"
+    title_cell.font = Font(bold=True, color="1F4E78", size=16)
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    ws.row_dimensions[2].height = 30
+    
+    # Add timestamp (row 3)
+    timestamp_cell = ws.cell(row=3, column=1)
+    timestamp_cell.value = f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    timestamp_cell.font = Font(color="666666", size=10)
+    timestamp_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=len(headers))
+    ws.row_dimensions[3].height = 20
+    
+    # Add summary statistics (row 4)
+    total_guardians = len(data_rows)
+    mothers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'mother')
+    fathers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'father')
+    others_count = total_guardians - mothers_count - fathers_count
+    summary_cell = ws.cell(row=4, column=1)
+    summary_cell.value = f"Total Guardians: {total_guardians} | Mothers: {mothers_count} | Fathers: {fathers_count} | Others: {others_count}"
+    summary_cell.font = Font(color="333333", size=10)
+    summary_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=len(headers))
+    ws.row_dimensions[4].height = 20
+    
+    # Add empty row for spacing (row 5)
+    ws.row_dimensions[5].height = 10
+    
+    # Add table headers (row 6)
+    header_row = 6
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=header_row, column=col_num)
+        cell.value = header
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    for row_data in data_rows:
-        ws.append(row_data)
+    # Set header row height
+    ws.row_dimensions[header_row].height = 25
     
-    for row_idx in range(2, ws.max_row + 1):
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
+    # Add data rows (starting from row 7)
+    for row_num, row_data in enumerate(data_rows, 7):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
             cell.border = border_style
             
-            if col_idx in [1, 6]:
+            # Apply alignment based on column type
+            if col_num in [4, 6]:  # Relationship, Children
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
     
-    ws.freeze_panes = ws['A2']
+    # Freeze the header row (row 6)
+    ws.freeze_panes = "A7"
     
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
+    # Create HTTP response
     response = HttpResponse(
-        buffer.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename="guardians_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename=guardians_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    # Save workbook to response
+    wb.save(response)
     
     return response
 
@@ -6958,50 +8254,160 @@ def export_guardians_to_excel_format(headers, data_rows):
 def export_guardians_to_pdf(headers, data_rows):
     """Export guardians to PDF format"""
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    
+    # Create PDF document with landscape orientation (many columns)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=50, bottomMargin=30)
+    
+    # Container for PDF elements
     elements = []
     
+    # Define styles
     styles = getSampleStyleSheet()
+    
+    # Institution header style
+    institution_style = ParagraphStyle(
+        'Institution',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor('#1F4E78'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         textColor=colors.HexColor('#1F4E78'),
-        spaceAfter=30,
-        alignment=1
+        spaceAfter=6,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
     )
     
-    elements.append(Paragraph("Guardians Report", title_style))
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=4,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    info_style = ParagraphStyle(
+        'Info',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#333333'),
+        spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # Add institution header
+    institution = Paragraph("PROTECH - DETECT TO PROTECT", institution_style)
+    elements.append(institution)
+    
+    # Add title
+    title = Paragraph("GUARDIAN MANAGEMENT REPORT", title_style)
+    elements.append(title)
+    
+    # Add generation timestamp
+    timestamp = Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style)
+    elements.append(timestamp)
+    
+    # Add summary statistics
+    total_guardians = len(data_rows)
+    mothers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'mother')
+    fathers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'father')
+    others_count = total_guardians - mothers_count - fathers_count
+    summary = Paragraph(f"Total Guardians: {total_guardians} | Mothers: {mothers_count} | Fathers: {fathers_count} | Others: {others_count}", info_style)
+    elements.append(summary)
+    
     elements.append(Spacer(1, 0.2*inch))
     
+    # Prepare table data
     table_data = [headers] + data_rows
-    table = Table(table_data, colWidths=[0.3*inch, 1.5*inch, 1.5*inch, 1*inch, 1*inch, 0.7*inch, 1.1*inch])
     
-    table.setStyle(TableStyle([
+    # Create table with adjusted column widths for A4 (landscape orientation)
+    col_widths = [1.0*inch, 1.0*inch, 1.0*inch, 1.0*inch, 1.5*inch, 1.2*inch, 1.2*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Define table style
+    table_style = TableStyle([
+        # Header style
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F4E78')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 14),
+        
+        # Data cells style - Left align text columns
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (2, -1), 'LEFT'),    # Names left-aligned
+        ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Relationship centered
+        ('ALIGN', (4, 1), (5, -1), 'LEFT'),    # Email, Phone left-aligned
+        ('ALIGN', (6, 1), (-1, -1), 'CENTER'), # Children centered
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        
+        # Grid
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('WORDWRAP', (0, 0), (-1, -1), True),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
-    ]))
+        
+        # Alternating row colors
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+    ])
     
+    table.setStyle(table_style)
     elements.append(table)
-    elements.append(Spacer(1, 0.3*inch))
-    elements.append(Paragraph(f"Total Guardians: {len(data_rows)}", styles['Normal']))
     
+    # Add footer with summary
+    elements.append(Spacer(1, 0.4*inch))
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    footer = Paragraph(f"Total Guardians: {len(data_rows)}", footer_style)
+    elements.append(footer)
+    
+    # Add separator line
+    elements.append(Spacer(1, 0.1*inch))
+    line_style = ParagraphStyle(
+        'Line',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    )
+    line = Paragraph("PROTECH - Guardian Management System", line_style)
+    elements.append(line)
+    
+    # Build PDF
     doc.build(elements)
-    buffer.seek(0)
     
-    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="guardians_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+    # Get PDF from buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create HTTP response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=guardians_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response.write(pdf)
     
     return response
 
@@ -7017,48 +8423,190 @@ def export_guardians_to_word(headers, data_rows):
         shading_elm.set(qn('w:fill'), fill_color)
         cell._element.get_or_add_tcPr().append(shading_elm)
     
+    def set_cell_border(cell, **kwargs):
+        """Set cell borders with more visible styling to match PDF"""
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcBorders = OxmlElement('w:tcBorders')
+        for edge in ('top', 'left', 'bottom', 'right'):
+            edge_elm = OxmlElement(f'w:{edge}')
+            edge_elm.set(qn('w:val'), 'single')
+            edge_elm.set(qn('w:sz'), '12')  # Increased from 4 to 12 for more visible borders
+            edge_elm.set(qn('w:space'), '0')
+            edge_elm.set(qn('w:color'), 'CCCCCC')  # Light gray border to match PDF
+            tcBorders.append(edge_elm)
+        tcPr.append(tcBorders)
+    
+    # Create Word document
     doc = Document()
     
-    title = doc.add_heading('Guardians Report', 0)
+    # Set narrow margins and landscape orientation (many columns)
+    sections = doc.sections
+    for section in sections:
+        section.orientation = WD_ORIENTATION.LANDSCAPE
+        section.page_width = Inches(11.69)  # A4 landscape width
+        section.page_height = Inches(8.27)  # A4 landscape height
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+    
+    # Add institution header
+    institution = doc.add_paragraph('PROTECH - DETECT TO PROTECT')
+    institution.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    institution_run = institution.runs[0]
+    institution_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    institution_run.font.size = Pt(16)
+    institution_run.font.bold = True
+    institution_run.font.name = 'Arial'
+    
+    # Add title
+    title = doc.add_heading('GUARDIAN MANAGEMENT REPORT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.runs[0]
+    title_run.font.color.rgb = RGBColor(31, 78, 120)  # #1F4E78
+    title_run.font.size = Pt(18)
+    title_run.font.bold = True
+    title_run.font.name = 'Arial'
+    
+    # Add timestamp
+    timestamp = doc.add_paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
+    timestamp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    timestamp_run = timestamp.runs[0]
+    timestamp_run.font.size = Pt(10)
+    timestamp_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    timestamp_run.font.name = 'Arial'
+    
+    # Add summary statistics
+    total_guardians = len(data_rows)
+    mothers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'mother')
+    fathers_count = sum(1 for row in data_rows if str(row[3]).lower() == 'father')
+    others_count = total_guardians - mothers_count - fathers_count
+    summary = doc.add_paragraph(f"Total Guardians: {total_guardians} | Mothers: {mothers_count} | Fathers: {fathers_count} | Others: {others_count}")
+    summary.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_run = summary.runs[0]
+    summary_run.font.size = Pt(10)
+    summary_run.font.color.rgb = RGBColor(51, 51, 51)  # #333333
+    summary_run.font.name = 'Arial'
+    summary_run.font.bold = False
+    
+    # Add spacing before table
+    doc.add_paragraph()
     doc.add_paragraph()
     
+    # Create table with professional styling to match PDF
     table = doc.add_table(rows=1, cols=len(headers))
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
     
+    # Add headers with EXACT styling as PDF
     header_cells = table.rows[0].cells
-    for idx, header_text in enumerate(headers):
+    for idx, header in enumerate(headers):
         cell = header_cells[idx]
-        cell.text = header_text
+        cell.text = header
+        
+        # Set cell background color to match PDF exactly (#1F4E78)
         set_cell_background(cell, '1F4E78')
+        
+        # Style header text to match PDF
         for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_before = Pt(0)
+            paragraph.paragraph_format.space_after = Pt(0)
             for run in paragraph.runs:
                 run.font.bold = True
                 run.font.size = Pt(11)
-                run.font.color.rgb = RGBColor(255, 255, 255)
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run.font.color.rgb = RGBColor(255, 255, 255)  # White text
+                run.font.name = 'Arial'
+        
+        # Add cell border with visible styling
+        set_cell_border(cell)
+        
+        # Add padding and alignment
+        cell.vertical_alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set cell margins for proper padding
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        for margin_name in ['top', 'left', 'bottom', 'right']:
+            node = OxmlElement(f'w:{margin_name}')
+            node.set(qn('w:w'), '100')
+            node.set(qn('w:type'), 'dxa')
+            tcMar.append(node)
+        tcPr.append(tcMar)
     
+    # Add data rows
     for row_idx, row_data in enumerate(data_rows):
         row_cells = table.add_row().cells
-        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F5F5F5'
+        
+        # Set alternating row colors to match PDF exactly (#F9F9F9)
+        row_color = 'FFFFFF' if row_idx % 2 == 0 else 'F9F9F9'
         
         for idx, value in enumerate(row_data):
             cell = row_cells[idx]
             cell.text = str(value)
+            
+            # Set row background color
             set_cell_background(cell, row_color)
             
+            # Add cell border to match PDF
+            set_cell_border(cell)
+            
+            # Set cell margins for proper padding
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcMar = OxmlElement('w:tcMar')
+            for margin_name in ['top', 'left', 'bottom', 'right']:
+                node = OxmlElement(f'w:{margin_name}')
+                node.set(qn('w:w'), '100')
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+            tcPr.append(tcMar)
+            
+            # Style data cells
             for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
                 for run in paragraph.runs:
-                    run.font.size = Pt(9)
-                if idx in [0, 5]:
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(0, 0, 0)
+                    run.font.name = 'Arial'
+                
+                # Center align Relationship and Children columns
+                if idx in [3, 6]:  # Relationship, Children
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                else:
+                else:  # Names, Email, Phone
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
+    # Set column widths to match PDF layout
+    column_widths = [Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.5), Inches(1.2), Inches(1.2)]
+    for row in table.rows:
+        for idx, cell in enumerate(row.cells):
+            if idx < len(column_widths):
+                cell.width = column_widths[idx]
+    
+    # Add footer to match PDF exactly
     doc.add_paragraph()
     footer = doc.add_paragraph(f"Total Guardians: {len(data_rows)}")
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.runs[0]
+    footer_run.font.size = Pt(10)
+    footer_run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
+    footer_run.font.bold = True
+    footer_run.font.name = 'Arial'
     
+    # Add separator line
+    doc.add_paragraph()
+    system_name = doc.add_paragraph("PROTECH - Guardian Management System")
+    system_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    system_run = system_name.runs[0]
+    system_run.font.size = Pt(8)
+    system_run.font.color.rgb = RGBColor(153, 153, 153)  # #999999
+    system_run.font.italic = True
+    system_run.font.name = 'Arial'
+    
+    # Save to buffer
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
