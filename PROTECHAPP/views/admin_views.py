@@ -1090,7 +1090,8 @@ def import_teachers(request):
             if file_ext == '.csv':
                 df = pd.read_csv(file)
             else:
-                df = pd.read_excel(file)
+                # For Excel files, skip the instruction rows (rows 1-4) and use row 5 as header
+                df = pd.read_excel(file, header=4)  # Row 5 (0-indexed row 4) is the header row
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Error reading file: {str(e)}'}, status=400)
         
@@ -1106,6 +1107,8 @@ def import_teachers(request):
             'Active Status': 'is_active',
             'Status': 'is_active',
             'ID': 'id',
+            'Grade': 'grade',
+            'Section': 'section',
             'Created Date': 'created_date'
         }
         df.rename(columns=column_mapping, inplace=True)
@@ -1125,8 +1128,10 @@ def import_teachers(request):
         skipped_count = 0
         errors = []
         emails_sent = 0
+        section_advisor_warnings = []
         
         for index, row in df.iterrows():
+            row_num = index + 5  # +5 because Excel row 1 is title, row 2 is instructions, row 3 is notes, row 4 is headers, data starts at row 5
             try:
                 username = str(row['username']).strip() if pd.notna(row['username']) else ''
                 email = str(row['email']).strip() if pd.notna(row['email']) else ''
@@ -1134,13 +1139,35 @@ def import_teachers(request):
                 last_name = str(row['last_name']).strip() if pd.notna(row['last_name']) else ''
                 middle_name = str(row['middle_name']).strip() if 'middle_name' in row and pd.notna(row['middle_name']) else ''
                 
+                # Process grade and section (optional)
+                grade_name = str(row['grade']).strip() if 'grade' in row and pd.notna(row['grade']) else ''
+                section_name = str(row['section']).strip() if 'section' in row and pd.notna(row['section']) else ''
+                
                 is_active = True
                 if 'is_active' in row and pd.notna(row['is_active']):
                     status_value = str(row['is_active']).strip().upper()
                     is_active = status_value in ['ACTIVE', 'TRUE', '1', 'YES']
                 
-                if not all([username, email, first_name, last_name]):
-                    errors.append(f'Row {index + 2}: Missing required field(s)')
+                # Validate required fields with specific column names
+                missing_fields = []
+                if not username:
+                    missing_fields.append('Username (Column A)')
+                if not email:
+                    missing_fields.append('Email (Column B)')
+                if not first_name:
+                    missing_fields.append('First Name (Column C)')
+                if not last_name:
+                    missing_fields.append('Last Name (Column E)')
+                
+                if missing_fields:
+                    errors.append(f'Row {row_num}: Missing required fields: {", ".join(missing_fields)}')
+                    skipped_count += 1
+                    continue
+                
+                # Validate email format
+                email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not re.match(email_regex, email):
+                    errors.append(f'Row {row_num}, Email (Column B): Invalid email format "{email}"')
                     skipped_count += 1
                     continue
                 
@@ -1159,11 +1186,17 @@ def import_teachers(request):
                 # Only import new teachers (blank ID)
                 # Check if username or email already exists
                 if CustomUser.objects.filter(username=username).exists():
-                    errors.append(f'Row {index + 2}: Username "{username}" already exists')
+                    errors.append(f'Row {row_num}, Username (Column A): Username "{username}" already exists in the system')
                     skipped_count += 1
                     continue
                 if CustomUser.objects.filter(email=email).exists():
-                    errors.append(f'Row {index + 2}: Email "{email}" already exists')
+                    errors.append(f'Row {row_num}, Email (Column B): Email "{email}" already exists in the system')
+                    skipped_count += 1
+                    continue
+                
+                # Validate section requires grade
+                if section_name and not grade_name:
+                    errors.append(f'Row {row_num}, Section (Column G): Cannot assign section without selecting a grade first (Column F)')
                     skipped_count += 1
                     continue
                 
@@ -1182,6 +1215,45 @@ def import_teachers(request):
                 )
                 teacher.password = make_password(generated_password)
                 teacher.save()
+                
+                # Assign grade and section if provided via AdvisoryAssignment
+                if section_name and grade_name:
+                    try:
+                        grade_obj = Grade.objects.get(name__iexact=grade_name)
+                        section = Section.objects.get(name__iexact=section_name, grade=grade_obj)
+                        
+                        # Check if section already has an active advisor
+                        existing_advisor = AdvisoryAssignment.objects.filter(section=section).first()
+                        if existing_advisor:
+                            section_advisor_warnings.append(
+                                f'Row {row_num}, Section (Column G): Section "{section_name}" already has an advisor ({existing_advisor.teacher.get_full_name()}). '
+                                f'Teacher {teacher.get_full_name()} will be assigned but section will have multiple advisors.'
+                            )
+                        
+                        # Create advisory assignment
+                        AdvisoryAssignment.objects.create(
+                            teacher=teacher,
+                            section=section
+                        )
+                        
+                        # Also set the section field on CustomUser for compatibility
+                        teacher.section = section
+                        teacher.save()
+                        
+                    except Grade.DoesNotExist:
+                        errors.append(f'Row {row_num}, Grade (Column F): Grade "{grade_name}" not found in database')
+                    except Section.DoesNotExist:
+                        errors.append(f'Row {row_num}, Section (Column G): Section "{section_name}" not found for grade "{grade_name}"')
+                    except Exception as e:
+                        errors.append(f'Row {row_num}, Section (Column G): Error assigning section - {str(e)}')
+                elif grade_name and not section_name:
+                    # Grade provided but no section - this is okay, just note it
+                    try:
+                        Grade.objects.get(name__iexact=grade_name)
+                        # Grade exists but no section assigned - this is fine
+                    except Grade.DoesNotExist:
+                        errors.append(f'Row {row_num}, Grade (Column F): Grade "{grade_name}" not found in database')
+                
                 created_count += 1
                 
                 # Send email with generated password
@@ -1189,9 +1261,12 @@ def import_teachers(request):
                     emails_sent += 1
                 
             except Exception as e:
-                errors.append(f'Row {index + 2}: {str(e)}')
+                errors.append(f'Row {row_num}: Unexpected error - {str(e)}')
                 skipped_count += 1
                 continue
+        
+        # Combine warnings with errors
+        all_messages = errors + section_advisor_warnings
         
         message_parts = []
         if created_count > 0:
@@ -1207,7 +1282,7 @@ def import_teachers(request):
             'created': created_count,
             'skipped': skipped_count,
             'emails_sent': emails_sent,
-            'errors': errors[:10]
+            'errors': all_messages[:20]  # Show up to 20 messages (errors + warnings)
         })
         
     except Exception as e:
@@ -1218,77 +1293,211 @@ def import_teachers(request):
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
 def download_teachers_template(request):
-    """Generate and download Excel template for teacher import"""
+    """Generate and download Excel template for teacher import with cascading dropdowns"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
     import io
     
     wb = Workbook()
     ws = wb.active
     ws.title = "Teachers Import Template"
     
+    # Create hidden sheet for grade-section mappings
+    lookup_sheet = wb.create_sheet("Lookup Data")
+    lookup_sheet.sheet_state = 'hidden'
+    
+    # Define styles (EXACT same as users import)
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     
+    instruction_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    instruction_font = Font(bold=True, size=10, color="D9534F")
+    instruction_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
     border_style = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
     )
     
     center_alignment = Alignment(horizontal="center", vertical="center")
     left_alignment = Alignment(horizontal="left", vertical="center")
     
-    column_widths = [8, 15, 30, 15, 15, 15, 12]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    # Set column widths for better readability
+    column_widths = {
+        'A': 18,  # Username
+        'B': 35,  # Email
+        'C': 18,  # First Name
+        'D': 15,  # Middle Name
+        'E': 18,  # Last Name
+        'F': 15,  # Grade
+        'G': 15,  # Section
+        'H': 12   # Status
+    }
+    for col_letter, width in column_widths.items():
+        ws.column_dimensions[col_letter].width = width
     
-    headers = ["ID", "Username", "Email", "First Name", "Last Name", "Middle Name", "Status"]
+    headers = ["Username", "Email", "First Name", "Middle Name", "Last Name", "Grade", "Section", "Status"]
     
+    # Add instructions at the top (rows 1-4) - EXACT same format as users import
+    ws.merge_cells('A1:H1')
+    instruction_cell_1 = ws['A1']
+    instruction_cell_1.value = "📋 BULK TEACHER IMPORT TEMPLATE"
+    instruction_cell_1.font = Font(bold=True, size=13, color="1F4E78")
+    instruction_cell_1.alignment = Alignment(horizontal="center", vertical="center")
+    instruction_cell_1.fill = instruction_fill
+    ws.row_dimensions[1].height = 28
+    
+    ws.merge_cells('A2:H2')
+    instruction_cell_2 = ws['A2']
+    instruction_cell_2.value = "📝 Instructions: Fill in teacher details below. Passwords are auto-generated and emailed. Username and Email must be unique."
+    instruction_cell_2.font = Font(size=9, italic=True, color="333333")
+    instruction_cell_2.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    instruction_cell_2.fill = instruction_fill
+    ws.row_dimensions[2].height = 32
+    
+    ws.merge_cells('A3:H3')
+    instruction_cell_3 = ws['A3']
+    instruction_cell_3.value = "✅ Required: First Name, Last Name, Username, Email  |  ⚪ Optional: Middle Name, Grade, Section"
+    instruction_cell_3.font = Font(size=9, color="555555")
+    instruction_cell_3.alignment = Alignment(horizontal="left", vertical="center")
+    instruction_cell_3.fill = instruction_fill
+    ws.row_dimensions[3].height = 22
+    
+    ws.merge_cells('A4:H4')
+    instruction_cell_4 = ws['A4']
+    instruction_cell_4.value = "⚠️ Username and Email must be unique. Select Grade first to see sections for that grade. Only 1 advisor per section is recommended."
+    instruction_cell_4.font = Font(size=9, bold=True, color="C0504D")
+    instruction_cell_4.alignment = Alignment(horizontal="left", vertical="center")
+    instruction_cell_4.fill = instruction_fill
+    ws.row_dimensions[4].height = 22
+    
+    # Add headers on row 5
     ws.append(headers)
-    ws.row_dimensions[1].height = 25
+    ws.row_dimensions[5].height = 30
     
-    for cell in ws[1]:
+    for cell in ws[5]:
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = border_style
     
-    # Add instruction row
-    instruction_row = ["Instructions:", "Leave ID blank for new teachers (auto-generates password & sends email). Rows with existing IDs will be SKIPPED (not imported).", "", "", "", "", ""]
-    ws.append(instruction_row)
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
-    instruction_cell = ws.cell(row=2, column=1)
-    instruction_cell.font = Font(italic=True, color="666666", size=10)
-    instruction_cell.alignment = left_alignment
-    ws.row_dimensions[2].height = 30
+    # Get all grades and sections from database
+    grades = Grade.objects.all().order_by('name')
     
+    # Build grade list and grade-section mapping in hidden sheet
+    grade_list = []
+    col_index = 1
+    
+    for grade in grades:
+        grade_list.append(grade.name)
+        # Add grade name as header in hidden sheet
+        lookup_sheet.cell(row=1, column=col_index, value=grade.name)
+        
+        # Get sections for this grade
+        grade_sections = grade.sections.all().order_by('name')
+        row_index = 2
+        for section in grade_sections:
+            lookup_sheet.cell(row=row_index, column=col_index, value=section.name)
+            row_index += 1
+        
+        col_index += 1
+    
+    # If no grades in database, add default values
+    if not grades.exists():
+        grade_list = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"]
+        for idx, grade_name in enumerate(grade_list, start=1):
+            lookup_sheet.cell(row=1, column=idx, value=grade_name)
+            lookup_sheet.cell(row=2, column=idx, value="Section A")
+            lookup_sheet.cell(row=3, column=idx, value="Section B")
+    
+    # Create named ranges for each grade in the hidden sheet
+    for idx, grade_name in enumerate(grade_list, start=1):
+        # Replace spaces and special characters for named range
+        range_name = grade_name.replace(" ", "_").replace("-", "_")
+        # Find the last row with data in this column
+        last_row = 2
+        while lookup_sheet.cell(row=last_row, column=idx).value:
+            last_row += 1
+        last_row -= 1
+        
+        if last_row >= 2:
+            # Define named range for this grade's sections
+            wb.create_named_range(range_name, lookup_sheet, f'${get_column_letter(idx)}$2:${get_column_letter(idx)}${last_row}')
+    
+    # Add data validation for Grade column (column F) - Optional
+    grade_validation = DataValidation(type="list", formula1=f'"{"," .join(grade_list)}"', allow_blank=True)
+    grade_validation.error = 'Please select a grade from the dropdown list or leave blank'
+    grade_validation.errorTitle = 'Invalid Grade'
+    grade_validation.prompt = 'Select a grade from the list (optional). Section dropdown will show sections for selected grade.'
+    grade_validation.promptTitle = 'Grade Selection (Optional)'
+    ws.add_data_validation(grade_validation)
+    grade_validation.add('F5:F1000')
+    
+    # Add cascading data validation for Section column (column G) - Dependent on Grade
+    # Using INDIRECT to reference the named range based on Grade value
+    section_validation = DataValidation(
+        type="list",
+        formula1='INDIRECT(SUBSTITUTE(F5," ","_"))',
+        allow_blank=True
+    )
+    section_validation.error = 'Please select a grade first, then choose a section from the dropdown'
+    section_validation.errorTitle = 'Invalid Section'
+    section_validation.prompt = 'Select a section (optional). You must select a grade first to see available sections.'
+    section_validation.promptTitle = 'Section Selection (Optional)'
+    ws.add_data_validation(section_validation)
+    section_validation.add('G5:G1000')
+    
+    # Add data validation for Status column (column H)
+    status_validation = DataValidation(type="list", formula1='"Active,Inactive"', allow_blank=False)
+    status_validation.error = 'Please select Active or Inactive'
+    status_validation.errorTitle = 'Invalid Status'
+    ws.add_data_validation(status_validation)
+    status_validation.add('H5:H1000')
+    
+    # Sample data rows
     sample_data = [
-        ["", "john.teacher", "john.teacher@protech.com", "John", "Doe", "M", "Active"],
-        ["", "jane.teacher", "jane.teacher@protech.com", "Jane", "Smith", "S", "Active"],
+        ["john.teacher", "john.teacher@protech.com", "John", "M", "Doe", grades[0].name if grades.exists() else "", "", "Active"],
+        ["jane.teacher", "jane.teacher@protech.com", "Jane", "S", "Smith", "", "", "Active"],
     ]
     
+    # Add sample data rows with styling
     for row_data in sample_data:
         ws.append(row_data)
     
-    for row_idx in range(3, ws.max_row + 1):
+    # Apply formatting to data rows
+    for row_idx in range(6, ws.max_row + 1):
+        ws.row_dimensions[row_idx].height = 20
         for col_idx in range(1, len(headers) + 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             cell.border = border_style
-            if col_idx in [1, 7]:
+            cell.font = Font(size=10)
+            
+            # Apply alignment (Status and Grade/Section - center, rest left)
+            if col_idx in [6, 7, 8]:  # Grade, Section, Status columns
                 cell.alignment = center_alignment
             else:
                 cell.alignment = left_alignment
+        
+        # Add alternating row colors for better readability
+        if row_idx % 2 == 0:
+            for col_idx in range(1, len(headers) + 1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.fill = PatternFill(start_color="F8F9FA", end_color="F8F9FA", fill_type="solid")
     
-    ws.freeze_panes = ws['A2']
+    # Freeze rows 1-5 (instructions and header)
+    ws.freeze_panes = ws['A6']
     
+    # Save to buffer
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
     
+    # Create HTTP response
     response = HttpResponse(
         buffer.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -6798,7 +7007,6 @@ def import_grades(request):
             'created': created_count,
             'updated': updated_count,
             'skipped': skipped_count,
-            'skipped_rows': skipped_rows,
             'errors': errors[:10]
         })
         
