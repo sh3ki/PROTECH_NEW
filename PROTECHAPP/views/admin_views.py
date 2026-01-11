@@ -53,30 +53,91 @@ def generate_random_password(length=12):
     return password
 
 def send_password_email(user_email, username, password, user_type="User"):
-    """Send email with generated password to new user"""
+    """Send email with generated password to new user - EXACT SAME FORMAT as create_user"""
     try:
-        subject = f'Your PROTECH Account Has Been Created'
-        message = f'''Hello,
+        from django.core.mail import EmailMultiAlternatives
+        
+        subject = 'Your PROTECH Account Credentials'
+        
+        # Get full name if possible (for imports, we might not have it easily, so use username as fallback)
+        display_name = username
+        
+        # Plain text version
+        text_message = f'''Hello {display_name},
 
-Your PROTECH account has been created successfully!
+Your account has been created successfully. Please use the following credentials to log in:
 
-Login Credentials:
 Username: {username}
 Password: {password}
-Account Type: {user_type}
 
-Please login at your earliest convenience and change your password in the settings.
+Important: Please change your password after your first login.
 
-Best regards,
-PROTECH Admin Team'''
+Login URL: http://www.protech.it.com
+
+Attendance Monitoring System PROTECH
+'''
         
-        send_mail(
+        # HTML version with modern dark design (EXACT SAME as create_user)
+        html_message = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your PROTECH Account Credentials</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+                            <h1 style="color: white; font-size: 24px; font-weight: bold; margin: 0;">Welcome to PROTECH</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 40px 0;">
+                            <div style="background-color: #10b981; color: white; display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">Account Created</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 40px;">
+                            <h2 style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 15px;">Your Account Credentials</h2>
+                            <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0 0 10px;">Hello {display_name},</p>
+                            <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0 0 25px;">Your account has been created successfully. Please use the following credentials to log in:</p>
+                            
+                            <div style="background-color: #1a1a1a; border: 2px solid #3f3f46; border-radius: 8px; padding: 20px; margin: 0 0 25px;">
+                                <p style="color: #9ca3af; font-size: 13px; margin: 0 0 10px;">Username:</p>
+                                <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0 0 20px; font-family: 'Courier New', monospace;">{username}</p>
+                                <p style="color: #9ca3af; font-size: 13px; margin: 0 0 10px;">Password:</p>
+                                <p style="color: #10b981; font-size: 18px; font-weight: bold; margin: 0; font-family: 'Courier New', monospace; letter-spacing: 1px;">{password}</p>
+                            </div>
+                            
+                            <p style="color: #ef4444; font-size: 13px; line-height: 1.5; margin: 0 0 10px;"><strong>Important:</strong> Please change your password after your first login.</p>
+                            <p style="color: #9ca3af; font-size: 13px; line-height: 1.5; margin: 0;">Login URL: <a href="http://www.protech.it.com" style="color: #3b82f6;">http://www.protech.it.com</a></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 40px 30px; border-top: 1px solid #3f3f46;">
+                            <p style="color: #6b7280; font-size: 12px; margin: 0;">Attendance Monitoring System PROTECH</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'''
+        
+        msg = EmailMultiAlternatives(
             subject,
-            message,
+            text_message,
             settings.DEFAULT_FROM_EMAIL,
-            [user_email],
-            fail_silently=True,
+            [user_email]
         )
+        msg.attach_alternative(html_message, "text/html")
+        msg.send(fail_silently=False)
+        
         return True
     except Exception as e:
         print(f"Error sending email to {user_email}: {str(e)}")
