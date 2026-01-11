@@ -225,6 +225,30 @@ class BroadcastAnnouncement(models.Model):
     def __str__(self):
         return f"{self.title} - To {self.get_target_role_display()} by {self.sender}"
 
+# 13. Calendar Events Table
+class CalendarEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('EVENT', 'Event'),
+        ('ANNOUNCEMENT', 'Announcement'),
+    ]
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    event_type = models.CharField(max_length=15, choices=EVENT_TYPE_CHOICES, default='EVENT')
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    location = models.CharField(max_length=255, blank=True, null=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='created_events')
+    target_role = models.CharField(max_length=20, choices=UserRole.choices, blank=True, null=True)  # For announcements
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"{self.title} ({self.get_event_type_display()})"
+
 # 14. Chats Table (created before Messages to satisfy dependencies)
 class Chat(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
