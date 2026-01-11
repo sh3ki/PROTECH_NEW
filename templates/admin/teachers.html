@@ -965,16 +965,31 @@
                 </h4>
                 <form id="import-teachers-form" class="space-y-4">
                     {% csrf_token %}
-                    <div class="flex items-center justify-center w-full">
-                        <label for="import-teachers-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-3 transition-colors"></i>
-                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                    <span class="font-semibold">Click to upload</span> or drag and drop
+                    
+                    <!-- Drag & Drop Zone -->
+                    <div id="drop-zone-teachers" class="flex items-center justify-center w-full">
+                        <label for="import-teachers-file" class="flex flex-col items-center justify-center w-full h-56 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group relative overflow-hidden">
+                            
+                            <!-- Default State -->
+                            <div id="upload-prompt-teachers" class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-tertiary mb-4 transition-colors"></i>
+                                <p class="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                    Drop your file here or <span class="text-primary dark:text-tertiary">click to browse</span>
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Excel (.xlsx, .xls) or CSV files (MAX. 10MB)</p>
-                                <p id="import-teachers-file-name" class="mt-2 text-sm font-medium text-primary dark:text-tertiary hidden"></p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Supported: Excel (.xlsx, .xls) or CSV files</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500">Maximum file size: 10MB</p>
                             </div>
+                            
+                            <!-- File Selected State -->
+                            <div id="file-selected-teachers" class="hidden flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-file-excel text-6xl text-green-600 mb-4"></i>
+                                <p id="import-teachers-file-name" class="text-sm font-medium text-gray-900 dark:text-white mb-2"></p>
+                                <p id="import-teachers-file-size" class="text-xs text-gray-500 dark:text-gray-400 mb-3"></p>
+                                <button type="button" id="remove-teachers-file" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                    <i class="fas fa-times-circle mr-1"></i>Remove file
+                                </button>
+                            </div>
+                            
                             <input id="import-teachers-file" name="file" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
                         </label>
                     </div>
@@ -2325,8 +2340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset form and file display
         importTeachersForm.reset();
-        const importTeachersFileName = $('import-teachers-file-name');
-        if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+        showUploadPromptTeachers();
         if (submitImportTeachers) submitImportTeachers.disabled = true;
         importTeachersProgress.classList.add('hidden');
         importTeachersResults.classList.add('hidden');
@@ -2350,8 +2364,125 @@ document.addEventListener('DOMContentLoaded', function() {
     if (closeImportTeachersModal) closeImportTeachersModal.addEventListener('click', closeImportModal);
     if (cancelImportTeachers) cancelImportTeachers.addEventListener('click', closeImportModal);
 
+    // Drag & Drop functionality for teachers import
+    const dropZoneTeachers = document.getElementById('drop-zone-teachers');
+    const uploadPromptTeachers = document.getElementById('upload-prompt-teachers');
+    const fileSelectedTeachers = document.getElementById('file-selected-teachers');
+    const removeFileTeachersBtn = document.getElementById('remove-teachers-file');
+    const fileNameDisplayTeachers = document.getElementById('import-teachers-file-name');
+    const fileSizeDisplayTeachers = document.getElementById('import-teachers-file-size');
+    
+    function showUploadPromptTeachers() {
+        if (uploadPromptTeachers) uploadPromptTeachers.classList.remove('hidden');
+        if (uploadPromptTeachers) uploadPromptTeachers.classList.add('flex');
+        if (fileSelectedTeachers) fileSelectedTeachers.classList.add('hidden');
+        if (fileSelectedTeachers) fileSelectedTeachers.classList.remove('flex');
+    }
+    
+    function showFileSelectedTeachers(fileName, fileSize) {
+        if (uploadPromptTeachers) uploadPromptTeachers.classList.add('hidden');
+        if (uploadPromptTeachers) uploadPromptTeachers.classList.remove('flex');
+        if (fileSelectedTeachers) fileSelectedTeachers.classList.remove('hidden');
+        if (fileSelectedTeachers) fileSelectedTeachers.classList.add('flex');
+        if (fileNameDisplayTeachers) fileNameDisplayTeachers.textContent = fileName;
+        if (fileSizeDisplayTeachers) fileSizeDisplayTeachers.textContent = formatFileSizeTeachers(fileSize);
+    }
+    
+    function formatFileSizeTeachers(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    function validateFileTeachers(file) {
+        const validExtensions = ['csv', 'xlsx', 'xls'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(fileExtension)) {
+            showToast('Invalid file type. Please upload a CSV or Excel file.', 'error');
+            return false;
+        }
+        
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            showToast('File is too large. Maximum size is 10MB.', 'error');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        if (dropZoneTeachers) {
+            dropZoneTeachers.addEventListener(eventName, preventDefaultsTeachers, false);
+        }
+    });
+    
+    function preventDefaultsTeachers(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Highlight drop zone when dragging over
+    ['dragenter', 'dragover'].forEach(eventName => {
+        if (dropZoneTeachers) {
+            dropZoneTeachers.addEventListener(eventName, highlightTeachers, false);
+        }
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        if (dropZoneTeachers) {
+            dropZoneTeachers.addEventListener(eventName, unhighlightTeachers, false);
+        }
+    });
+    
+    function highlightTeachers(e) {
+        dropZoneTeachers.classList.add('border-primary', 'bg-primary/5');
+    }
+    
+    function unhighlightTeachers(e) {
+        dropZoneTeachers.classList.remove('border-primary', 'bg-primary/5');
+    }
+    
+    // Handle dropped files
+    if (dropZoneTeachers) {
+        dropZoneTeachers.addEventListener('drop', handleDropTeachers, false);
+    }
+    
+    function handleDropTeachers(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            const file = files[0];
+            
+            if (validateFileTeachers(file)) {
+                // Create a new FileList-like object
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                importTeachersFile.files = dataTransfer.files;
+                
+                showFileSelectedTeachers(file.name, file.size);
+                if (submitImportTeachers) submitImportTeachers.disabled = false;
+            }
+        }
+    }
+    
+    // Remove file button handler
+    if (removeFileTeachersBtn) {
+        removeFileTeachersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            importTeachersFile.value = '';
+            showUploadPromptTeachers();
+            if (submitImportTeachers) submitImportTeachers.disabled = true;
+        });
+    }
+
     // Handle file selection for teachers import
-    const importTeachersFileName = $('import-teachers-file-name');
     if (importTeachersFile && submitImportTeachers) {
         // Initially disable submit button
         submitImportTeachers.disabled = true;
@@ -2369,7 +2500,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
                     showToast('Invalid file type. Please upload Excel (.xlsx, .xls) or CSV files only.', 'error');
                     e.target.value = '';
-                    if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                    showUploadPromptTeachers();
                     submitImportTeachers.disabled = true;
                     return;
                 }
@@ -2377,18 +2508,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (file.size > 10 * 1024 * 1024) {
                     showToast('File too large. Maximum file size is 10MB.', 'error');
                     e.target.value = '';
-                    if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                    showUploadPromptTeachers();
                     submitImportTeachers.disabled = true;
                     return;
                 }
                 
-                if (importTeachersFileName) {
-                    importTeachersFileName.textContent = `Selected: ${file.name}`;
-                    importTeachersFileName.classList.remove('hidden');
-                }
+                showFileSelectedTeachers(file.name, file.size);
                 submitImportTeachers.disabled = false;
             } else {
-                if (importTeachersFileName) importTeachersFileName.classList.add('hidden');
+                showUploadPromptTeachers();
                 submitImportTeachers.disabled = true;
             }
         });
