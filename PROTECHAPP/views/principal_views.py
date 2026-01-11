@@ -640,6 +640,44 @@ def principal_excused(request):
 
 @login_required
 @user_passes_test(is_principal)
+def principal_calendar(request):
+    """View for calendar"""
+    return render(request, 'principal/calendar.html')
+
+
+@login_required
+@user_passes_test(is_principal)
+def get_principal_calendar_events(request):
+    """API endpoint to get calendar events for principal"""
+    from ..models import CalendarEvent
+    from django.db.models import Q
+    
+    # Get events and announcements targeted to principal or all staff
+    events = CalendarEvent.objects.filter(
+        Q(event_type='EVENT') |  # All events
+        Q(event_type='ANNOUNCEMENT', target_role__in=['PRINCIPAL', 'ADMIN'])  # Announcements for principal
+    )
+    
+    events_data = []
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'title': event.title,
+            'start': event.start_date.isoformat(),
+            'end': event.end_date.isoformat(),
+            'description': event.description,
+            'location': event.location,
+            'event_type': event.event_type,
+            'target_role': event.target_role,
+            'target_role_display': event.get_target_role_display() if event.target_role else None,
+            'created_by': f"{event.created_by.first_name} {event.created_by.last_name}",
+        })
+    
+    return JsonResponse(events_data, safe=False)
+
+
+@login_required
+@user_passes_test(is_principal)
 def principal_announcements(request):
     """View for announcements"""
     return render(request, 'principal/announcements.html')
