@@ -49,22 +49,40 @@
     <!-- Centered glass card with modern buttons -->
     <div class="w-full mx-auto glass-card text-center max-h-[72vh] overflow-auto card-appear" style="z-index:20;">
         <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-2">Select Attendance Mode</h1>
-        <p class="text-white/85 text-sm mb-5">Choose whether the device is for <strong class="text-white">Time In</strong> or <strong class="text-white">Time Out</strong></p>
+        
+        {% if attendance_mode == 'HYBRID' %}
+            <p class="text-white/85 text-sm mb-5">Hybrid mode: Use <strong class="text-white">Time In / Out</strong> with dual cameras</p>
+        {% else %}
+            <p class="text-white/85 text-sm mb-5">Choose whether the device is for <strong class="text-white">Time In</strong> or <strong class="text-white">Time Out</strong></p>
+        {% endif %}
 
         <div class="flex flex-col sm:flex-row btn-group justify-center items-center">
-            <a href="{% url 'time_in' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1e40af,#2563eb);">
-                <div class="bg-white/20 p-4 rounded-full">
-                    <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                </div>
-                <span class="font-semibold text-lg">TIME IN</span>
-            </a>
+            {% if attendance_mode == 'HYBRID' %}
+                <!-- Single button for Hybrid mode -->
+                <a href="{% url 'hybrid_attendance' %}" class="w-64 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1e40af,#2563eb);">
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span class="font-semibold text-lg">TIME IN / OUT (Hybrid)</span>
+                </a>
+            {% else %}
+                <!-- Separate buttons for Separate mode -->
+                <a href="{% url 'time_in' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1e40af,#2563eb);">
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </div>
+                    <span class="font-semibold text-lg">TIME IN</span>
+                </a>
 
-            <a href="{% url 'time_out' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1f4ed8,#7c3aed); animation-delay: 120ms;">
-                <div class="bg-white/20 p-4 rounded-full">
-                    <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                </div>
-                <span class="font-semibold text-lg">TIME OUT</span>
-            </a>
+                <a href="{% url 'time_out' %}" class="w-52 inline-flex flex-col items-center gap-4 py-5 px-8 rounded-2xl text-white shadow-lg glass-btn btn-pop" style="background: linear-gradient(90deg,#1f4ed8,#7c3aed); animation-delay: 120ms;">
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </div>
+                    <span class="font-semibold text-lg">TIME OUT</span>
+                </a>
+            {% endif %}
         </div>
 
         <div class="flex items-center gap-3 mt-8 justify-center">
