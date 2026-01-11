@@ -1,0 +1,179 @@
+{% extends 'components/base_component.html' %}
+
+{% block title %}PROTECH - Calendar{% endblock %}
+{% block page_title %}Calendar{% endblock %}
+
+{% block sidebar %}
+    {% include 'components/sidebar/principal_sidebar.html' with active='calendar' %}
+{% endblock %}
+
+{% block extra_css %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<style>
+    .fc {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+    .fc .fc-button-primary {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+    }
+    .fc .fc-button-primary:disabled {
+        background-color: #93c5fd !important;
+        border-color: #93c5fd !important;
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-event-EVENT {
+        background-color: #2563eb !important;
+        border-color: #1e40af !important;
+    }
+    .fc-event-ANNOUNCEMENT {
+        background-color: #ea580c !important;
+        border-color: #c2410c !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="mb-6">
+            <h1 class="text-3xl font-bold text-primary dark:text-tertiary">Calendar</h1>
+            <p class="text-accent dark:text-gray-400 mt-1">View events and announcements</p>
+        </div>
+
+        <!-- Calendar -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            <div id='calendar'></div>
+        </div>
+<!-- Calendar -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+    <div id='calendar'> id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Event Details</h2>
+            <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div id="eventDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    let calendar;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+            },
+            height: 'auto',
+            editable: false,
+            selectable: false,
+            events: '{% url "get_principal_calendar_events" %}',
+            eventClick: function(info) {
+                showEventDetails(info.event);
+            },
+            eventClassNames: function(arg) {
+                return ['fc-event-' + arg.event.extendedProps.event_type];
+            }
+        });
+        
+        calendar.render();
+    });
+    
+    function showEventDetails(event) {
+        const eventType = event.extendedProps.event_type;
+        const eventTypeLabel = eventType === 'EVENT' ? 'Event' : 'Announcement';
+        const bgColor = eventType === 'EVENT' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200';
+        
+        const content = `
+            <div class="space-y-4">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="inline-block px-3 py-1 rounded-full text-sm font-medium ${bgColor} mb-2">
+                            ${eventTypeLabel}
+                        </div>
+                        <h3 class="text-2xl font-bold text-primary dark:text-tertiary">${event.title}</h3>
+                    </div>
+                </div>
+                
+                ${event.extendedProps.description ? `
+                <div>
+                    <h4 class="font-semibold text-primary dark:text-tertiary mb-2">Description:</h4>
+                    <p class="text-accent dark:text-gray-400">${event.extendedProps.description}</p>
+                </div>
+                ` : ''}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-primary dark:text-tertiary mb-1">Start:</h4>
+                        <p class="text-accent dark:text-gray-400">${event.start.toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-primary dark:text-tertiary mb-1">End:</h4>
+                        <p class="text-accent dark:text-gray-400">${event.end ? event.end.toLocaleString() : 'N/A'}</p>
+                    </div>
+                </div>
+                
+                ${event.extendedProps.location ? `
+                <div>
+                    <h4 class="font-semibold text-primary dark:text-tertiary mb-1">Location:</h4>
+                    <p class="text-accent dark:text-gray-400">${event.extendedProps.location}</p>
+                </div>
+                ` : ''}
+                
+                ${eventType === 'ANNOUNCEMENT' && event.extendedProps.target_role ? `
+                <div>
+                    <h4 class="font-semibold text-primary dark:text-tertiary mb-1">Target Audience:</h4>
+                    <p class="text-accent dark:text-gray-400">${event.extendedProps.target_role_display}</p>
+                </div>
+                ` : ''}
+                
+                <div>
+                    <h4 class="font-semibold text-primary dark:text-tertiary mb-1">Created by:</h4>
+                    <p class="text-accent dark:text-gray-400">${event.extendedProps.created_by}</p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('eventDetailsContent').innerHTML = content;
+        document.getElementById('eventDetailsModal').style.display = 'flex';
+    }
+    
+    function closeEventDetailsModal() {
+        document.getElementById('eventDetailsModal').style.display = 'none';
+    }
+    
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('eventDetailsModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
