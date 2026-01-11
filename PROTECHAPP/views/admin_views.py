@@ -297,20 +297,19 @@ def create_user(request):
             # Plain text version
             text_message = f'''Hello {user.get_full_name() or user.username},
 
-Your account has been created successfully for the PROTECH Attendance Monitoring System.
+Your account has been created successfully. Please use the following credentials to log in:
 
-Your login credentials:
 Username: {user.username}
 Password: {generated_password}
 
-Please log in and change your password after your first login.
+Important: Please change your password after your first login.
 
-Login URL: {request.build_absolute_uri('/login/')}
+Login URL: http://www.protech.it.com
 
 Attendance Monitoring System PROTECH
 '''
             
-            # HTML version with modern dark design
+            # HTML version with modern dark design (matching image format)
             html_message = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -347,7 +346,7 @@ Attendance Monitoring System PROTECH
                             </div>
                             
                             <p style="color: #ef4444; font-size: 13px; line-height: 1.5; margin: 0 0 10px;"><strong>Important:</strong> Please change your password after your first login.</p>
-                            <p style="color: #9ca3af; font-size: 13px; line-height: 1.5; margin: 0;">Login URL: <a href="{request.build_absolute_uri('/login/')}" style="color: #3b82f6;">{request.build_absolute_uri('/login/')}</a></p>
+                            <p style="color: #9ca3af; font-size: 13px; line-height: 1.5; margin: 0;">Login URL: <a href="http://www.protech.it.com" style="color: #3b82f6;">http://www.protech.it.com</a></p>
                         </td>
                     </tr>
                     <tr>
