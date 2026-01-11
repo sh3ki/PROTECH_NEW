@@ -6994,92 +6994,103 @@ def export_grades(request):
 @user_passes_test(is_admin)
 @require_http_methods(["POST"])
 def import_grades(request):
-    """Import grades from CSV or Excel file"""
+    """Import grades from CSV or Excel file - matching users/teachers import logic"""
     try:
         import pandas as pd
         
-        if 'import_file' not in request.FILES:
+        if 'file' not in request.FILES:
             return JsonResponse({'status': 'error', 'message': 'No file uploaded'}, status=400)
         
-        file = request.FILES['import_file']
+        file = request.FILES['file']
         file_ext = os.path.splitext(file.name)[1].lower()
         
         if file_ext not in ['.csv', '.xlsx', '.xls']:
-            return JsonResponse({'status': 'error', 'message': 'Invalid file type'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Invalid file type. Please upload CSV or Excel file.'}, status=400)
         
         try:
-            df = pd.read_csv(file) if file_ext == '.csv' else pd.read_excel(file)
+            # Read file - skip instruction rows (rows 1-4), read row 5 as header
+            if file_ext == '.csv':
+                df = pd.read_csv(file, skiprows=4)
+            else:
+                df = pd.read_excel(file, header=4)  # header=4 means row 5 (0-indexed row 4)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Error reading file: {str(e)}'}, status=400)
         
-        df.columns = df.columns.str.strip()
-        column_mapping = {
-            'Grade Name': 'name',
-            'ID': 'id',
-            'Total Sections': 'total_sections',
-            'Total Students': 'total_students',
-            'Created Date': 'created_date'
-        }
-        df.rename(columns=column_mapping, inplace=True)
+        # Clean column names
+        df.columns = df.columns.str.strip().str.upper()
         
-        if 'name' not in df.columns:
-            return JsonResponse({'status': 'error', 'message': 'Missing required column: Grade Name'}, status=400)
+        # Check required column
+        if 'GRADE NAME' not in df.columns:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required column: GRADE NAME. Please use the provided template.'
+            }, status=400)
         
         created_count = 0
-        updated_count = 0
         skipped_count = 0
         errors = []
         
         for index, row in df.iterrows():
             try:
-                name = str(row['name']).strip() if pd.notna(row['name']) else ''
+                grade_name = str(row['GRADE NAME']).strip() if pd.notna(row['GRADE NAME']) else ''
                 
-                if not name:
-                    errors.append(f'Row {index + 2}: Missing grade name')
+                # Skip empty rows
+                if not grade_name or grade_name.lower() in ['nan', 'none', '']:
+                    continue
+                
+                # Check if grade already exists (case-insensitive)
+                existing_grade = Grade.objects.filter(name__iexact=grade_name).first()
+                
+                if existing_grade:
+                    errors.append(f'Row {index + 6}: Grade "{grade_name}" already exists - skipped')
                     skipped_count += 1
                     continue
                 
-                existing_grade = Grade.objects.filter(name__iexact=name).first()
+                # Create new grade
+                Grade.objects.create(name=grade_name)
+                created_count += 1
                 
-                if existing_grade:
-                    # Grade exists, just update (name doesn't change typically)
-                    updated_count += 1
-                else:
-                    # Create new grade
-                    Grade.objects.create(name=name)
-                    created_count += 1
-                    
             except Exception as e:
-                errors.append(f'Row {index + 2}: {str(e)}')
+                errors.append(f'Row {index + 6}: {str(e)}')
                 skipped_count += 1
                 continue
         
+        # Prepare response message
         message_parts = []
         if created_count > 0:
-            message_parts.append(f'{created_count} grade(s) created')
-        if updated_count > 0:
-            message_parts.append(f'{updated_count} grade(s) verified')
+            message_parts.append(f'{created_count} grade(s) imported successfully')
         if skipped_count > 0:
             message_parts.append(f'{skipped_count} row(s) skipped')
         
+        if created_count == 0 and skipped_count == 0:
+            return JsonResponse({
+                'status': 'warning',
+                'message': 'No valid data found in the file.',
+                'created': 0,
+                'skipped': 0,
+                'errors': []
+            })
+        
         return JsonResponse({
             'status': 'success',
-            'message': ', '.join(message_parts) if message_parts else 'No changes made',
+            'message': ', '.join(message_parts) if message_parts else 'Import completed',
             'created': created_count,
-            'updated': updated_count,
             'skipped': skipped_count,
-            'errors': errors[:10]
+            'errors': errors[:10]  # Limit to first 10 errors
         })
         
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An unexpected error occurred: {str(e)}'
+        }, status=500)
 
 
 @login_required
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
 def download_grades_template(request):
-    """Generate and download Excel template for grade import"""
+    """Generate and download Excel template for grade import - EXACT STYLE as users/teachers import"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -7087,52 +7098,96 @@ def download_grades_template(request):
     
     wb = Workbook()
     ws = wb.active
-    ws.title = "Grades Import Template"
+    ws.title = "Grades Import"
     
-    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
-    header_font = Font(bold=True, color="FFFFFF", size=11)
-    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    border_style = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    center_alignment = Alignment(horizontal="center", vertical="center")
-    left_alignment = Alignment(horizontal="left", vertical="center")
+    # Styling - matching users/teachers template exactly
+    yellow_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    blue_fill = PatternFill(start_color="DAEEF3", end_color="DAEEF3", fill_type="solid")
+    white_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    gray_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
     
-    column_widths = [8, 20, 18, 18, 20]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    title_font = Font(bold=True, size=14, color="000000")
+    header_font = Font(bold=True, size=11, color="000000")
+    normal_font = Font(size=10, color="000000")
+    bold_font = Font(bold=True, size=10, color="000000")
     
-    headers = ["ID", "Grade Name", "Total Sections", "Total Students", "Created Date"]
-    ws.append(headers)
+    center_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    thin_border = Border(
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
+    )
+    
+    # Set column width
+    ws.column_dimensions['A'].width = 40
+    
+    # Row 1: Title
+    ws['A1'] = '📚 BULK GRADE IMPORT TEMPLATE'
+    ws['A1'].font = title_font
+    ws['A1'].fill = yellow_fill
+    ws['A1'].alignment = center_alignment
+    ws['A1'].border = thin_border
     ws.row_dimensions[1].height = 25
     
-    for cell in ws[1]:
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = header_alignment
-        cell.border = border_style
+    # Row 2: Instructions
+    ws['A2'] = 'Instructions: Fill in the grade name below. Each grade name must be unique.'
+    ws['A2'].font = normal_font
+    ws['A2'].fill = yellow_fill
+    ws['A2'].alignment = left_alignment
+    ws['A2'].border = thin_border
+    ws.row_dimensions[2].height = 30
     
-    sample_data = [
-        ["", "Grade 7", "3", "90", ""],
-        ["10", "Grade 8", "3", "85", "2025-11-20 10:00:00"],
-        ["", "Grade 9", "2", "60", ""],
-    ]
+    # Row 3: Field info
+    ws['A3'] = 'Required Field: GRADE NAME'
+    ws['A3'].font = bold_font
+    ws['A3'].fill = yellow_fill
+    ws['A3'].alignment = left_alignment
+    ws['A3'].border = thin_border
+    ws.row_dimensions[3].height = 20
     
-    for row_data in sample_data:
-        ws.append(row_data)
+    # Row 4: Warning
+    ws['A4'] = '⚠️ Important: Grade names must be unique. Duplicates will be skipped.'
+    ws['A4'].font = normal_font
+    ws['A4'].fill = yellow_fill
+    ws['A4'].alignment = left_alignment
+    ws['A4'].border = thin_border
+    ws.row_dimensions[4].height = 25
     
-    for row_idx in range(2, ws.max_row + 1):
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
-            cell.border = border_style
-            cell.alignment = center_alignment if col_idx in [1, 3, 4] else left_alignment
+    # Row 5: Header
+    ws['A5'] = 'GRADE NAME'
+    ws['A5'].font = header_font
+    ws['A5'].fill = blue_fill
+    ws['A5'].alignment = center_alignment
+    ws['A5'].border = thin_border
+    ws.row_dimensions[5].height = 25
     
-    ws.freeze_panes = ws['A2']
+    # Sample data rows
+    sample_grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
     
+    for idx, grade_name in enumerate(sample_grades, start=6):
+        ws[f'A{idx}'] = grade_name
+        ws[f'A{idx}'].font = normal_font
+        ws[f'A{idx}'].fill = white_fill if idx % 2 == 0 else gray_fill
+        ws[f'A{idx}'].alignment = left_alignment
+        ws[f'A{idx}'].border = thin_border
+        ws.row_dimensions[idx].height = 20
+    
+    # Freeze panes at row 5 (header row)
+    ws.freeze_panes = 'A6'
+    
+    # Save to buffer
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
     
-    response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="grades_import_template_{datetime.now().strftime("%Y%m%d")}.xlsx"'
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="grades_import_template_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
     return response
 
 
