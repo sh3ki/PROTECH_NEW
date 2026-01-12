@@ -689,6 +689,10 @@ function getExcuseLetterUrl(filename) {
     if (!filename || filename === 'default-excuse-letter.png') {
         return DEFAULT_EXCUSE_LETTER_IMG;
     }
+    const lower = filename.toLowerCase();
+    if (!lower.endsWith('.png') && !lower.endsWith('.jpg') && !lower.endsWith('.jpeg') && !lower.endsWith('.gif') && !lower.endsWith('.webp')) {
+        return DEFAULT_EXCUSE_LETTER_IMG;
+    }
     // Handle filenames that already include the upload folder to avoid double prefixing
     if (filename.includes('/')) {
         return `/media/${filename}`;
