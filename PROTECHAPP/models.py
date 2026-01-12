@@ -326,6 +326,15 @@ class SystemSettings(models.Model):
         default=AttendanceMode.SEPARATE,
         help_text="Select whether attendance devices show separate or combined time in/out screens"
     )
+    # Notification Settings
+    email_notifications_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable or disable email notifications for attendance"
+    )
+    sms_notifications_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable or disable SMS notifications for attendance"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
