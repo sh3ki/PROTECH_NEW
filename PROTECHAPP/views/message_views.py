@@ -321,7 +321,7 @@ def get_messages(request, conversation_id):
     """
     try:
         # Verify user is in conversation
-        conversation = MessageService.get_conversation(conversation_id)
+        conversation = MessageService.get_conversation(conversation_id, request.user.id)
         if not conversation:
             return JsonResponse({'error': 'Conversation not found'}, status=404)
         
@@ -332,10 +332,7 @@ def get_messages(request, conversation_id):
         limit = int(request.GET.get('limit', 100))
         messages = MessageService.get_conversation_messages(conversation_id, limit)
         
-        # Convert datetime objects
-        for msg in messages:
-            if 'timestamp' in msg and msg['timestamp']:
-                msg['timestamp'] = msg['timestamp'].isoformat()
+        # Messages are already formatted with isoformat timestamps from _format_message
         
         return JsonResponse({
             'success': True,
@@ -343,6 +340,9 @@ def get_messages(request, conversation_id):
         })
     
     except Exception as e:
+        import traceback
+        print(f"ERROR in get_messages: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
 
 
