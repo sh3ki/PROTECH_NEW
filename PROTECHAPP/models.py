@@ -359,6 +359,11 @@ class SystemSettings(models.Model):
         default='SCROLLABLE',
         help_text="Control how recognized students are displayed on Time In/Out screens"
     )
+
+    spoof_proof_enabled = models.BooleanField(
+        default=True,
+        help_text="Require facial micro-movements (blink/landmark motion) to block photo/video spoofs"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
