@@ -373,6 +373,11 @@ class SystemSettings(models.Model):
         default=GateMode.CLOSED,
         help_text="Select gate behavior: Closed applies class timing rules; Open allows free entry/exit and marks all logs On Time"
     )
+
+    prototype_gate_system_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable or disable the prototype gate system and gate queue check functionality"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
