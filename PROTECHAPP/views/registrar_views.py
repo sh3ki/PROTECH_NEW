@@ -46,22 +46,165 @@ def get_pagination_range(paginator, current_page, num_pages=5):
 @login_required
 @user_passes_test(is_registrar)
 def registrar_dashboard(request):
-    """View for registrar dashboard"""
-    current_date = timezone.now()
+    """View for registrar dashboard with comprehensive attendance and enrollment data"""
+    from datetime import timedelta
     
-    # Example data for dashboard
-    student_count = Student.objects.count()
-    face_enrolled_count = Student.objects.filter(face_path__isnull=False).count()
-    pending_enrollments = 42  # This would be calculated based on actual data
+    today = timezone.now().date()
+    current_date = timezone.now()  # Pass as datetime object for template filters
+    current_date_formatted = timezone.now().strftime('%A, %B %d, %Y')
     
-    face_enrolled_percentage = (face_enrolled_count / student_count * 100) if student_count > 0 else 0
+    # Student enrollment statistics
+    total_students = Student.objects.filter(status='ACTIVE').count()
+    inactive_students = Student.objects.filter(status='INACTIVE').count()
+    face_enrolled_count = Student.objects.exclude(face_path__isnull=True).exclude(face_path__exact='').count()
+    face_enrolled_percentage = round((face_enrolled_count / total_students * 100), 1) if total_students > 0 else 0
+    
+    # Attendance statistics for today
+    today_attendance = Attendance.objects.filter(date=today).select_related('student')
+    present_count = today_attendance.filter(status='PRESENT').count()
+    late_count = today_attendance.filter(status='LATE').count()
+    excused_count = today_attendance.filter(status='EXCUSED').count()
+    
+    checked_in_count = present_count + late_count
+    absent_count = max(0, total_students - checked_in_count)
+    
+    # Calculate attendance percentage
+    if total_students > 0:
+        attendance_percentage = round((checked_in_count / total_students) * 100, 1)
+    else:
+        attendance_percentage = 0
+    
+    # Last 7 days attendance trend
+    last_7_days_data = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_name = day.strftime('%a')
+        
+        day_attendance = Attendance.objects.filter(date=day)
+        day_present = day_attendance.filter(status__in=['PRESENT', 'LATE']).count()
+        day_absent = max(0, total_students - day_present)
+        day_percentage = round((day_present / total_students) * 100, 1) if total_students > 0 else 0
+        
+        last_7_days_data.append({
+            'date': day_name,
+            'present': day_present,
+            'absent': day_absent,
+            'percentage': day_percentage
+        })
+    
+    # Enrollment by grade level
+    grades_enrollment = []
+    grades = Grade.objects.all().order_by('name')
+    for grade in grades:
+        grade_students = Student.objects.filter(grade=grade, status='ACTIVE').count()
+        grade_inactive = Student.objects.filter(grade=grade, status='INACTIVE').count()
+        grade_face_enrolled = Student.objects.filter(
+            grade=grade, 
+            status='ACTIVE'
+        ).exclude(face_path__isnull=True).exclude(face_path__exact='').count()
+        
+        face_percentage = round((grade_face_enrolled / grade_students) * 100, 1) if grade_students > 0 else 0
+        
+        grades_enrollment.append({
+            'name': grade.name,
+            'active': grade_students,
+            'inactive': grade_inactive,
+            'face_enrolled': grade_face_enrolled,
+            'face_percentage': face_percentage
+        })
+    
+    # Students not enrolled with face recognition (needs attention)
+    students_without_face = Student.objects.filter(
+        status='ACTIVE'
+    ).filter(
+        Q(face_path__isnull=True) | Q(face_path__exact='')
+    ).select_related('grade', 'section').order_by('grade__name', 'section__name', 'last_name')[:10]
+    
+    students_without_face_total = Student.objects.filter(
+        status='ACTIVE'
+    ).filter(
+        Q(face_path__isnull=True) | Q(face_path__exact='')
+    ).count()
+    
+    # Recent student registrations
+    recent_students = Student.objects.filter(
+        status='ACTIVE'
+    ).select_related('grade', 'section').order_by('-created_at')[:5]
+    
+    # Attendance by grade level for today
+    grades_attendance = []
+    for grade in grades:
+        grade_students = Student.objects.filter(grade=grade, status='ACTIVE').count()
+        grade_present = today_attendance.filter(
+            student__grade=grade,
+            status__in=['PRESENT', 'LATE']
+        ).count()
+        grade_percentage = round((grade_present / grade_students) * 100, 1) if grade_students > 0 else 0
+        
+        grades_attendance.append({
+            'name': grade.name,
+            'total': grade_students,
+            'present': grade_present,
+            'percentage': grade_percentage
+        })
+    
+    # Monthly enrollment trend (last 30 days)
+    monthly_enrollment = []
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        day_enrollments = Student.objects.filter(
+            created_at__date=day,
+            status='ACTIVE'
+        ).count()
+        
+        if day_enrollments > 0:  # Only add days with enrollments
+            monthly_enrollment.append({
+                'date': day.strftime('%b %d'),
+                'count': day_enrollments
+            })
+    
+    # Get recent attendance records
+    recent_attendance = today_attendance.filter(
+        time_in__isnull=False
+    ).select_related('student', 'student__grade', 'student__section').order_by('-time_in')[:5]
+    
+    # Yesterday comparison
+    yesterday = today - timedelta(days=1)
+    yesterday_attendance = Attendance.objects.filter(
+        date=yesterday,
+        status__in=['PRESENT', 'LATE']
+    ).count()
+    
+    if total_students > 0:
+        yesterday_percentage = round((yesterday_attendance / total_students) * 100, 1)
+        percentage_change = attendance_percentage - yesterday_percentage
+    else:
+        yesterday_percentage = 0
+        percentage_change = 0
     
     context = {
         'current_date': current_date,
-        'student_count': student_count,
-        'face_enrolled_count': face_enrolled_count,
-        'face_enrolled_percentage': round(face_enrolled_percentage),
-        'pending_enrollments': pending_enrollments
+        'current_date_formatted': current_date_formatted,
+        'stats': {
+            'total_students': total_students,
+            'inactive_students': inactive_students,
+            'face_enrolled_count': face_enrolled_count,
+            'face_enrolled_percentage': face_enrolled_percentage,
+            'present_count': present_count,
+            'late_count': late_count,
+            'absent_count': absent_count,
+            'excused_count': excused_count,
+            'attendance_percentage': attendance_percentage,
+            'percentage_change': percentage_change,
+        },
+        'students_without_face': students_without_face,
+        'students_without_face_total': students_without_face_total,
+        'recent_students': recent_students,
+        'recent_attendance': recent_attendance,
+        'last_7_days': json.dumps(last_7_days_data),
+        'grades_enrollment': grades_enrollment,
+        'grades_attendance': grades_attendance,
+        'monthly_enrollment': json.dumps(monthly_enrollment) if monthly_enrollment else json.dumps([]),
     }
     
     return render(request, 'registrar/dashboard.html', context)
