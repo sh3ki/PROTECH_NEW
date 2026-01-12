@@ -180,6 +180,7 @@ urlpatterns = [
     path('admin/settings/save-class-times/', admin_views.save_class_times, name='save_class_times'),
     path('admin/settings/save-notification-settings/', admin_views.save_notification_settings, name='save_notification_settings'),
     path('admin/settings/save-display-mode/', admin_views.save_display_mode, name='save_display_mode'),
+    path('admin/settings/save-spoof-proofing/', admin_views.save_spoof_proofing, name='save_spoof_proofing'),
     path('admin/settings/download-backup/', admin_views.download_database_backup, name='download_database_backup'),
     path('admin/settings/backup-status/', admin_views.get_backup_status, name='get_backup_status'),
 
@@ -218,6 +219,8 @@ urlpatterns = [
     path('principal/excused/export/', principal_views.export_principal_excused, name='principal_export_excused'),
     path('principal/calendar/', principal_views.principal_calendar, name='principal_calendar'),
     path('principal/calendar/events/', principal_views.get_principal_calendar_events, name='get_principal_calendar_events'),
+    path('principal/unauthorized-logs/', principal_views.principal_unauthorized_logs, name='principal_unauthorized_logs'),
+    path('principal/unauthorized-logs/latest/', principal_views.get_latest_principal_unauthorized_logs, name='principal_latest_unauthorized_logs'),
     path('principal/messages/', principal_views.principal_messages, name='principal_messages'),
     path('principal/settings/', principal_views.principal_settings, name='principal_settings'),
 
@@ -334,6 +337,7 @@ urlpatterns = [
     path('teacher/advisory/students/import/template/', advisory_teacher_views.download_advisory_student_template, name='download_advisory_student_template'),
     path('teacher/advisory/attendance/', advisory_teacher_views.teacher_advisory_attendance, name='teacher_advisory_attendance'),
     path('teacher/advisory/attendance/export/', advisory_teacher_views.export_advisory_attendance, name='export_advisory_attendance'),
+    path('teacher/advisory/attendance/history/<int:student_id>/', advisory_teacher_views.get_student_attendance_history, name='get_student_attendance_history'),
     path('teacher/advisory/excused/', advisory_teacher_views.teacher_advisory_excused, name='teacher_advisory_excused'),
     path('teacher/advisory/excused/export/', advisory_teacher_views.export_advisory_excused, name='export_advisory_excused'),
     path('teacher/advisory/calendar/', advisory_teacher_views.teacher_advisory_calendar, name='teacher_advisory_calendar'),
