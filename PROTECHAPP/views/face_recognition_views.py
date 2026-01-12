@@ -693,3 +693,48 @@ def save_unauthorized_face(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_unauthorized_log(request):
+    """Delete unauthorized face log(s)"""
+    try:
+        data = json.loads(request.body)
+        log_ids = data.get('log_ids', [])
+        
+        if not log_ids:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No log IDs provided'
+            }, status=400)
+        
+        # Get logs and delete associated photos
+        logs = UnauthorizedLog.objects.filter(id__in=log_ids)
+        deleted_count = 0
+        
+        for log in logs:
+            # Delete the photo file
+            try:
+                photo_path = os.path.join(settings.MEDIA_ROOT, log.photo_path)
+                if os.path.exists(photo_path):
+                    os.remove(photo_path)
+            except Exception as e:
+                print(f"Error deleting photo file: {e}")
+            
+            # Delete the database record
+            log.delete()
+            deleted_count += 1
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Successfully deleted {deleted_count} log(s)',
+            'deleted_count': deleted_count
+        })
+        
+    except Exception as e:
+        print(f"Error in delete_unauthorized_log: {e}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
