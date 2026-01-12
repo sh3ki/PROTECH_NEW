@@ -130,7 +130,8 @@
 <body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300">
     {% include 'components/toast_notification.html' %}
     
-    <div class="flex h-screen overflow-hidden">
+    <!-- Container: relative on mobile for overlay, flex on desktop for side-by-side -->
+    <div class="relative lg:flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
         <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-800/50 z-20 lg:hidden hidden" onclick="closeSidebar()"></div>
         
@@ -143,16 +144,16 @@
         })();
         </script>
         
-        <!-- Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transform -translate-x-full lg:translate-x-0 bg-primary lg:static lg:inset-0 flex flex-col" style="overflow-y: auto; overflow-x: visible;">
+        <!-- Sidebar - overlays on mobile, static on desktop -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 h-screen transform -translate-x-full lg:translate-x-0 bg-primary lg:static lg:inset-0 lg:h-full flex flex-col transition-transform duration-300 ease-in-out lg:transition-none" style="overflow-y: auto; overflow-x: visible;">
             {% block sidebar %}
                 <!-- This block will be overridden with the appropriate sidebar component -->
             {% endblock %}
         </aside>
         
-        <!-- Desktop collapse toggle button - positioned outside sidebar to overlay both sidebar and main content -->
-        <button id="sidebar-collapse-btn" class="hidden lg:flex fixed top-4 w-8 h-8 items-center justify-center text-white rounded-xl bg-primary" style="z-index: 49;" title="Toggle sidebar">
-            <svg id="chevron-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <!-- Toggle button - works for both mobile and desktop -->
+        <button id="sidebar-collapse-btn" class="flex fixed top-4 w-10 h-10 items-center justify-center text-white rounded-xl bg-primary shadow-lg hover:scale-105 active:scale-95 transition-all duration-200" style="z-index: 49;" title="Toggle sidebar">
+            <svg id="chevron-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             </svg>
         </button>
@@ -162,42 +163,47 @@
         (function() {
             const btn = document.getElementById('sidebar-collapse-btn');
             const icon = document.getElementById('chevron-icon');
+            const sidebar = document.getElementById('sidebar');
             
             if (btn) {
-                if (localStorage.getItem('sidebarCollapsed') === 'true') {
-                    // Collapsed state
-                    btn.style.left = '56px';
+                // Check screen size
+                const isMobile = window.innerWidth < 1024; // lg breakpoint
+                
+                if (isMobile) {
+                    // Mobile: button at ~1/4 screen width, sidebar hidden by default
+                    btn.style.left = '90px';
                     if (icon) {
+                        // Right-pointing chevron (closed state)
                         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
                     }
                 } else {
-                    // Expanded state
-                    btn.style.left = '240px';
-                    if (icon) {
-                        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                    // Desktop: position based on collapsed state
+                    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                        // Collapsed state
+                        btn.style.left = '56px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                        }
+                    } else {
+                        // Expanded state
+                        btn.style.left = '240px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                        }
                     }
                 }
             }
         })();
         </script>
         
-        <!-- Main content - This entire div will be replaced by AJAX -->
-        <div id="main-content-wrapper" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Main content - Full screen on mobile (absolute), flex-1 on desktop -->
+        <div id="main-content-wrapper" class="absolute inset-0 lg:relative lg:flex-1 flex flex-col overflow-hidden">
             <!-- Top Navigation -->
             <header class="bg-white dark:bg-dark shadow-sm z-10">
                 <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
-                        <!-- Mobile menu button -->
-                        <div class="flex items-center lg:hidden">
-                            <button id="sidebar-open-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none" onclick="openSidebar()">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <!-- Page title -->
-                        <div class="flex-1 flex items-center justify-center lg:justify-start">
+                        <!-- Page title (centered on mobile with padding for toggle button, left on desktop) -->
+                        <div class="flex-1 flex items-center justify-center lg:justify-start pl-10 lg:pl-0">
                             <h1 class="text-xl font-semibold text-gray-800 dark:text-white">{% block page_title %}Dashboard{% endblock %}</h1>
                         </div>
                         
@@ -319,15 +325,51 @@
         
         // Mobile sidebar functions
         function openSidebar() {
-            document.getElementById('sidebar').classList.remove('-translate-x-full');
-            document.getElementById('sidebar').classList.add('translate-x-0');
-            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const btn = document.getElementById('sidebar-collapse-btn');
+            const icon = document.getElementById('chevron-icon');
+            
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            backdrop.classList.remove('hidden');
+            
+            // Update button position and icon for mobile open state
+            if (btn) {
+                btn.style.transition = 'left 0.3s ease-in-out';
+                btn.style.left = '246px'; // 256px (w-64) - 10px margin
+                if (icon) {
+                    // Left-pointing chevron (open state)
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                }
+                setTimeout(() => {
+                    btn.style.transition = '';
+                }, 300);
+            }
         }
         
         function closeSidebar() {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('sidebar').classList.remove('translate-x-0');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const btn = document.getElementById('sidebar-collapse-btn');
+            const icon = document.getElementById('chevron-icon');
+            
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            backdrop.classList.add('hidden');
+            
+            // Update button position and icon for mobile closed state
+            if (btn) {
+                btn.style.transition = 'left 0.3s ease-in-out';
+                btn.style.left = '90px';
+                if (icon) {
+                    // Right-pointing chevron (closed state)
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                }
+                setTimeout(() => {
+                    btn.style.transition = '';
+                }, 300);
+            }
         }
         
         // Toast notification functions are now provided by the toast_notification.html component
