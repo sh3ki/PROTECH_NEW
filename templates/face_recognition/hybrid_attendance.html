@@ -597,6 +597,9 @@
     
     <!-- face-api.js for detection and embeddings -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
+    <script>
+        window.SPOOF_PROOF_ENABLED = {{ spoof_proof_enabled|yesno:"true,false" }};
+    </script>
     
     <!-- Hybrid Face Recognition System - Dual camera support for TIME IN and TIME OUT -->
     <script src="{% static 'js/hybrid-face-recognition.js' %}"></script>
