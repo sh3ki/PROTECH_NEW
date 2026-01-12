@@ -685,12 +685,8 @@ def principal_announcements(request):
 @login_required
 @user_passes_test(is_principal)
 def principal_messages(request):
-    """View for messages"""
-    from django.conf import settings
-    context = {
-        'firebase_config': settings.FIREBASE_WEB_CONFIG
-    }
-    return render(request, 'principal/messages.html', context)
+    """View for messages - now using PostgreSQL with polling"""
+    return render(request, 'principal/messages.html')
 
 @login_required
 @user_passes_test(is_principal)
