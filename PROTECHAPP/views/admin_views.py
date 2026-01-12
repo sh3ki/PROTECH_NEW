@@ -2286,6 +2286,7 @@ def search_sections(request):
     advisor_filter = request.GET.get('advisor', '')
     page_number = request.GET.get('page', 1)
     items_per_page = request.GET.get('items_per_page', 10)
+    get_all = request.GET.get('all', '').lower() == 'true'  # For print/export - get all records
     
     # Base queryset - order by created_at DESC (newest first)
     sections = Section.objects.select_related('grade').order_by('-created_at')
@@ -2321,6 +2322,38 @@ def search_sections(request):
     
     # Get total count for pagination
     total_count = sections.count()
+    
+    # If 'all=true', return all sections without pagination (for print/export)
+    if get_all:
+        section_data = []
+        for section in sections:
+            # Get advisor info from AdvisoryAssignment table
+            advisor_name = None
+            advisory_assignment = AdvisoryAssignment.objects.filter(
+                section_id=section.id
+            ).select_related('teacher').first()
+            
+            if advisory_assignment and advisory_assignment.teacher:
+                advisor_name = f"{advisory_assignment.teacher.first_name} {advisory_assignment.teacher.last_name}"
+            else:
+                advisor_name = "No Advisor"
+            
+            section_data.append({
+                'id': section.id,
+                'name': section.name,
+                'grade_id': section.grade.id,
+                'grade_name': section.grade.name,
+                'student_count': section.students_count,
+                'advisor_name': advisor_name,
+                'created_at': section.created_at.strftime('%Y-%m-%d'),
+                'created_at_display': section.created_at.strftime('%b %d, %Y'),
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'sections': section_data,
+            'total_count': total_count,
+        })
     
     # Parse page number and items_per_page
     try:
@@ -7918,9 +7951,10 @@ def export_sections(request):
         grade_filter = request.GET.get('grade', '').strip()
         advisor_filter = request.GET.get('advisor', '').strip()
         
-        # Use select_related for grade and prefetch advisory assignments (ordered by ID for backup/restore)
+        # Use select_related for grade and prefetch advisory assignments and students for efficiency
         sections = Section.objects.select_related('grade').prefetch_related(
-            'advisory_assignments__teacher'
+            'advisory_assignments__teacher',
+            'students'
         ).all().order_by('id')
         
         if search_query:
@@ -7938,21 +7972,26 @@ def export_sections(request):
             elif advisor_filter == 'without_advisor':
                 sections = sections.filter(advisory_assignments__isnull=True)
         
-        headers = ["ID", "Section Name", "Grade", "Room Number", "Capacity"]
+        headers = ["Section Name", "Grade", "Total Students", "Advisor", "Created At"]
         
         data_rows = []
         for section in sections:
-            # Room number and capacity are optional fields on the import template.
-            # The `Section` model does not currently store these by default, so export blank values.
-            room_number = getattr(section, 'room_number', '') or ''
-            capacity = getattr(section, 'capacity', '') or ''
+            # Get student count
+            student_count = section.students.count()
+            
+            # Get advisor name
+            advisor_assignment = section.advisory_assignments.first()
+            advisor_name = advisor_assignment.teacher.get_full_name() if advisor_assignment and advisor_assignment.teacher else "No Advisor"
+            
+            # Format created date
+            created_at = section.created_at.strftime('%b %d, %Y') if section.created_at else ""
 
             data_rows.append([
-                str(section.id),
                 section.name,
                 section.grade.name if section.grade else "",
-                room_number,
-                str(capacity)
+                str(student_count),
+                advisor_name,
+                created_at
             ])
         
         if export_format == 'pdf':
