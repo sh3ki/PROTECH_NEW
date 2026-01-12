@@ -16,7 +16,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">School-Wide Overview</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ current_date }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{% if current_date %}{{ current_date }}{% else %}{{ "now"|date:"l, F d, Y" }}{% endif %}</p>
         </div>
     </div>
 
