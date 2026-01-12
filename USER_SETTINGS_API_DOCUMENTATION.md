@@ -363,15 +363,16 @@ ERROR 2026-01-12 10:32:00 user_settings_views Error updating profile: Validation
 
 ## Deployment Checklist
 
-- [ ] Ensure `MEDIA_ROOT` directory exists and is writable
-- [ ] Configure web server to serve `/media/` files
-- [ ] Set up backup for profile pictures
+- [ ] Ensure `private_profile_pics` directory exists in BASE_DIR and is writable
+- [ ] Configure `/profile-pics/` URL route in urls.py (should already exist from admin implementation)
+- [ ] Set up backup for profile pictures in `private_profile_pics/`
 - [ ] Configure proper file permissions (755 for directories, 644 for files)
 - [ ] Enable HTTPS for secure password transmission
 - [ ] Set up log rotation for application logs
 - [ ] Test with real user accounts
 - [ ] Verify CSRF protection is enabled
 - [ ] Check email validation works with your domain
+- [ ] Verify profile picture serving view requires authentication
 
 ---
 
