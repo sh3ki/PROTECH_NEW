@@ -19,6 +19,7 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from datetime import timedelta
 import io
 
 def is_principal(user):
@@ -34,19 +35,136 @@ def principal_grades_redirect(request):
 @login_required
 @user_passes_test(is_principal)
 def principal_dashboard(request):
-    """View for principal dashboard"""
-    current_date = timezone.now()
+    """View for principal dashboard with comprehensive attendance tracking"""
+    from django.db.models import Count, Q, Avg
+    import json
     
-    # Example data for dashboard
-    attendance_rate = 94.8
-    student_count = Student.objects.count()
-    teacher_count = CustomUser.objects.filter(role=UserRole.TEACHER).count()
+    current_date = timezone.now()
+    current_date_formatted = current_date.strftime('%A, %B %d, %Y')
+    today = current_date.date()
+    
+    # Get all active students
+    total_students = Student.objects.filter(status='active').count()
+    
+    # Get all teachers and sections
+    total_teachers = CustomUser.objects.filter(role=UserRole.TEACHER).count()
+    total_sections = Section.objects.count()
+    
+    # Calculate today's attendance statistics
+    attendance_today = Attendance.objects.filter(date=today)
+    present_today = attendance_today.filter(status='present').count()
+    late_today = attendance_today.filter(status='late').count()
+    absent_today = total_students - attendance_today.values('student').distinct().count()
+    
+    # Calculate attendance rate
+    if total_students > 0:
+        attendance_rate = round((present_today / total_students) * 100, 1)
+    else:
+        attendance_rate = 0
+    
+    # Get last 7 days attendance data for chart (same format as registrar)
+    chart_data = []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        att_records = Attendance.objects.filter(date=date)
+        present_count = att_records.filter(status='present').count()
+        absent_count = total_students - att_records.values('student').distinct().count()
+        percentage = round((present_count / total_students * 100), 1) if total_students > 0 else 0
+        
+        chart_data.append({
+            'date': date.strftime('%a'),
+            'present': present_count,
+            'absent': absent_count,
+            'percentage': percentage
+        })
+    
+    # Calculate percentage change for badge
+    if len(chart_data) >= 2:
+        percentage_change = round(chart_data[-1]['percentage'] - chart_data[0]['percentage'], 1)
+    else:
+        percentage_change = 0
+    
+    # Get attendance by grade
+    grades_attendance = []
+    grades = Grade.objects.all().order_by('name')
+    for grade in grades:
+        students_in_grade = Student.objects.filter(grade=grade, status='active')
+        total_grade_students = students_in_grade.count()
+        
+        if total_grade_students > 0:
+            present_grade = Attendance.objects.filter(
+                date=today,
+                status='present',
+                student__grade=grade
+            ).values('student').distinct().count()
+            
+            grade_rate = round((present_grade / total_grade_students) * 100, 1)
+        else:
+            grade_rate = 0
+            present_grade = 0
+        
+        grades_attendance.append({
+            'grade': grade.name,
+            'total': total_grade_students,
+            'present': present_grade,
+            'rate': grade_rate
+        })
+    
+    # Get attendance by section (top 5 and bottom 5)
+    sections_attendance = []
+    sections = Section.objects.select_related('grade').all()
+    
+    for section in sections:
+        students_in_section = Student.objects.filter(section=section, status='active')
+        total_section_students = students_in_section.count()
+        
+        if total_section_students > 0:
+            present_section = Attendance.objects.filter(
+                date=today,
+                status='present',
+                student__section=section
+            ).values('student').distinct().count()
+            
+            section_rate = round((present_section / total_section_students) * 100, 1)
+            
+            # Get advisory teacher
+            advisory = AdvisoryAssignment.objects.filter(section=section).first()
+            teacher_name = f"{advisory.teacher.first_name} {advisory.teacher.last_name}" if advisory else "No Adviser"
+            
+            sections_attendance.append({
+                'section': f"{section.grade.name} - {section.name}",
+                'teacher': teacher_name,
+                'total': total_section_students,
+                'present': present_section,
+                'rate': section_rate
+            })
+    
+    # Sort sections by rate
+    sections_attendance.sort(key=lambda x: x['rate'], reverse=True)
+    top_sections = sections_attendance[:5]
+    bottom_sections = list(reversed(sections_attendance[-5:])) if len(sections_attendance) > 5 else []
+    
+    # Get recent check-ins (last 10)
+    recent_checkins = attendance_today.select_related(
+        'student', 'student__grade', 'student__section'
+    ).order_by('-time_in')[:10]
     
     context = {
         'current_date': current_date,
+        'current_date_formatted': current_date_formatted,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_sections': total_sections,
         'attendance_rate': attendance_rate,
-        'student_count': student_count,
-        'teacher_count': teacher_count
+        'present_today': present_today,
+        'late_today': late_today,
+        'absent_today': absent_today,
+        'chart_data': json.dumps(chart_data),
+        'percentage_change': percentage_change,
+        'grades_attendance': grades_attendance,
+        'top_sections': top_sections,
+        'bottom_sections': bottom_sections,
+        'recent_checkins': recent_checkins,
     }
     
     return render(request, 'principal/dashboard.html', context)
