@@ -611,15 +611,10 @@
     let pollInterval = 5000; // Poll every 5 seconds
     let pollTimeout = null;
     let lastPolledLogs = [];
-    let pollingEnabled = true;
     
     function startRealtimePolling() {
         if (pollTimeout) {
             clearTimeout(pollTimeout);
-        }
-        
-        if (!pollingEnabled) {
-            return;
         }
         
         pollTimeout = setTimeout(async () => {
@@ -638,17 +633,6 @@
                 
                 // Fetch latest unauthorized logs
                 const response = await fetch(`/admin/unauthorized-logs/latest/?${params.toString()}`);
-                
-                // Check if endpoint exists
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        console.warn('Polling endpoint not found. Disabling real-time updates. Please implement /admin/unauthorized-logs/latest/ endpoint.');
-                        pollingEnabled = false;
-                        return;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
                 const data = await response.json();
                 
                 if (data.status === 'success' && data.logs && data.logs.length > 0) {
@@ -660,7 +644,7 @@
                     const hasNewLogs = data.logs.some(log => !currentLogIds.includes(log.id));
                     
                     if (hasNewLogs) {
-                        // Reload the page to show new logs
+                        // Reload immediately to show new logs (keeping current filters)
                         const search = searchInput ? searchInput.value : '';
                         const camera = cameraSelect ? cameraSelect.value : '';
                         const date = dateInput ? dateInput.value : '';
@@ -671,25 +655,17 @@
                         if (camera) reloadUrl += '&camera=' + encodeURIComponent(camera);
                         if (date) reloadUrl += '&date=' + encodeURIComponent(date);
                         
-                        showToast('New unauthorized face detected!', 'warning');
-                        
-                        // Reload after a short delay to show the toast
-                        setTimeout(() => {
-                            window.location.href = reloadUrl;
-                        }, 1000);
+                        // Reload immediately for real-time update
+                        window.location.href = reloadUrl;
+                        return; // Stop polling after triggering reload
                     }
                 }
             } catch (error) {
-                // Silently fail - don't spam console
-                if (pollingEnabled) {
-                    console.warn('Polling temporarily unavailable:', error.message);
-                }
+                console.error('Error polling for unauthorized logs:', error);
             }
             
-            // Schedule next poll if still enabled
-            if (pollingEnabled) {
-                startRealtimePolling();
-            }
+            // Schedule next poll
+            startRealtimePolling();
         }, pollInterval);
     }
     
