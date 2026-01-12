@@ -69,12 +69,8 @@ def teacher_non_advisory_excused(request):
 @login_required
 @user_passes_test(is_teacher)
 def teacher_non_advisory_messages(request):
-    """View for messages"""
-    from django.conf import settings
-    context = {
-        'firebase_config': settings.FIREBASE_WEB_CONFIG
-    }
-    return render(request, 'teacher/non_advisory/messages.html', context)
+    """View for messages - now using PostgreSQL with polling"""
+    return render(request, 'teacher/non_advisory/messages.html')
 
 @login_required
 @user_passes_test(is_teacher)
