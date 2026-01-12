@@ -1420,6 +1420,13 @@ function updateTable(records) {
     const tableBody = document.querySelector('#attendance-table tbody');
     tableBody.innerHTML = '';
     
+    // Sort records by student name (A to Z)
+    records.sort((a, b) => {
+        const nameA = `${a.student.first_name} ${a.student.last_name}`.toLowerCase();
+        const nameB = `${b.student.first_name} ${b.student.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+    
     records.forEach(record => {
         // Create status badge
         let statusBadge = '';
