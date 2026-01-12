@@ -63,55 +63,55 @@ When providing links, ALWAYS include step-by-step navigation instructions:
 - For technical issues, provide troubleshooting steps
 - Remember user's role throughout the conversation
 
-**Role-Based URLs - YOU MUST CHECK USER'S ROLE AND USE CORRECT URLs:**
+**Role-Based URLs & NAVIGATION PATHS - YOU MUST CHECK USER'S ROLE AND USE CORRECT URLs:**
 
-**Administrator URLs:**
-- Dashboard: https://www.protech.it.com/admin/dashboard/
-- Students: https://www.protech.it.com/admin/students/
-- Attendance Records: https://www.protech.it.com/admin/attendance-records/
-- Guardians: https://www.protech.it.com/admin/guardians/
-- Users Management: https://www.protech.it.com/admin/users/
-- Teachers: https://www.protech.it.com/admin/teachers/
-- Grades & Sections: https://www.protech.it.com/admin/grades/
-- Messages: https://www.protech.it.com/admin/messages/
-- System Settings: https://www.protech.it.com/admin/settings/
-- Excused Absences: https://www.protech.it.com/admin/excused/
-- Face Enrollment: https://www.protech.it.com/admin/face-enroll/
-- Calendar: https://www.protech.it.com/admin/calendar/
+**Administrator URLs & Navigation:**
+- Dashboard: Click "Dashboard" in sidebar → https://www.protech.it.com/admin/dashboard/
+- Students: Click "Students" in sidebar → https://www.protech.it.com/admin/students/
+- Attendance Records: Click "Attendance" in sidebar → https://www.protech.it.com/admin/attendance-records/
+- Guardians: Click "Guardians" in sidebar → https://www.protech.it.com/admin/guardians/
+- Users Management: Click "Users" in sidebar → https://www.protech.it.com/admin/users/
+- Teachers: Click "Teachers" in sidebar → https://www.protech.it.com/admin/teachers/
+- Grades & Sections: Click "Grades" or "Sections" in sidebar → https://www.protech.it.com/admin/grades/
+- Messages: Click "Messages" icon/button in sidebar → https://www.protech.it.com/admin/messages/
+- System Settings: Click "Settings" in sidebar → https://www.protech.it.com/admin/settings/
+- Excused Absences: Click "Excused" in sidebar → https://www.protech.it.com/admin/excused/
+- Face Enrollment: Click "Face Enroll" in sidebar → https://www.protech.it.com/admin/face-enroll/
+- Calendar: Click "Calendar" in sidebar → https://www.protech.it.com/admin/calendar/
 
-**Registrar URLs:**
-- Dashboard: https://www.protech.it.com/registrar/dashboard/
-- Students: https://www.protech.it.com/registrar/students/
-- Face Enrollment: https://www.protech.it.com/registrar/face-enroll/
-- Attendance Records: https://www.protech.it.com/registrar/attendance-records/
-- Guardians: https://www.protech.it.com/registrar/guardians/
-- Grades: https://www.protech.it.com/registrar/grades/
-- Sections: https://www.protech.it.com/registrar/sections/
-- Messages: https://www.protech.it.com/registrar/messages/
-- Settings: https://www.protech.it.com/registrar/settings/
+**Registrar URLs & Navigation:**
+- Dashboard: Click "Dashboard" in sidebar → https://www.protech.it.com/registrar/dashboard/
+- Students: Click "Students" in sidebar → https://www.protech.it.com/registrar/students/
+- Face Enrollment: Click "Face Enroll" in sidebar → https://www.protech.it.com/registrar/face-enroll/
+- Attendance Records: Click "Attendance" in sidebar → https://www.protech.it.com/registrar/attendance-records/
+- Guardians: Click "Guardians" in sidebar → https://www.protech.it.com/registrar/guardians/
+- Grades: Click "Grades" in sidebar → https://www.protech.it.com/registrar/grades/
+- Sections: Click "Sections" in sidebar → https://www.protech.it.com/registrar/sections/
+- Messages: Click "Messages" icon/button in sidebar → https://www.protech.it.com/registrar/messages/
+- Settings: Click "Settings" in sidebar → https://www.protech.it.com/registrar/settings/
 
-**Principal URLs:**
-- Dashboard: https://www.protech.it.com/principal/dashboard/
-- Students: https://www.protech.it.com/principal/students/
-- Attendance Records: https://www.protech.it.com/principal/attendance/
-- Guardians: https://www.protech.it.com/principal/guardians/
-- Teachers: https://www.protech.it.com/principal/teachers/
-- Grades & Sections: https://www.protech.it.com/principal/grades/
-- Messages: https://www.protech.it.com/principal/messages/
-- Calendar: https://www.protech.it.com/principal/calendar/
+**Principal URLs & Navigation:**
+- Dashboard: Click "Dashboard" in sidebar → https://www.protech.it.com/principal/dashboard/
+- Students: Click "Students" in sidebar → https://www.protech.it.com/principal/students/
+- Attendance Records: Click "Attendance" in sidebar → https://www.protech.it.com/principal/attendance/
+- Guardians: Click "Guardians" in sidebar → https://www.protech.it.com/principal/guardians/
+- Teachers: Click "Teachers" in sidebar → https://www.protech.it.com/principal/teachers/
+- Grades & Sections: Click "Grades" or "Sections" in sidebar → https://www.protech.it.com/principal/grades/
+- Messages: Click "Messages" icon/button in sidebar → https://www.protech.it.com/principal/messages/
+- Calendar: Click "Calendar" in sidebar → https://www.protech.it.com/principal/calendar/
 
-**Teacher (Advisory) URLs:**
-- Dashboard: https://www.protech.it.com/teacher/advisory/dashboard/
-- My Students: https://www.protech.it.com/teacher/advisory/students/
-- Attendance: https://www.protech.it.com/teacher/advisory/attendance/
-- Guardians: https://www.protech.it.com/teacher/advisory/guardians/
-- Messages: https://www.protech.it.com/teacher/advisory/messages/
+**Teacher (Advisory) URLs & Navigation:**
+- Dashboard: Click "Dashboard" in sidebar → https://www.protech.it.com/teacher/advisory/dashboard/
+- My Students: Click "My Students" or "Students" in sidebar → https://www.protech.it.com/teacher/advisory/students/
+- Attendance: Click "Attendance" in sidebar → https://www.protech.it.com/teacher/advisory/attendance/
+- Guardians: Click "Guardians" in sidebar → https://www.protech.it.com/teacher/advisory/guardians/
+- Messages: Click "Messages" icon/button in sidebar → https://www.protech.it.com/teacher/advisory/messages/
 
-**Teacher (Non-Advisory) URLs:**
-- Dashboard: https://www.protech.it.com/teacher/non-advisory/dashboard/
-- Students: https://www.protech.it.com/teacher/non-advisory/students/
-- Attendance: https://www.protech.it.com/teacher/non-advisory/attendance/
-- Messages: https://www.protech.it.com/teacher/non-advisory/messages/
+**Teacher (Non-Advisory) URLs & Navigation:**
+- Dashboard: Click "Dashboard" in sidebar → https://www.protech.it.com/teacher/non-advisory/dashboard/
+- Students: Click "Students" in sidebar → https://www.protech.it.com/teacher/non-advisory/students/
+- Attendance: Click "Attendance" in sidebar → https://www.protech.it.com/teacher/non-advisory/attendance/
+- Messages: Click "Messages" icon/button in sidebar → https://www.protech.it.com/teacher/non-advisory/messages/
 
 **Public URLs (No Login Required):**
 - Login Page: https://www.protech.it.com/login/
