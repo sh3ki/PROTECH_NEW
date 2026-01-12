@@ -8504,21 +8504,35 @@ def import_sections(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid file type'}, status=400)
         
         try:
-            df = pd.read_csv(file) if file_ext == '.csv' else pd.read_excel(file)
+            # Skip first 4 rows (title, instructions, field info, warning) and use row 5 as header
+            df = pd.read_csv(file, skiprows=4) if file_ext == '.csv' else pd.read_excel(file, skiprows=4)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Error reading file: {str(e)}'}, status=400)
         
+        # Normalize column names: strip whitespace and make case-insensitive
         df.columns = df.columns.str.strip()
-        column_mapping = {
-            'Section Name': 'name',
-            'Grade': 'grade',
-            'Room Number': 'room_number',
-            'Capacity': 'capacity',
-            'Advisor': 'advisor',
-            'Total Students': 'total_students',
-            'ID': 'id',
-            'Created Date': 'created_date'
-        }
+        
+        # Create a case-insensitive column mapping
+        column_mapping = {}
+        for col in df.columns:
+            col_upper = col.upper()
+            if col_upper in ['SECTION NAME', 'SECTION_NAME']:
+                column_mapping[col] = 'name'
+            elif col_upper in ['GRADE', 'GRADE LEVEL', 'GRADE_LEVEL']:
+                column_mapping[col] = 'grade'
+            elif col_upper in ['ROOM NUMBER', 'ROOM_NUMBER']:
+                column_mapping[col] = 'room_number'
+            elif col_upper == 'CAPACITY':
+                column_mapping[col] = 'capacity'
+            elif col_upper == 'ADVISOR':
+                column_mapping[col] = 'advisor'
+            elif col_upper in ['TOTAL STUDENTS', 'TOTAL_STUDENTS']:
+                column_mapping[col] = 'total_students'
+            elif col_upper == 'ID':
+                column_mapping[col] = 'id'
+            elif col_upper in ['CREATED DATE', 'CREATED_DATE']:
+                column_mapping[col] = 'created_date'
+        
         df.rename(columns=column_mapping, inplace=True)
         
         required_columns = ['name', 'grade']
@@ -8622,61 +8636,142 @@ def import_sections(request):
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
 def download_sections_template(request):
-    """Generate and download Excel template for section import"""
+    """Generate and download Excel template for section import with grade dropdown"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
     import io
     
     wb = Workbook()
     ws = wb.active
     ws.title = "Sections Import Template"
     
-    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
-    header_font = Font(bold=True, color="FFFFFF", size=11)
-    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    border_style = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    center_alignment = Alignment(horizontal="center", vertical="center")
-    left_alignment = Alignment(horizontal="left", vertical="center")
+    # Color fills matching grade template
+    yellow_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    blue_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    white_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    gray_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
     
-    column_widths = [8, 18, 15, 12, 10]
-    for idx, width in enumerate(column_widths, start=1):
-        ws.column_dimensions[get_column_letter(idx)].width = width
+    title_font = Font(bold=True, size=14, color="000000")
+    header_font = Font(bold=True, size=11, color="FFFFFF")
+    normal_font = Font(size=10, color="000000")
+    bold_font = Font(bold=True, size=10, color="000000")
     
-    headers = ["ID", "Section Name", "Grade", "Room Number", "Capacity"]
-    ws.append(headers)
+    center_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    thin_border = Border(
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
+    )
+    
+    # Set column widths
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 25
+    
+    # Row 1: Title
+    ws['A1'] = '📚 BULK SECTION IMPORT TEMPLATE'
+    ws.merge_cells('A1:B1')
+    ws['A1'].font = title_font
+    ws['A1'].fill = yellow_fill
+    ws['A1'].alignment = center_alignment
+    ws['A1'].border = thin_border
     ws.row_dimensions[1].height = 25
     
-    for cell in ws[1]:
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = header_alignment
-        cell.border = border_style
+    # Row 2: Instructions
+    ws['A2'] = 'Instructions: Fill in section names and select grade levels from dropdown. Section Name + Grade combination must be unique.'
+    ws.merge_cells('A2:B2')
+    ws['A2'].font = normal_font
+    ws['A2'].fill = yellow_fill
+    ws['A2'].alignment = left_alignment
+    ws['A2'].border = thin_border
+    ws.row_dimensions[2].height = 40
     
+    # Row 3: Field info
+    ws['A3'] = 'Required Fields: SECTION NAME and GRADE LEVEL'
+    ws.merge_cells('A3:B3')
+    ws['A3'].font = bold_font
+    ws['A3'].fill = yellow_fill
+    ws['A3'].alignment = left_alignment
+    ws['A3'].border = thin_border
+    ws.row_dimensions[3].height = 20
+    
+    # Row 4: Warning
+    ws['A4'] = '⚠️ Important: Use the dropdown in Grade Level column. Section Name + Grade combination must be unique.'
+    ws.merge_cells('A4:B4')
+    ws['A4'].font = normal_font
+    ws['A4'].fill = yellow_fill
+    ws['A4'].alignment = left_alignment
+    ws['A4'].border = thin_border
+    ws.row_dimensions[4].height = 30
+    
+    # Row 5: Headers
+    ws['A5'] = 'SECTION NAME'
+    ws['A5'].font = header_font
+    ws['A5'].fill = blue_fill
+    ws['A5'].alignment = center_alignment
+    ws['A5'].border = thin_border
+    
+    ws['B5'] = 'GRADE LEVEL'
+    ws['B5'].font = header_font
+    ws['B5'].fill = blue_fill
+    ws['B5'].alignment = center_alignment
+    ws['B5'].border = thin_border
+    ws.row_dimensions[5].height = 25
+    
+    # Get all grades from database for dropdown
+    grades = Grade.objects.all().order_by('id')
+    grade_names = [grade.name for grade in grades]
+    
+    # Create data validation (dropdown) for Grade Level column
+    if grade_names:
+        # Format: formula1 should be '"value1,value2,value3"' (entire list in quotes)
+        grade_list = ','.join(grade_names)
+        dv = DataValidation(type="list", formula1=f'"{grade_list}"', allow_blank=False)
+        dv.error = 'Please select a valid grade from the dropdown'
+        dv.errorTitle = 'Invalid Grade'
+        dv.prompt = 'Select a grade from the dropdown'
+        dv.promptTitle = 'Grade Selection'
+        # Apply validation to column B starting from row 6 for 100 rows
+        ws.add_data_validation(dv)
+        dv.add('B6:B105')
+    
+    # Sample data rows
     sample_data = [
-        ["", "Section A", "Grade 7", "101", "40"],
-        ["25", "Section B", "Grade 7", "102", "40"],
-        ["", "Section A", "Grade 8", "201", "35"],
+        ['Section A', 'Grade 7'],
+        ['Section B', 'Grade 7'],
+        ['Section A', 'Grade 8'],
+        ['Section B', 'Grade 8'],
+        ['Section A', 'Grade 9'],
+        ['Section B', 'Grade 9'],
     ]
     
-    for row_data in sample_data:
-        ws.append(row_data)
+    for idx, (section_name, grade_name) in enumerate(sample_data, start=6):
+        ws[f'A{idx}'] = section_name
+        ws[f'A{idx}'].font = normal_font
+        ws[f'A{idx}'].fill = white_fill if idx % 2 == 0 else gray_fill
+        ws[f'A{idx}'].alignment = left_alignment
+        ws[f'A{idx}'].border = thin_border
+        
+        ws[f'B{idx}'] = grade_name
+        ws[f'B{idx}'].font = normal_font
+        ws[f'B{idx}'].fill = white_fill if idx % 2 == 0 else gray_fill
+        ws[f'B{idx}'].alignment = left_alignment
+        ws[f'B{idx}'].border = thin_border
+        ws.row_dimensions[idx].height = 20
     
-    for row_idx in range(2, ws.max_row + 1):
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
-            cell.border = border_style
-            # center ID and Capacity (cols A and E)
-            cell.alignment = center_alignment if col_idx in [1, 5] else left_alignment
-    
-    ws.freeze_panes = ws['A2']
+    # Freeze panes at row 5 (header row)
+    ws.freeze_panes = 'A6'
     
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
     
     response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="sections_import_template_{datetime.now().strftime("%Y%m%d")}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="sections_import_template_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
     return response
 
 
