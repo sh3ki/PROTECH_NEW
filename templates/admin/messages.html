@@ -232,22 +232,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Firebase Web SDK for Real-time Listeners -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-<!-- Firebase Configuration -->
-<script>
-const firebaseConfig = {
-    apiKey: "{{ firebase_config.apiKey }}",
-    authDomain: "{{ firebase_config.authDomain }}",
-    projectId: "{{ firebase_config.projectId }}",
-    storageBucket: "{{ firebase_config.storageBucket }}",
-    messagingSenderId: "{{ firebase_config.messagingSenderId }}",
-    appId: "{{ firebase_config.appId }}"
-};
-</script>
-
-<!-- Real-time Messaging (with Firebase listeners) -->
+<!-- PostgreSQL-based Real-time Messaging (HTTP Polling) -->
 <script src="{% static 'js/realtime-messaging.js' %}"></script>
 {% endblock %}
