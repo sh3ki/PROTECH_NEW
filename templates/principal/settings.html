@@ -27,8 +27,8 @@
         <div class="flex items-center space-x-6">
             <div class="relative">
                 <div id="profile-picture-preview" class="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-4xl font-bold shadow-lg overflow-hidden">
-                    {% if user.profile_picture %}
-                        <img src="{{ user.profile_picture.url }}" alt="Profile" class="w-full h-full object-cover">
+                    {% if user.profile_pic %}
+                        <img src="/profile-pics/{{ user.profile_pic }}/" alt="Profile" class="w-full h-full object-cover">
                     {% else %}
                         <span>{{ user.first_name|first|upper|default:user.username|first|upper }}{{ user.last_name|first|upper|default:"" }}</span>
                     {% endif %}
@@ -179,17 +179,61 @@
             </svg>
             Danger Zone
         </h3>
-        <p class="text-sm text-red-800 dark:text-red-300 mb-4">
-            Once you delete your account, there is no going back. Please be certain.
-        </p>
-        <button onclick="openDeleteModal()" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm hover:shadow-md">
-            <span class="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        
+        <!-- Deactivate Account Section -->
+        <div class="mb-6 pb-6 border-b border-red-200 dark:border-red-800">
+            <p class="text-sm text-red-800 dark:text-red-300 mb-3">
+                Deactivate your account to temporarily disable login access. You can be reactivated by an administrator.
+            </p>
+            <button onclick="openDeactivateModal()" class="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium shadow-sm hover:shadow-md">
+                <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                    Deactivate Account
+                </span>
+            </button>
+        </div>
+        
+        <!-- Delete Account Section -->
+        <div>
+            <p class="text-sm text-red-800 dark:text-red-300 mb-3">
+                Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <button onclick="openDeleteModal()" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm hover:shadow-md">
+                <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Account
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Deactivate Account Confirmation Modal -->
+<div id="deactivate-account-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeDeactivateModal()" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
-                Delete Account
-            </span>
-        </button>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Deactivate Account?</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Your account will be temporarily disabled. You will not be able to login until an administrator reactivates your account.</p>
+                <div class="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p class="text-sm text-orange-800 dark:text-orange-300">
+                        <strong>Note:</strong> This action does not delete any data. Your account can be reactivated by an administrator.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeDeactivateModal()" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" onclick="confirmDeactivate()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">Deactivate</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -224,58 +268,187 @@
     </div>
 </div>
 
+<!-- Confirmation Modal for Profile Picture Upload -->
+<div id="upload-picture-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeUploadPictureModal()" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Upload Profile Picture?</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Are you sure you want to update your profile picture?</p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeUploadPictureModal()" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" onclick="confirmUploadPicture()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal for Profile Picture Removal -->
+<div id="remove-picture-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeRemovePictureModal()" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Remove Profile Picture?</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Your profile picture will be removed and replaced with your initials.</p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeRemovePictureModal()" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" onclick="confirmRemovePicture()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal for Profile Update -->
+<div id="update-profile-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeUpdateProfileModal()" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Save Profile Changes?</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Are you sure you want to update your personal information?</p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeUpdateProfileModal()" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" onclick="confirmUpdateProfile()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal for Password Change -->
+<div id="change-password-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeChangePasswordModal()" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Change Password?</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Are you sure you want to change your password?</p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeChangePasswordModal()" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" onclick="confirmChangePassword()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Change Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// Profile Picture Upload
-document.getElementById('profile-picture-input').addEventListener('change', async function(e) {
+document.addEventListener('DOMContentLoaded', function() {
+    let pendingProfilePicture = null;
+    let pendingProfileData = null;
+    let pendingPasswordData = null;
+
+    // Profile Picture Upload
+    document.getElementById('profile-picture-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-        showError('File size must be less than 5MB');
+        showToast('File size must be less than 5MB', 'error');
+        e.target.value = '';
         return;
     }
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-        showError('Please upload an image file');
+        showToast('Please upload an image file', 'error');
+        e.target.value = '';
         return;
     }
     
     // Preview image
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('profile-picture-preview').innerHTML = 
+            document.getElementById('profile-picture-preview').innerHTML = 
             `<img src="${e.target.result}" alt="Profile" class="w-full h-full object-cover">`;
     };
     reader.readAsDataURL(file);
     
-    // Upload image
-    const formData = new FormData();
-    formData.append('profile_picture', file);
-    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    // Store file for confirmation
+    pendingProfilePicture = file;
     
-    try {
-        const response = await fetch('/api/update-profile-picture/', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        if (response.ok && data.success) {
-            showSuccess('Profile picture updated successfully');
-        } else {
-            showError(data.message || 'Failed to update profile picture');
-        }
-    } catch (error) {
-        showError('An error occurred while uploading');
-    }
-});
+    // Show confirmation modal
+    openUploadPictureModal();
+    });
 
-// Remove Profile Picture
-async function removeProfilePicture() {
-    if (!confirm('Are you sure you want to remove your profile picture?')) return;
-    
+    function openUploadPictureModal() {
+        document.getElementById('upload-picture-modal').classList.remove('hidden');
+    }
+
+    function closeUploadPictureModal() {
+        const modal = document.getElementById('upload-picture-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        // Reset file input and preview
+            document.getElementById('profile-picture-input').value = '';
+        pendingProfilePicture = null;
+        // Restore original picture if exists
+        {% if user.profile_pic %}
+            document.getElementById('profile-picture-preview').innerHTML = 
+            `<img src="/profile-pics/{{ user.profile_pic }}/" alt="Profile" class="w-full h-full object-cover">`;
+        {% else %}
+        const initial = '{{ user.first_name|first|upper|default:user.username|first|upper }}{{ user.last_name|first|upper|default:"" }}';
+            document.getElementById('profile-picture-preview').innerHTML = `<span>${initial}</span>`;
+        {% endif %}
+    }
+
+            async function confirmUploadPicture() {
+        if (!pendingProfilePicture) return;
+        
+        const formData = new FormData();
+        formData.append('profile_picture', pendingProfilePicture);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        try {
+            const response = await fetch('/api/update-profile-picture/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Profile picture updated successfully', 'success');
+                closeUploadPictureModal();
+            } else {
+                showToast(data.message || 'Failed to update profile picture', 'error');
+            }
+        } catch (error) {
+            showToast('An error occurred while uploading', 'error');
+        }
+    }
+
+    // Remove Profile Picture
+    function removeProfilePicture() {
+        openRemovePictureModal();
+    }
+
+    function openRemovePictureModal() {
+        document.getElementById('remove-picture-modal').classList.remove('hidden');
+    }
+
+    function closeRemovePictureModal() {
+        document.getElementById('remove-picture-modal').classList.add('hidden');
+    }
+
+    async function confirmRemovePicture() {
     try {
         const response = await fetch('/api/remove-profile-picture/', {
             method: 'POST',
@@ -288,19 +461,20 @@ async function removeProfilePicture() {
         const data = await response.json();
         if (response.ok && data.success) {
             const initial = '{{ user.first_name|first|upper|default:user.username|first|upper }}{{ user.last_name|first|upper|default:"" }}';
-            document.getElementById('profile-picture-preview').innerHTML = 
+                document.getElementById('profile-picture-preview').innerHTML = 
                 `<span>${initial}</span>`;
-            showSuccess('Profile picture removed successfully');
+            showToast('Profile picture removed successfully', 'success');
+            closeRemovePictureModal();
         } else {
-            showError(data.message || 'Failed to remove profile picture');
+            showToast(data.message || 'Failed to remove profile picture', 'error');
         }
     } catch (error) {
-        showError('An error occurred');
+        showToast('An error occurred', 'error');
     }
 }
 
 // Personal Information Form
-document.getElementById('personal-info-form').addEventListener('submit', async function(e) {
+    document.getElementById('personal-info-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const formData = {
@@ -313,14 +487,33 @@ document.getElementById('personal-info-form').addEventListener('submit', async f
     
     // Validation
     if (!formData.first_name || !formData.last_name || !formData.username || !formData.email) {
-        showError('Please fill in all required fields');
+        showToast('Please fill in all required fields', 'error');
         return;
     }
     
     if (!validateEmail(formData.email)) {
-        showError('Please enter a valid email address');
+        showToast('Please enter a valid email address', 'error');
         return;
     }
+    
+    // Store data for confirmation
+    pendingProfileData = formData;
+    
+    // Show confirmation modal
+    openUpdateProfileModal();
+});
+
+    function openUpdateProfileModal() {
+        document.getElementById('update-profile-modal').classList.remove('hidden');
+    }
+
+    function closeUpdateProfileModal() {
+        document.getElementById('update-profile-modal').classList.add('hidden');
+        pendingProfileData = null;
+    }
+
+    async function confirmUpdateProfile() {
+    if (!pendingProfileData) return;
     
     try {
         const response = await fetch('/api/update-profile/', {
@@ -329,22 +522,25 @@ document.getElementById('personal-info-form').addEventListener('submit', async f
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(pendingProfileData)
         });
         
         const data = await response.json();
         if (response.ok && data.success) {
-            showSuccess('Profile updated successfully');
+            showToast('Profile updated successfully', 'success');
+            closeUpdateProfileModal();
+            // Update sidebar name if changed
+            setTimeout(() => location.reload(), 1500);
         } else {
-            showError(data.message || 'Failed to update profile');
+            showToast(data.message || 'Failed to update profile', 'error');
         }
     } catch (error) {
-        showError('An error occurred while updating profile');
+        showToast('An error occurred while updating profile', 'error');
     }
-});
+}
 
 // Password Form
-document.getElementById('password-form').addEventListener('submit', async function(e) {
+    document.getElementById('password-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const currentPassword = document.getElementById('current-password').value;
@@ -353,19 +549,42 @@ document.getElementById('password-form').addEventListener('submit', async functi
     
     // Validation
     if (!currentPassword || !newPassword || !confirmPassword) {
-        showError('Please fill in all password fields');
+        showToast('Please fill in all password fields', 'error');
         return;
     }
     
     if (newPassword.length < 8) {
-        showError('New password must be at least 8 characters long');
+        showToast('New password must be at least 8 characters long', 'error');
         return;
     }
     
     if (newPassword !== confirmPassword) {
-        showError('New passwords do not match');
+        showToast('New passwords do not match', 'error');
         return;
     }
+    
+    // Store data for confirmation
+    pendingPasswordData = {
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword
+    };
+    
+    // Show confirmation modal
+    openChangePasswordModal();
+});
+
+    function openChangePasswordModal() {
+        document.getElementById('change-password-modal').classList.remove('hidden');
+    }
+
+    function closeChangePasswordModal() {
+        document.getElementById('change-password-modal').classList.add('hidden');
+        pendingPasswordData = null;
+    }
+
+    async function confirmChangePassword() {
+    if (!pendingPasswordData) return;
     
     try {
         const response = await fetch('/api/change-password/', {
@@ -374,27 +593,25 @@ document.getElementById('password-form').addEventListener('submit', async functi
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword,
-                confirm_password: confirmPassword
-            })
+            body: JSON.stringify(pendingPasswordData)
         });
         
         const data = await response.json();
         if (response.ok && data.success) {
-            showSuccess('Password updated successfully');
-            document.getElementById('password-form').reset();
+            showToast('Password updated successfully', 'success');
+                document.getElementById('password-form').reset();
+                document.getElementById('password-strength').classList.add('hidden');
+            closeChangePasswordModal();
         } else {
-            showError(data.message || 'Failed to update password');
+            showToast(data.message || 'Failed to update password', 'error');
         }
     } catch (error) {
-        showError('An error occurred while updating password');
+        showToast('An error occurred while updating password', 'error');
     }
-});
+}
 
 // Password Strength Checker
-document.getElementById('new-password').addEventListener('input', function() {
+    document.getElementById('new-password').addEventListener('input', function() {
     const password = this.value;
     const strengthDiv = document.getElementById('password-strength');
     const strengthBar = document.getElementById('strength-bar');
@@ -436,7 +653,7 @@ document.getElementById('new-password').addEventListener('input', function() {
 });
 
 // Toggle Password Visibility
-function togglePasswordVisibility(inputId) {
+    function togglePasswordVisibility(inputId) {
     const input = document.getElementById(inputId);
     const button = input.nextElementSibling;
     const svg = button.querySelector('svg');
@@ -450,33 +667,68 @@ function togglePasswordVisibility(inputId) {
     }
 }
 
+// Deactivate Account Modal
+    function openDeactivateModal() {
+    const modal = document.getElementById('deactivate-account-modal');
+    modal.classList.remove('hidden');
+}
+
+    function closeDeactivateModal() {
+    const modal = document.getElementById('deactivate-account-modal');
+    modal.classList.add('hidden');
+}
+
+    async function confirmDeactivate() {
+    try {
+        const response = await fetch('/api/deactivate-account/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showToast('Account deactivated successfully. Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = '/login/';
+            }, 2000);
+        } else {
+            showToast(data.message || 'Failed to deactivate account', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while deactivating account', 'error');
+    }
+}
+
 // Delete Account Modal
-function openDeleteModal() {
+    function openDeleteModal() {
     const modal = document.getElementById('delete-account-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.getElementById('delete-confirmation-input').value = '';
 }
 
-function closeDeleteModal() {
+    function closeDeleteModal() {
     const modal = document.getElementById('delete-account-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
 
 // Enable/disable delete button based on username confirmation
-document.getElementById('delete-confirmation-input').addEventListener('input', function() {
+    document.getElementById('delete-confirmation-input').addEventListener('input', function() {
     const confirmBtn = document.getElementById('confirm-delete-btn');
     const expectedUsername = '{{ user.username }}';
     confirmBtn.disabled = this.value !== expectedUsername;
 });
 
-async function confirmDeleteAccount() {
+    async function confirmDeleteAccount() {
     const input = document.getElementById('delete-confirmation-input').value;
     const expectedUsername = '{{ user.username }}';
     
     if (input !== expectedUsername) {
-        showError('Username does not match');
+        showToast('Username does not match', 'error');
         return;
     }
     
@@ -491,52 +743,59 @@ async function confirmDeleteAccount() {
         
         const data = await response.json();
         if (response.ok && data.success) {
-            showSuccess('Account deleted successfully. Redirecting...');
+            showToast('Account deleted successfully. Redirecting...', 'success');
             setTimeout(() => {
                 window.location.href = '/login/';
             }, 2000);
         } else {
-            showError(data.message || 'Failed to delete account');
+            showToast(data.message || 'Failed to delete account', 'error');
         }
     } catch (error) {
-        showError('An error occurred while deleting account');
+        showToast('An error occurred while deleting account', 'error');
     }
 }
 
-// Utility Functions
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // Utility Functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function showSuccess(message) {
-    if (typeof window.showToast === 'function') {
-        window.showToast(message, 'success');
-    } else {
-        alert(message);
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
-}
 
-function showError(message) {
-    if (typeof window.showToast === 'function') {
-        window.showToast(message, 'error');
-    } else {
-        alert(message);
-    }
-}
+    // Make functions globally accessible
+    window.openUploadPictureModal = openUploadPictureModal;
+    window.closeUploadPictureModal = closeUploadPictureModal;
+    window.confirmUploadPicture = confirmUploadPicture;
+    window.removeProfilePicture = removeProfilePicture;
+    window.openRemovePictureModal = openRemovePictureModal;
+    window.closeRemovePictureModal = closeRemovePictureModal;
+    window.confirmRemovePicture = confirmRemovePicture;
+    window.openUpdateProfileModal = openUpdateProfileModal;
+    window.closeUpdateProfileModal = closeUpdateProfileModal;
+    window.confirmUpdateProfile = confirmUpdateProfile;
+    window.openChangePasswordModal = openChangePasswordModal;
+    window.closeChangePasswordModal = closeChangePasswordModal;
+    window.confirmChangePassword = confirmChangePassword;
+    window.togglePasswordVisibility = togglePasswordVisibility;
+    window.openDeactivateModal = openDeactivateModal;
+    window.closeDeactivateModal = closeDeactivateModal;
+    window.confirmDeactivate = confirmDeactivate;
+    window.openDeleteModal = openDeleteModal;
+    window.closeDeleteModal = closeDeleteModal;
+    window.confirmDeleteAccount = confirmDeleteAccount;
+});
 </script>
 {% endblock %}
