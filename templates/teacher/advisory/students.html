@@ -1740,29 +1740,48 @@ const importResults = document.getElementById('import-students-results');
 const importFileName = document.getElementById('import-students-file-name');
 
 function openImportModal() {
-    importModal.classList.remove('hidden');
-    importModal.classList.add('flex');
+    const modal = document.getElementById('import-students-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    
+    // Trigger animation
     setTimeout(() => {
-        importModal.classList.remove('opacity-0');
-        importModal.querySelector('.transform').classList.remove('scale-95');
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
     }, 10);
     
-    // Reset file display on open
+    // Reset form
+    document.getElementById('import-students-form').reset();
     if (importFileName) importFileName.classList.add('hidden');
+    if (importProgress) importProgress.classList.add('hidden');
+    if (importResults) importResults.classList.add('hidden');
     if (submitImportBtn) submitImportBtn.disabled = true;
 }
 
 function closeImportModalFunc() {
-    importModal.classList.add('opacity-0');
-    importModal.querySelector('.transform').classList.add('scale-95');
+    const modal = document.getElementById('import-students-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    // Start animation out
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    // Hide modal after animation
     setTimeout(() => {
-        importModal.classList.add('hidden');
-        importModal.classList.remove('flex');
-        importForm.reset();
-        importProgress.classList.add('hidden');
-        importResults.classList.add('hidden');
-        importProgressBar.style.width = '0%';
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+        
+        // Reset form
+        if (importForm) importForm.reset();
+        if (importProgress) importProgress.classList.add('hidden');
+        if (importResults) importResults.classList.add('hidden');
+        if (importProgressBar) importProgressBar.style.width = '0%';
         if (importProgressPercent) importProgressPercent.textContent = '0%';
+        if (importFileName) importFileName.classList.add('hidden');
     }, 300);
 }
 
@@ -2843,6 +2862,23 @@ select option:checked {
     thead {
         display: table-header-group;
     }
+}
+
+/* Modal animation classes */
+.scale-95 {
+    transform: scale(0.95);
+}
+
+.scale-100 {
+    transform: scale(1);
+}
+
+.opacity-0 {
+    opacity: 0;
+}
+
+.opacity-100 {
+    opacity: 1;
 }
 </style>
 
