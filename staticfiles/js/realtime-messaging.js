@@ -234,6 +234,7 @@ class RealtimeMessaging {
             if (data.success) {
                 this.currentConversation = data.conversation;
                 this.renderConversationHeader();
+                this.showChatArea();
             }
             
             // Load messages
@@ -245,6 +246,13 @@ class RealtimeMessaging {
         } catch (error) {
             console.error('Error loading conversation:', error);
         }
+    }
+
+    showChatArea() {
+        const emptyState = document.getElementById('emptyState');
+        const chatArea = document.getElementById('chatArea');
+        if (emptyState) emptyState.classList.add('hidden');
+        if (chatArea) chatArea.classList.remove('hidden');
     }
 
     async loadMessages(conversationId) {
@@ -601,14 +609,14 @@ class RealtimeMessaging {
                 <div class="conversation-item ${isActive ? 'active' : ''}" data-conversation-id="${conv.id}">
                     <div class="flex items-start">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <h4 class="font-semibold text-gray-900 dark:text-white truncate">${conv.title || 'Unnamed Chat'}</h4>
+                            <div class="flex items-center justify-between gap-2">
+                                <h4 class="conversation-title truncate">${conv.title || 'Unnamed Chat'}</h4>
                                 ${unreadBadge}
                             </div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            <p class="conversation-preview text-sm truncate">
                                 ${conv.last_message || 'No messages yet'}
                             </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            <p class="conversation-meta text-xs mt-1">
                                 ${this.formatTimestamp(conv.last_message_time)}
                             </p>
                         </div>
@@ -617,18 +625,18 @@ class RealtimeMessaging {
             `;
         }).join('');
         
-        // Add click event listeners to conversation items
-        const conversationItems = container.querySelectorAll('.conversation-item');
-        conversationItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const conversationId = item.getAttribute('data-conversation-id');
-                this.loadConversation(conversationId);
-            });
-        });
+        // Event delegation for clicks
+        container.onclick = (e) => {
+            const item = e.target.closest('.conversation-item');
+            if (!item) return;
+            const conversationId = item.getAttribute('data-conversation-id');
+            if (!conversationId) return;
+            this.loadConversation(conversationId);
+        };
     }
 
     renderConversationHeader() {
-        const header = document.getElementById('conversationHeader');
+        const header = document.getElementById('chatHeader');
         if (!header || !this.currentConversation) return;
         
         const participants = this.currentConversation.participant_names || [];
