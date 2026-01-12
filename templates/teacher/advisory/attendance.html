@@ -408,7 +408,480 @@
     </div>
 </div>
 
+<!-- Attendance History Modal -->
+<div id="attendance-history-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Attendance History</h3>
+                    <p class="text-purple-100 text-sm mt-1" id="history-student-name"></p>
+                </div>
+            </div>
+            <button type="button" id="close-attendance-history" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Year</label>
+                    <select id="history-year-filter" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Month</label>
+                    <select id="history-month-filter" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="">All Months</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Day</label>
+                    <select id="history-day-filter" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="">All Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Status</label>
+                    <select id="history-status-filter" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="">All Status</option>
+                        <option value="ON TIME">On Time</option>
+                        <option value="LATE">Late</option>
+                        <option value="ABSENT">Absent</option>
+                        <option value="EXCUSED">Excused</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="px-8 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">On Time</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400" id="stat-on-time">0</p>
+                        </div>
+                        <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Late</p>
+                            <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-late">0</p>
+                        </div>
+                        <div class="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-800">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Absent</p>
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400" id="stat-absent">0</p>
+                        </div>
+                        <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Excused</p>
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="stat-excused">0</p>
+                        </div>
+                        <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-400px)] custom-scrollbar">
+            <!-- Loading State -->
+            <div id="history-loading" class="flex flex-col items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <p class="mt-4 text-gray-700 dark:text-gray-300 font-medium">Loading attendance history...</p>
+            </div>
+
+            <!-- Content -->
+            <div id="history-content" class="hidden space-y-4">
+                <!-- Content will be dynamically populated -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="history-empty" class="hidden flex flex-col items-center justify-center py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-lg font-medium text-gray-500 dark:text-gray-400">No attendance records found</p>
+                <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">This student has no attendance history</p>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-6 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <p class="text-sm text-gray-600 dark:text-gray-400">Total Records: <span id="total-records" class="font-semibold">0</span></p>
+            <button type="button" id="close-history-btn" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+// Attendance History Modal Functions
+let currentStudentId = null;
+let attendanceHistoryData = [];
+let filteredHistoryData = [];
+
+function viewAttendanceHistory(studentId, studentName) {
+    currentStudentId = studentId;
+    const modal = document.getElementById('attendance-history-modal');
+    const studentNameEl = document.getElementById('history-student-name');
+    const historyContent = document.getElementById('history-content');
+    const historyLoading = document.getElementById('history-loading');
+    const historyEmpty = document.getElementById('history-empty');
+    
+    // Set student name
+    studentNameEl.textContent = studentName;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
+        modal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Show loading state
+    historyLoading.classList.remove('hidden');
+    historyContent.classList.add('hidden');
+    historyEmpty.classList.add('hidden');
+    
+    // Populate year filter
+    populateYearFilter();
+    populateDayFilter();
+    
+    // Reset filters
+    document.getElementById('history-year-filter').value = '';
+    document.getElementById('history-month-filter').value = '';
+    document.getElementById('history-day-filter').value = '';
+    document.getElementById('history-status-filter').value = '';
+    
+    // Fetch attendance history
+    fetchAttendanceHistory(studentId);
+}
+
+function fetchAttendanceHistory(studentId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/teacher/advisory/attendance/history/${studentId}/`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch attendance history');
+        return response.json();
+    })
+    .then(data => {
+        // Store student information if provided
+        if (data.student) {
+            const studentInfo = data.student;
+            console.log('Student Info:', studentInfo);
+            // Update modal with additional student details if needed
+        }
+        
+        attendanceHistoryData = data.attendance_history || [];
+        filteredHistoryData = [...attendanceHistoryData];
+        document.getElementById('history-loading').classList.add('hidden');
+        
+        if (attendanceHistoryData.length === 0) {
+            document.getElementById('history-empty').classList.remove('hidden');
+        } else {
+            renderAttendanceHistory();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('history-loading').classList.add('hidden');
+        document.getElementById('history-empty').classList.remove('hidden');
+    });
+}
+
+function populateYearFilter() {
+    const yearFilter = document.getElementById('history-year-filter');
+    const currentYear = new Date().getFullYear();
+    const startYear = 2020;
+    const years = [];
+    
+    for (let year = currentYear; year >= startYear; year--) {
+        years.push(year);
+    }
+    
+    yearFilter.innerHTML = '<option value="">All Years</option>';
+    years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+    });
+}
+
+function populateDayFilter() {
+    const yearFilter = document.getElementById('history-year-filter').value;
+    const monthFilter = document.getElementById('history-month-filter').value;
+    const dayFilter = document.getElementById('history-day-filter');
+    
+    dayFilter.innerHTML = '<option value="">All Days</option>';
+    
+    if (!yearFilter || !monthFilter) {
+        for (let day = 1; day <= 31; day++) {
+            const option = document.createElement('option');
+            option.value = day.toString().padStart(2, '0');
+            option.textContent = day;
+            dayFilter.appendChild(option);
+        }
+    } else {
+        const daysInMonth = new Date(parseInt(yearFilter), parseInt(monthFilter), 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const option = document.createElement('option');
+            option.value = day.toString().padStart(2, '0');
+            option.textContent = day;
+            dayFilter.appendChild(option);
+        }
+    }
+}
+
+function filterAttendanceHistory() {
+    const yearFilter = document.getElementById('history-year-filter').value;
+    const monthFilter = document.getElementById('history-month-filter').value;
+    const dayFilter = document.getElementById('history-day-filter').value;
+    const statusFilter = document.getElementById('history-status-filter').value;
+    
+    populateDayFilter();
+    
+    filteredHistoryData = attendanceHistoryData.filter(record => {
+        const recordDate = new Date(record.date);
+        const recordYear = recordDate.getFullYear().toString();
+        const recordMonth = (recordDate.getMonth() + 1).toString().padStart(2, '0');
+        const recordDay = recordDate.getDate().toString().padStart(2, '0');
+        
+        if (yearFilter && recordYear !== yearFilter) return false;
+        if (monthFilter && recordMonth !== monthFilter) return false;
+        if (dayFilter && recordDay !== dayFilter) return false;
+        if (statusFilter && record.status !== statusFilter) return false;
+        
+        return true;
+    });
+    
+    renderAttendanceHistory();
+}
+
+function renderAttendanceHistory() {
+    const historyContent = document.getElementById('history-content');
+    const historyLoading = document.getElementById('history-loading');
+    const historyEmpty = document.getElementById('history-empty');
+    
+    historyLoading.classList.add('hidden');
+    
+    if (filteredHistoryData.length === 0) {
+        historyContent.classList.add('hidden');
+        historyEmpty.classList.remove('hidden');
+        return;
+    }
+    
+    historyEmpty.classList.add('hidden');
+    historyContent.classList.remove('hidden');
+    
+    // Group records by year and month
+    const groupedData = {};
+    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    filteredHistoryData.forEach(record => {
+        const date = new Date(record.date);
+        const year = date.getFullYear();
+        const month = date.toLocaleString('default', { month: 'long' });
+        const key = `${year}-${month}`;
+        
+        if (!groupedData[key]) {
+            groupedData[key] = {
+                year: year,
+                month: month,
+                records: []
+            };
+        }
+        
+        groupedData[key].records.push(record);
+    });
+    
+    // Sort groups by year and month
+    const sortedGroups = Object.values(groupedData).sort((a, b) => {
+        if (b.year !== a.year) return b.year - a.year;
+        return monthOrder.indexOf(b.month) - monthOrder.indexOf(a.month);
+    });
+    
+    // Render grouped records
+    let html = '';
+    sortedGroups.forEach(group => {
+        html += `
+            <div class="mb-6">
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-t-lg font-semibold">
+                    ${group.month} ${group.year}
+                    <span class="float-right text-sm bg-white/20 px-3 py-0.5 rounded-full">${group.records.length} record(s)</span>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-b-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+                    ${group.records.map(record => {
+                        const date = new Date(record.date);
+                        const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                        const statusClass = getStatusClass(record.status);
+                        return `
+                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="p-2 bg-${statusClass}-100 dark:bg-${statusClass}-900/30 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-${statusClass}-600 dark:text-${statusClass}-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 dark:text-white">${formattedDate}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                            Time In: ${record.time_in || 'N/A'} | Time Out: ${record.time_out || 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div>
+                                    ${getStatusBadge(record.status)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    historyContent.innerHTML = html;
+    updateStatistics();
+    document.getElementById('total-records').textContent = filteredHistoryData.length;
+}
+
+function getStatusClass(status) {
+    switch(status?.toUpperCase()) {
+        case 'ON TIME': return 'green';
+        case 'LATE': return 'yellow';
+        case 'ABSENT': return 'red';
+        case 'EXCUSED': return 'purple';
+        default: return 'blue';
+    }
+}
+
+function getStatusBadge(status) {
+    switch(status?.toUpperCase()) {
+        case 'ON TIME': return '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">On Time</span>';
+        case 'LATE': return '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Late</span>';
+        case 'ABSENT': return '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Absent</span>';
+        case 'EXCUSED': return '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">Excused</span>';
+        default: return `<span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">${status}</span>`;
+    }
+}
+
+function updateStatistics() {
+    const stats = {
+        'ON TIME': 0,
+        'LATE': 0,
+        'ABSENT': 0,
+        'EXCUSED': 0
+    };
+    
+    filteredHistoryData.forEach(record => {
+        const status = record.status?.toUpperCase();
+        if (stats.hasOwnProperty(status)) {
+            stats[status]++;
+        }
+    });
+    
+    document.getElementById('stat-on-time').textContent = stats['ON TIME'];
+    document.getElementById('stat-late').textContent = stats['LATE'];
+    document.getElementById('stat-absent').textContent = stats['ABSENT'];
+    document.getElementById('stat-excused').textContent = stats['EXCUSED'];
+}
+
+function closeAttendanceHistoryModal() {
+    const modal = document.getElementById('attendance-history-modal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
+    modal.querySelector('.modal-content').classList.remove('scale-100', 'opacity-100');
+    
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        attendanceHistoryData = [];
+        filteredHistoryData = [];
+        currentStudentId = null;
+    }, 300);
+}
+
+// Event listeners for attendance history modal
+const closeHistoryBtn = document.getElementById('close-attendance-history');
+const closeHistoryBtn2 = document.getElementById('close-history-btn');
+const yearHistFilter = document.getElementById('history-year-filter');
+const monthHistFilter = document.getElementById('history-month-filter');
+const dayHistFilter = document.getElementById('history-day-filter');
+const statusHistoryFilter = document.getElementById('history-status-filter');
+
+if (closeHistoryBtn) closeHistoryBtn.addEventListener('click', closeAttendanceHistoryModal);
+if (closeHistoryBtn2) closeHistoryBtn2.addEventListener('click', closeAttendanceHistoryModal);
+if (yearHistFilter) yearHistFilter.addEventListener('change', filterAttendanceHistory);
+if (monthHistFilter) monthHistFilter.addEventListener('change', filterAttendanceHistory);
+if (dayHistFilter) dayHistFilter.addEventListener('change', filterAttendanceHistory);
+if (statusHistoryFilter) statusHistoryFilter.addEventListener('change', filterAttendanceHistory);
+
 // Placeholder function for viewing attendance details
 function viewAttendanceDetails(recordId) {
     alert('View details for record ID: ' + recordId);
@@ -1095,6 +1568,7 @@ function updateAttendanceTable(records) {
             <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
                 <div class="flex items-center justify-center space-x-2">
+                    <button onclick="viewAttendanceHistory(${record.student_id}, '${record.full_name}')" class="text-blue-600 hover:text-blue-800" title="Attendance History">🕐</button>
                     <button onclick="viewAttendanceDetails(${record.id})" class="text-blue-600 hover:text-blue-800" title="View Details">🔍</button>
                 </div>
             </td>
