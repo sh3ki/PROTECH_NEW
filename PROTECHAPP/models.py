@@ -347,6 +347,19 @@ class SystemSettings(models.Model):
         default=True,
         help_text="Enable or disable SMS notifications for attendance"
     )
+    
+    # Recognition Display Settings
+    DISPLAY_MODE_CHOICES = [
+        ('SCROLLABLE', 'Scrollable List - Show all recognized students'),
+        ('LATEST', 'Latest Only - Show only the most recent student'),
+    ]
+    recognition_display_mode = models.CharField(
+        max_length=20,
+        choices=DISPLAY_MODE_CHOICES,
+        default='SCROLLABLE',
+        help_text="Control how recognized students are displayed on Time In/Out screens"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
