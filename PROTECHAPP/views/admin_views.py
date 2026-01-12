@@ -6019,8 +6019,8 @@ def admin_announcements(request):
 PROFILE_PICS_DIR = os.path.join(settings.BASE_DIR, 'private_profile_pics')
 os.makedirs(PROFILE_PICS_DIR, exist_ok=True)
 
-# Create private_excuse_letters directory if it doesn't exist
-PRIVATE_EXCUSE_LETTERS_DIR = os.path.join(settings.BASE_DIR, 'private_excuse_letters')
+# Create private_excuse_letters directory under MEDIA_ROOT so files are served via /media/
+PRIVATE_EXCUSE_LETTERS_DIR = os.path.join(settings.MEDIA_ROOT, 'private_excuse_letters')
 os.makedirs(PRIVATE_EXCUSE_LETTERS_DIR, exist_ok=True)
 
 @login_required
