@@ -689,9 +689,8 @@ function getExcuseLetterUrl(filename) {
     if (!filename || filename === 'default-excuse-letter.png') {
         return DEFAULT_EXCUSE_LETTER_IMG;
     }
-    // Always return default image since files don't exist on server
-    // To fix: upload actual files to media/private_excuse_letters/
-    return DEFAULT_EXCUSE_LETTER_IMG;
+    // Return URL to private_excuse_letters folder
+    return `/media/private_excuse_letters/${filename}`;
 }
 
 function showExcuseLetterModal(url, filename) {
@@ -1456,13 +1455,17 @@ document.getElementById('add-excused-grade').addEventListener('change', async fu
     }
     
     try {
-        const response = await fetch(`/admin/sections/by-grade/${gradeId}/`);
-        const sections = await response.json();
+        const response = await fetch(`/admin/guardians/sections-by-grade/?grade_id=${gradeId}`);
+        const data = await response.json();
         
-        sectionSelect.innerHTML = '<option value="">Select Section</option>';
-        sections.forEach(section => {
-            sectionSelect.innerHTML += `<option value="${section.id}">${section.name}</option>`;
-        });
+        if (data.status === 'success') {
+            sectionSelect.innerHTML = '<option value="">Select Section</option>';
+            data.sections.forEach(section => {
+                sectionSelect.innerHTML += `<option value="${section.id}">${section.name}</option>`;
+            });
+        } else {
+            sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+        }
     } catch (error) {
         console.error('Error loading sections:', error);
         sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
@@ -1482,13 +1485,18 @@ document.getElementById('add-excused-section').addEventListener('change', async 
     }
     
     try {
-        const response = await fetch(`/admin/students/by-section/${sectionId}/`);
-        const students = await response.json();
+        const response = await fetch(`/admin/guardians/students-by-section/?section_id=${sectionId}`);
+        const data = await response.json();
         
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-        students.forEach(student => {
-            studentSelect.innerHTML += `<option value="${student.id}">${student.last_name}, ${student.first_name} ${student.middle_name || ''}</option>`;
-        });
+        if (data.status === 'success') {
+            studentSelect.innerHTML = '<option value="">Select Student</option>';
+            data.students.forEach(student => {
+                const middleName = student.middle_name || '';
+                studentSelect.innerHTML += `<option value="${student.id}">${student.last_name}, ${student.first_name} ${middleName}</option>`;
+            });
+        } else {
+            studentSelect.innerHTML = '<option value="">Error loading students</option>';
+        }
     } catch (error) {
         console.error('Error loading students:', error);
         studentSelect.innerHTML = '<option value="">Error loading students</option>';
@@ -1499,9 +1507,38 @@ document.getElementById('add-excused-section').addEventListener('change', async 
 addExcusedForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    const studentId = document.getElementById('add-excused-student').value;
+    const dateAbsent = document.getElementById('add-excused-date-absent').value;
+    
+    // Validate that student doesn't have time-in for the selected date
+    const submitBtn = document.getElementById('submit-add-excused');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking...';
+    
+    try {
+        // Check if student has attendance for this date
+        const checkResponse = await fetch(`/admin/attendance/check/?student_id=${studentId}&date=${dateAbsent}`, {
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (checkResponse.ok) {
+            const checkData = await checkResponse.json();
+            if (checkData.has_time_in) {
+                showToast('Cannot add excused absence. Student already has time-in for this date.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Excused';
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Error checking attendance:', error);
+    }
+    
     const formData = new FormData();
-    formData.append('student_id', document.getElementById('add-excused-student').value);
-    formData.append('date_absent', document.getElementById('add-excused-date-absent').value);
+    formData.append('student_id', studentId);
+    formData.append('date_absent', dateAbsent);
     formData.append('effective_date', document.getElementById('add-excused-effective-date').value);
     formData.append('end_date', document.getElementById('add-excused-end-date').value);
     formData.append('reason', document.getElementById('add-excused-reason').value);
@@ -1511,8 +1548,6 @@ addExcusedForm.addEventListener('submit', async function(e) {
         formData.append('excuse_letter', letterFile);
     }
     
-    const submitBtn = document.getElementById('submit-add-excused');
-    submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
     
     try {
