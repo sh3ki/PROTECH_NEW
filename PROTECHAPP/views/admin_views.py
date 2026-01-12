@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import FileResponse, Http404, JsonResponse, HttpResponse, HttpResponseNotFound
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
-from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, UserRole, UserStatus, ExcusedAbsence, AdvisoryAssignment, PasswordResetOTP
+from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, UserRole, UserStatus, ExcusedAbsence, AdvisoryAssignment, PasswordResetOTP, UnauthorizedLog
 from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
@@ -10900,4 +10900,73 @@ def import_attendance(request):
             'status': 'error',
             'message': f'Error importing attendance: {str(e)}'
         }, status=500)
+
+
+@login_required(login_url='login')
+@user_passes_test(is_admin, login_url='access_denied')
+def admin_unauthorized_logs(request):
+    """Admin view for unauthorized face logs with pagination"""
+    try:
+        # Get search parameters
+        search_query = request.GET.get('search', '').strip()
+        camera_filter = request.GET.get('camera', '').strip()
+        date_filter = request.GET.get('date', '').strip()
+        
+        # Start with all unauthorized logs
+        logs = UnauthorizedLog.objects.all()
+        
+        # Apply filters
+        if search_query:
+            logs = logs.filter(
+                Q(camera_name__icontains=search_query)
+            )
+        
+        if camera_filter:
+            logs = logs.filter(camera_name__icontains=camera_filter)
+        
+        if date_filter:
+            try:
+                # Parse date in YYYY-MM-DD format
+                filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                logs = logs.filter(timestamp__date=filter_date)
+            except ValueError:
+                pass
+        
+        # Order by latest first
+        logs = logs.order_by('-timestamp')
+        
+        # Pagination
+        page = request.GET.get('page', 1)
+        paginator = Paginator(logs, 20)  # 20 logs per page
+        
+        try:
+            logs_page = paginator.page(page)
+        except:
+            logs_page = paginator.page(1)
+        
+        # Get unique camera names for filter dropdown
+        camera_names = UnauthorizedLog.objects.values_list('camera_name', flat=True).distinct().order_by('camera_name')
+        
+        # Get total count
+        total_logs = logs.count()
+        
+        context = {
+            'logs': logs_page,
+            'total_logs': total_logs,
+            'camera_names': camera_names,
+            'search_query': search_query,
+            'camera_filter': camera_filter,
+            'date_filter': date_filter,
+        }
+        
+        return render(request, 'admin/unauthorized_logs.html', context)
+        
+    except Exception as e:
+        print(f"Error in admin_unauthorized_logs: {e}")
+        messages.error(request, f'Error loading unauthorized logs: {str(e)}')
+        return render(request, 'admin/unauthorized_logs.html', {
+            'logs': [],
+            'total_logs': 0,
+            'camera_names': [],
+        })
 
