@@ -152,12 +152,27 @@ def teacher_advisory_dashboard(request):
 def teacher_advisory_students(request):
     """View for advisory students listing"""
     section = request.user.section
-    students_list = Student.objects.filter(section=section).select_related('grade', 'section').order_by('last_name', 'first_name') if section else []
+    students_queryset = Student.objects.filter(section=section).select_related('grade', 'section').order_by('last_name', 'first_name') if section else []
     
-    # Calculate statistics
-    total_students = students_list.count() if section else 0
-    active_students = students_list.filter(status='ACTIVE').count() if section else 0
-    face_enrolled = students_list.exclude(face_path__isnull=True).exclude(face_path='').count() if section else 0
+    # Convert to list to ensure properties persist
+    students_list = list(students_queryset) if section else []
+    
+    # Get today's date
+    today = timezone.now().date()
+    
+    # Add has_timed_in_today property to each student
+    for student in students_list:
+        # Check if student has attendance record with time_in for today
+        student.has_timed_in_today = Attendance.objects.filter(
+            student=student,
+            date=today,
+            time_in__isnull=False
+        ).exists()
+    
+    # Calculate statistics (use queryset for counts, not list)
+    total_students = students_queryset.count() if section else 0
+    active_students = students_queryset.filter(status='ACTIVE').count() if section else 0
+    face_enrolled = students_queryset.exclude(face_path__isnull=True).exclude(face_path='').count() if section else 0
     
     # Send ALL students to template - pagination handled by JavaScript
     context = {
