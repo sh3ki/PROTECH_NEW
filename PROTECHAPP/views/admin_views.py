@@ -4260,6 +4260,39 @@ def admin_get_students_by_section(request):
 @login_required
 @user_passes_test(is_admin)
 @require_GET
+def check_student_attendance(request):
+    """Check if a student has time-in for a specific date"""
+    try:
+        student_id = request.GET.get('student_id')
+        date = request.GET.get('date')
+        
+        if not student_id or not date:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student ID and date are required'
+            }, status=400)
+        
+        # Check if student has attendance with time_in for the given date
+        has_time_in = Attendance.objects.filter(
+            student_id=student_id,
+            date=date,
+            time_in__isnull=False
+        ).exists()
+        
+        return JsonResponse({
+            'status': 'success',
+            'has_time_in': has_time_in
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+@require_GET
 def get_guardian_details(request, guardian_id):
     """
     Endpoint to retrieve a specific guardian's data for editing
