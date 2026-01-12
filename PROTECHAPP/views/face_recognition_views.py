@@ -392,8 +392,14 @@ def get_today_attendance(request):
     """
     Get today's attendance list for Time In page
     Returns list of students who timed in today, ordered by latest first
+    Respects the recognition_display_mode setting (SCROLLABLE or LATEST)
     """
     try:
+        # Get system settings for display mode
+        from PROTECHAPP.models import SystemSettings
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        display_mode = settings_obj.recognition_display_mode
+        
         # Get today's date in UTC (database stores UTC)
         today = timezone.now().date()
         
@@ -402,6 +408,10 @@ def get_today_attendance(request):
             date=today,
             time_in__isnull=False
         ).select_related('student').order_by('-time_in')
+        
+        # If display mode is LATEST, only get the most recent record
+        if display_mode == 'LATEST' and attendances.exists():
+            attendances = attendances[:1]
         
         attendance_list = []
         for attendance in attendances:
@@ -459,8 +469,14 @@ def get_today_timeout(request):
     """
     Get today's time out list for Time Out page
     Returns list of students who timed out today, ordered by latest first
+    Respects the recognition_display_mode setting (SCROLLABLE or LATEST)
     """
     try:
+        # Get system settings for display mode
+        from PROTECHAPP.models import SystemSettings
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        display_mode = settings_obj.recognition_display_mode
+        
         # Get today's date in UTC (database stores UTC)
         today = timezone.now().date()
         
@@ -469,6 +485,10 @@ def get_today_timeout(request):
             date=today,
             time_out__isnull=False
         ).select_related('student').order_by('-time_out')
+        
+        # If display mode is LATEST, only get the most recent record
+        if display_mode == 'LATEST' and attendances.exists():
+            attendances = attendances[:1]
         
         attendance_list = []
         for attendance in attendances:
