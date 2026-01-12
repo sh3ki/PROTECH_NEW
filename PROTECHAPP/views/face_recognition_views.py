@@ -114,6 +114,12 @@ def record_attendance_api(request):
                 # Send email and SMS notification to guardian(s) in background
                 def send_guardian_notification():
                     try:
+                        # Check system settings for notification toggles
+                        from PROTECHAPP.models import SystemSettings
+                        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+                        email_enabled = settings_obj.email_notifications_enabled
+                        sms_enabled = settings_obj.sms_notifications_enabled
+                        
                         # Get all guardians for this student
                         guardians = student.guardians.all()
                         
@@ -122,8 +128,8 @@ def record_attendance_api(request):
                             for guardian in guardians:
                                 guardian_name = f"{guardian.first_name} {guardian.last_name}"
                                 
-                                # STEP 1: Send email first (if guardian has email)
-                                if guardian.email:
+                                # STEP 1: Send email first (if guardian has email AND email notifications are enabled)
+                                if guardian.email and email_enabled:
                                     try:
                                         subject = f"Student Time In Alert - {student.first_name} {student.last_name}"
                                         message = f"""
@@ -159,9 +165,11 @@ PROTECH Administration
                                         print(f"✅ Email sent to {guardian_name} ({guardian.email})")
                                     except Exception as e:
                                         print(f"❌ Email failed for {guardian_name}: {e}")
+                                elif guardian.email and not email_enabled:
+                                    print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
                                 
-                                # STEP 2: Send SMS after email (if guardian has phone number)
-                                if guardian.phone:
+                                # STEP 2: Send SMS after email (if guardian has phone number AND SMS notifications are enabled)
+                                if guardian.phone and sms_enabled:
                                     try:
                                         sms_message = f"""PROTECH Time In Alert
 
@@ -188,6 +196,8 @@ Status: {attendance.status}
                                             print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
                                     except Exception as e:
                                         print(f"❌ SMS exception for {guardian_name}: {e}")
+                                elif guardian.phone and not sms_enabled:
+                                    print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
                     except Exception as e:
                         print(f"Error sending guardian notification: {e}")
                 
@@ -223,6 +233,12 @@ Status: {attendance.status}
                 # Send email and SMS notification to guardian(s) in background
                 def send_guardian_notification():
                     try:
+                        # Check system settings for notification toggles
+                        from PROTECHAPP.models import SystemSettings
+                        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+                        email_enabled = settings_obj.email_notifications_enabled
+                        sms_enabled = settings_obj.sms_notifications_enabled
+                        
                         # Get all guardians for this student
                         guardians = student.guardians.all()
                         
@@ -231,8 +247,8 @@ Status: {attendance.status}
                             for guardian in guardians:
                                 guardian_name = f"{guardian.first_name} {guardian.last_name}"
                                 
-                                # STEP 1: Send email first (if guardian has email)
-                                if guardian.email:
+                                # STEP 1: Send email first (if guardian has email AND email notifications are enabled)
+                                if guardian.email and email_enabled:
                                     try:
                                         subject = f"Student Time Out Alert - {student.first_name} {student.last_name}"
                                         message = f"""
@@ -267,9 +283,11 @@ PROTECH Administration
                                         print(f"✅ Email sent to {guardian_name} ({guardian.email})")
                                     except Exception as e:
                                         print(f"❌ Email failed for {guardian_name}: {e}")
+                                elif guardian.email and not email_enabled:
+                                    print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
                                 
-                                # STEP 2: Send SMS after email (if guardian has phone number)
-                                if guardian.phone:
+                                # STEP 2: Send SMS after email (if guardian has phone number AND SMS notifications are enabled)
+                                if guardian.phone and sms_enabled:
                                     try:
                                         sms_message = f"""PROTECH Time Out Alert
 
@@ -295,6 +313,8 @@ Time: {manila_time.strftime('%I:%M %p')}
                                             print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
                                     except Exception as e:
                                         print(f"❌ SMS exception for {guardian_name}: {e}")
+                                elif guardian.phone and not sms_enabled:
+                                    print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
                     except Exception as e:
                         print(f"Error sending guardian notification: {e}")
                 
