@@ -1,7 +1,8 @@
 {% extends 'components/base_dashboard.html' %}
+{% load static %}
 
 {% block title %}PROTECH - Advisory Teacher Dashboard{% endblock %}
-{% block page_title %}Advisory Teacher Dashboard{% endblock %}
+{% block page_title %}Advisory Dashboard{% endblock %}
 
 {% block sidebar %}
     {% include 'components/sidebar/advisory_teacher_sidebar.html' with active='dashboard' %}
@@ -10,36 +11,374 @@
 {% block home_url %}{% url 'teacher_advisory_dashboard' %}{% endblock %}
 
 {% block welcome_message %}
-You are logged in as Advisory Teacher{% if user.section %} for {{ user.section }}{% endif %}.
+You are logged in as Advisory Teacher{% if section %} for {{ section.grade.name }} - {{ section.name }}{% endif %}.
 {% endblock %}
 
-{% block content_title %}My Class Overview{% endblock %}
+{% block content_title %}
+<div class="flex items-center justify-between">
+    <span>Today's Class Overview</span>
+    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ current_date|date:"l, F d, Y" }}</span>
+</div>
+{% endblock %}
 
 {% block dashboard_content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div class="bg-tertiary/10 dark:bg-tertiary/20 p-6 rounded-lg border border-tertiary/20 dark:border-tertiary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Today's Attendance</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">96%</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-green-600 dark:text-green-400 text-sm font-medium">+2%</span>
-            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">from yesterday</span>
+<!-- Main Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <!-- Total Students Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Total Students</p>
+                <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.total_students }}</h3>
+            </div>
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </div>
         </div>
     </div>
 
-    <div class="bg-secondary/10 dark:bg-secondary/20 p-6 rounded-lg border border-secondary/20 dark:border-secondary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">My Students</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">38</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-gray-500 dark:text-gray-400 text-sm">Total in class</span>
+    <!-- Present Students Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-green-500 dark:border-green-400 transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Present Today</p>
+                <h3 class="text-3xl font-bold text-green-600 dark:text-green-400">{{ stats.present_count }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {{ stats.attendance_percentage }}% attendance
+                </p>
+            </div>
+            <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
         </div>
     </div>
 
-    <div class="bg-primary/10 dark:bg-primary/20 p-6 rounded-lg border border-primary/20 dark:border-primary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Pending Excuses</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">3</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-yellow-600 dark:text-yellow-400 text-sm font-medium">Needs Review</span>
+    <!-- Late Students Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 dark:border-yellow-400 transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Late Today</p>
+                <h3 class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ stats.late_count }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {% if stats.late_count > 0 %}Needs attention{% else %}All on time{% endif %}
+                </p>
+            </div>
+            <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absent Students Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-red-500 dark:border-red-400 transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Absent Today</p>
+                <h3 class="text-3xl font-bold text-red-600 dark:text-red-400">{{ stats.absent_count }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {% if stats.excused_count > 0 %}{{ stats.excused_count }} excused{% else %}No excuses{% endif %}
+                </p>
+            </div>
+            <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600 dark:text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
         </div>
     </div>
 </div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Attendance Chart and Activity -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- 7-Day Attendance Trend Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">7-Day Attendance Trend</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Class attendance overview for the past week</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                        {% if stats.percentage_change >= 0 %}+{% endif %}{{ stats.percentage_change }}%
+                    </span>
+                </div>
+            </div>
+            
+            <div class="relative" style="height: 280px;">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+            
+            <!-- Legend -->
+            <div class="flex items-center justify-center space-x-6 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Present</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Absent</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Percentage</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Check-ins</h3>
+                <a href="{% url 'teacher_advisory_attendance' %}" class="text-sm text-primary dark:text-tertiary hover:underline">View All</a>
+            </div>
+            
+            {% if recent_activity %}
+            <div class="space-y-3">
+                {% for attendance in recent_activity %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="rounded-full bg-primary/10 dark:bg-tertiary/20 p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ attendance.student.first_name }} {{ attendance.student.last_name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">LRN: {{ attendance.student.lrn }} • {{ attendance.time_in|time:"g:i A" }}</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                        {% if attendance.status == 'PRESENT' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300
+                        {% elif attendance.status == 'LATE' %}bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300
+                        {% endif %}">
+                        {{ attendance.status }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-sm">No check-ins yet today</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Absent Students and Pending Excuses -->
+    <div class="space-y-6">
+        <!-- Absent Students Today -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Absent Students</h3>
+                <span class="px-2 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                    {{ absent_students_total }}
+                </span>
+            </div>
+            
+            {% if absent_students %}
+            <div class="space-y-2 max-h-96 overflow-y-auto">
+                {% for student in absent_students %}
+                <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30">
+                    <div class="flex items-center space-x-3">
+                        <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ student.first_name }} {{ student.last_name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">LRN: {{ student.lrn }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if absent_students_total > 10 %}
+                <a href="{% url 'teacher_advisory_attendance' %}" class="block text-center py-2 text-sm text-primary dark:text-tertiary hover:underline">
+                    View all {{ absent_students_total }} absent students
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-sm font-medium">Perfect Attendance!</p>
+                <p class="text-xs mt-1">No students are absent today</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-gradient-to-br from-primary to-secondary dark:from-tertiary dark:to-primary rounded-xl shadow-sm p-6 text-white">
+            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                <a href="{% url 'teacher_advisory_attendance' %}" class="block w-full bg-white/20 hover:bg-white/30 transition-colors rounded-lg p-3 text-center font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    View Attendance
+                </a>
+                <a href="{% url 'teacher_advisory_students' %}" class="block w-full bg-white/20 hover:bg-white/30 transition-colors rounded-lg p-3 text-center font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Manage Students
+                </a>
+                <a href="{% url 'teacher_advisory_excused' %}" class="block w-full bg-white/20 hover:bg-white/30 transition-colors rounded-lg p-3 text-center font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Review Excuses
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 7-Day Attendance Chart
+    const ctx = document.getElementById('attendanceChart');
+    if (ctx) {
+        const chartData = {{ last_7_days|safe }};
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Present',
+                        data: chartData.map(d => d.present),
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Absent',
+                        data: chartData.map(d => d.absent),
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Attendance %',
+                        data: chartData.map(d => d.percentage),
+                        type: 'line',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                const index = context[0].dataIndex;
+                                return chartData[index].full_date;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        max: {{ stats.total_students }},
+                        ticks: {
+                            stepSize: 5,
+                            color: '#6B7280'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Students',
+                            color: '#6B7280',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: '#6B7280'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Attendance Percentage',
+                            color: '#6B7280',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#6B7280'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
