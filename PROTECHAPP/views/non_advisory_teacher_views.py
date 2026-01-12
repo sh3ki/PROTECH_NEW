@@ -62,6 +62,13 @@ def teacher_non_advisory_settings(request):
     return render(request, 'teacher/non_advisory/settings.html')
 
 
+@login_required
+@user_passes_test(is_teacher)
+def teacher_non_advisory_calendar(request):
+    """View for non-advisory teacher calendar"""
+    return render(request, 'teacher/non_advisory/calendar.html')
+
+
 # ======================
 # STUDENTS
 # ======================
