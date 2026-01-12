@@ -28,6 +28,8 @@ class UltraFastFaceRecognition {
         this.lastResults = [];
         this.modelsLoaded = false;
         this.detectorOptions = null;
+        this.unauthorizedCooldown = new Map(); // Track unauthorized faces to avoid duplicate saves
+        this.unauthorizedCooldownMs = 2000; // Save same unauthorized face only once per 2 seconds
     }
 
     async initialize() {
@@ -132,8 +134,8 @@ class UltraFastFaceRecognition {
         this.canvas.style.left = '0';
         this.canvas.style.pointerEvents = 'none';
 
-        this.scaleX = this.canvas.width / this.video.videoWidth;
-        this.scaleY = this.canvas.height / this.video.videoHeight;
+        this.scaleX = 1;
+        this.scaleY = 1;
     }
 
     async recognitionLoop() {
@@ -321,7 +323,8 @@ class UltraFastFaceRecognition {
             return {
                 box: box,
                 result: result,
-                status: matched ? 'matched' : 'unknown'
+                status: matched ? 'matched' : 'unknown',
+                detectionIndex: index
             };
         });
 
@@ -330,6 +333,11 @@ class UltraFastFaceRecognition {
                 if (detection.status === 'matched') {
                     this.autoRecordAttendance(detection.result).catch(error => {
                         console.error('Failed to record attendance:', error);
+                    });
+                } else if (detection.status === 'unknown') {
+                    // Save unauthorized face
+                    this.saveUnauthorizedFace(detection).catch(error => {
+                        console.error('Failed to save unauthorized face:', error);
                     });
                 }
             }
@@ -421,6 +429,78 @@ class UltraFastFaceRecognition {
             }
         } catch (error) {
             console.error('Failed to record attendance:', error);
+        }
+    }
+
+    async saveUnauthorizedFace(detection) {
+        if (!detection || !detection.box) {
+            return;
+        }
+
+        // Generate a hash of the box position to track unique faces
+        const boxHash = `${Math.floor(detection.box.start[0])}_${Math.floor(detection.box.start[1])}`;
+        
+        const now = Date.now();
+        if (this.unauthorizedCooldown.has(boxHash)) {
+            const last = this.unauthorizedCooldown.get(boxHash);
+            if (now - last < this.unauthorizedCooldownMs) {
+                return; // Don't save the same face too frequently
+            }
+        }
+
+        try {
+            // Capture the face region from video
+            const canvas = document.createElement('canvas');
+            const box = detection.box;
+            
+            // Calculate face region with some padding
+            const padding = 50;
+            const x = Math.max(0, box.start[0] - padding);
+            const y = Math.max(0, box.start[1] - padding);
+            const width = Math.min(this.video.videoWidth - x, box.end[0] - box.start[0] + padding * 2);
+            const height = Math.min(this.video.videoHeight - y, box.end[1] - box.start[1] + padding * 2);
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Draw the face region from video
+            ctx.drawImage(
+                this.video,
+                x, y, width, height,
+                0, 0, width, height
+            );
+            
+            // Convert to base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Determine camera name based on attendance type
+            const cameraName = this.attendanceType === 'time_in' ? 'Time In Camera' : 
+                               this.attendanceType === 'time_out' ? 'Time Out Camera' : 
+                               'Hybrid Camera';
+            
+            // Send to backend
+            const response = await fetch('/api/save-unauthorized-face/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image: imageData,
+                    camera_name: cameraName
+                })
+            });
+
+            const data = await response.json();
+            if (data && data.success) {
+                this.unauthorizedCooldown.set(boxHash, now);
+                console.log('✅ Unauthorized face saved:', data.photo_path);
+            } else {
+                console.warn('Failed to save unauthorized face:', data ? data.error : 'Unknown error');
+            }
+        } catch (error) {
+            console.error('Error saving unauthorized face:', error);
         }
     }
 
