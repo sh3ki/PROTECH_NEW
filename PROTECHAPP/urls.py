@@ -136,6 +136,7 @@ urlpatterns = [
     path('admin/attendance-records/', admin_views.admin_attendance_records, name='admin_attendance'),
     path('admin/attendance-records/search/', admin_views.search_attendance_records, name='admin_search_attendance'),
     path('admin/attendance-records/latest/', admin_views.get_latest_attendance_records, name='admin_latest_attendance'),
+    path('admin/attendance/check/', admin_views.check_student_attendance, name='admin_check_attendance'),
     path('admin/attendance-records/create/', admin_views.create_attendance_record, name='admin_create_attendance'),
     path('admin/attendance-records/<int:attendance_id>/', admin_views.get_attendance_record, name='admin_get_attendance'),
     path('admin/attendance-records/<int:attendance_id>/update/', admin_views.update_attendance_record, name='admin_update_attendance'),
