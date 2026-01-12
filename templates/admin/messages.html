@@ -10,9 +10,21 @@
 
 {% block extra_head %}
 <style>
+    .conversation-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .conversation-item:hover {
+        background-color: rgba(79, 70, 229, 0.05);
+    }
+    
     .conversation-item.active {
-        background-color: rgba(79, 70, 229, 0.1);
+        background-color: rgba(79, 70, 229, 0.1) !important;
         border-left: 4px solid #4F46E5;
+        padding-left: 12px;
     }
     
     #messagesContainer {
