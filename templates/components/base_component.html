@@ -132,7 +132,7 @@
     
     <div class="flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
-        <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-800/50 z-20 lg:hidden hidden" onclick="closeSidebar()"></div>
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-40 lg:hidden hidden transition-opacity duration-300" onclick="closeSidebar()"></div>
         
         <script>
         // Apply sidebar collapsed state BEFORE sidebar renders to prevent animation
@@ -144,7 +144,7 @@
         </script>
         
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transform -translate-x-full lg:translate-x-0 bg-primary lg:static lg:inset-0 flex flex-col" style="overflow-y: auto; overflow-x: visible;">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 bg-primary lg:static lg:inset-0 flex flex-col shadow-2xl lg:shadow-none" style="overflow-y: auto; overflow-x: visible;">
             {% block sidebar %}
                 <!-- This block will be overridden with the appropriate sidebar component -->
             {% endblock %}
@@ -319,15 +319,47 @@
         
         // Mobile sidebar functions
         function openSidebar() {
-            document.getElementById('sidebar').classList.remove('-translate-x-full');
-            document.getElementById('sidebar').classList.add('translate-x-0');
-            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            // Show backdrop first
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('opacity-0');
+            
+            // Trigger reflow for animation
+            backdrop.offsetHeight;
+            
+            // Animate in
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            
+            // Slide sidebar in
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            
+            // Prevent body scroll on mobile when sidebar is open
+            document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
         }
         
         function closeSidebar() {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('sidebar').classList.remove('translate-x-0');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            // Slide sidebar out
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            
+            // Fade out backdrop
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            
+            // Hide backdrop after animation
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+            }, 300);
+            
+            // Re-enable body scroll
+            document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
         }
         
         // Toast notification functions are now provided by the toast_notification.html component
