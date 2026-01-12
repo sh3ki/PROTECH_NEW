@@ -345,7 +345,7 @@
             height: 'auto',
             editable: false,
             selectable: true,
-            events: '{% url "get_calendar_events" %}',
+            events: '{% url "get_teacher_non_advisory_calendar_events" %}',
             eventClick: function(info) {
                 showEventDetails(info.event);
             },
@@ -454,7 +454,7 @@
         const formData = new FormData(this);
         
         try {
-            const response = await fetch('{% url "add_calendar_event" %}', {
+            const response = await fetch('{% url "add_teacher_non_advisory_calendar_event" %}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -484,7 +484,7 @@
         const formData = new FormData(this);
         
         try {
-            const response = await fetch('{% url "add_calendar_announcement" %}', {
+            const response = await fetch('{% url "add_teacher_non_advisory_calendar_announcement" %}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -514,7 +514,7 @@
         }
         
         try {
-            const response = await fetch(`/admin/calendar/delete-event/${eventId}/`, {
+            const response = await fetch(`/teacher/non-advisory/calendar/delete-event/${eventId}/`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
