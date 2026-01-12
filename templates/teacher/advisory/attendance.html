@@ -1141,6 +1141,14 @@ function updateAttendanceTable(records) {
     const tbody = document.querySelector('#attendance-table tbody');
     tbody.innerHTML = '';
     if (!records || records.length === 0) return;
+    
+    // Sort records by student name (A to Z)
+    records.sort((a, b) => {
+        const nameA = (a.full_name || '').toLowerCase();
+        const nameB = (b.full_name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+    
     records.forEach(record => {
         let statusBadge = '';
         switch((record.status || '').toLowerCase()) {
