@@ -21,6 +21,8 @@ __all__ = [
     'delete_message',
     'get_unread_count',
     'search_users',
+    'poll_new_messages',
+    'poll_conversations',
 ]
 
 # ============================================================================
@@ -111,12 +113,16 @@ def get_conversations(request):
         for conv in conversations:
             # Transform Firebase structure to frontend structure
             transformed = {
-                'conversation_id': conv.get('id'),
+                'id': conv.get('id'),  # Use 'id' not 'conversation_id'
+                'conversation_id': conv.get('id'),  # Keep for backwards compatibility
                 'type': 'group' if conv.get('is_group') else 'private',
-                'name': conv.get('title', 'Unnamed'),
+                'title': conv.get('title', 'Unnamed Chat'),  # Use 'title' for frontend
+                'name': conv.get('title', 'Unnamed Chat'),
                 'unread_count': conv.get('unread_count', 0),
                 'participant_count': len(conv.get('participant_ids', [])),
-                'last_message': {
+                'last_message': conv.get('last_message'),  # Direct message text
+                'last_message_time': conv.get('last_message_time').isoformat() if conv.get('last_message_time') else None,
+                'last_message_obj': {
                     'message': conv.get('last_message'),
                     'timestamp': conv.get('last_message_time').isoformat() if conv.get('last_message_time') else None,
                     'sender_name': conv.get('last_message_sender', ''),
@@ -172,7 +178,7 @@ def get_conversation(request, conversation_id):
     Get a specific conversation by ID
     """
     try:
-        conversation = MessageService.get_conversation(conversation_id)
+        conversation = MessageService.get_conversation(conversation_id, request.user.id)
         
         if not conversation:
             return JsonResponse({'error': 'Conversation not found'}, status=404)
@@ -389,7 +395,7 @@ def get_unread_count(request):
     Get total unread message count for current user
     """
     try:
-        count = MessageService.get_total_unread_count(request.user.id)
+        count = MessageService.get_unread_count(request.user.id)
         
         return JsonResponse({
             'success': True,
@@ -438,4 +444,68 @@ def search_users(request):
         })
     
     except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def poll_new_messages(request, conversation_id):
+    """
+    Poll for new messages since a specific timestamp (for real-time updates)
+    """
+    try:
+        from datetime import datetime
+        
+        since_str = request.GET.get('since')
+        if not since_str:
+            return JsonResponse({'error': 'Missing since parameter'}, status=400)
+        
+        # Parse the timestamp - expects ISO format
+        try:
+            # Python 3.7+ datetime.fromisoformat
+            since_timestamp = datetime.fromisoformat(since_str.replace('Z', '+00:00'))
+        except Exception:
+            return JsonResponse({'error': 'Invalid timestamp format'}, status=400)
+        
+        # Get new messages
+        new_messages = MessageService.get_new_messages_since(conversation_id, since_timestamp)
+        
+        return JsonResponse({
+            'success': True,
+            'messages': new_messages,
+            'has_new_messages': len(new_messages) > 0
+        })
+    
+    except Exception as e:
+        import traceback
+        print(f"Error in poll_new_messages: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def poll_conversations(request):
+    """
+    Poll for updated conversations (for real-time conversation list updates)
+    """
+    try:
+        conversations = MessageService.get_user_conversations(request.user.id)
+        
+        # Convert datetime objects to ISO format
+        for conv in conversations:
+            if 'created_at' in conv and conv['created_at']:
+                conv['created_at'] = conv['created_at'].isoformat()
+            if 'last_message_time' in conv and conv['last_message_time']:
+                conv['last_message_time'] = conv['last_message_time'].isoformat()
+        
+        return JsonResponse({
+            'success': True,
+            'conversations': conversations
+        })
+    
+    except Exception as e:
+        import traceback
+        print(f"Error in poll_conversations: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
