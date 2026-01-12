@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/record-attendance/', face_recognition_views.record_attendance_api, name='record_attendance_api'),
     path('api/today-attendance/', face_recognition_views.get_today_attendance, name='get_today_attendance'),
     path('api/today-timeout/', face_recognition_views.get_today_timeout, name='get_today_timeout'),
+    path('api/save-unauthorized-face/', face_recognition_views.save_unauthorized_face, name='save_unauthorized_face'),
     
     # Gate Control API routes
     path('api/gate/trigger/', face_recognition_views.trigger_gate, name='trigger_gate'),
@@ -155,6 +156,9 @@ urlpatterns = [
     path('private-excuse-letters/<str:filename>/', views.serve_private_excuse_letter, name='serve_private_excuse_letter'),
     path('admin/excused/upload_excuse_letter/', admin_views.upload_excuse_letter, name='admin_upload_excuse_letter'),
     path('admin/excused/delete_excuse_letter/', admin_views.delete_excuse_letter, name='admin_delete_excuse_letter'),
+
+    # admin unauthorized logs route
+    path('admin/unauthorized-logs/', admin_views.admin_unauthorized_logs, name='admin_unauthorized_logs'),
 
     # admin other routes
     path('profile-pics/', admin_views.serve_profile_pic_default, name='serve_profile_pic_default'),
