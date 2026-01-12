@@ -20,15 +20,27 @@ import numpy as np
 
 def time_in(request):
     """Time In page for face recognition attendance"""
-    return render(request, 'face_recognition/time_in.html')
+    from PROTECHAPP.models import SystemSettings
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    return render(request, 'face_recognition/time_in.html', {
+        'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+    })
 
 def time_out(request):
     """Time Out page for face recognition attendance"""
-    return render(request, 'face_recognition/time_out.html')
+    from PROTECHAPP.models import SystemSettings
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    return render(request, 'face_recognition/time_out.html', {
+        'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+    })
 
 def hybrid_attendance(request):
     """Hybrid attendance page with both time in and time out cameras"""
-    return render(request, 'face_recognition/hybrid_attendance.html')
+    from PROTECHAPP.models import SystemSettings
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    return render(request, 'face_recognition/hybrid_attendance.html', {
+        'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+    })
 
 @csrf_exempt
 @require_http_methods(["POST"])
