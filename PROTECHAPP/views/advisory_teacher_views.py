@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 from django.core.paginator import Paginator
 from PROTECHAPP.views.admin_views import get_pagination_range
 from django.utils import timezone
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
-from PROTECHAPP.models import CustomUser, Student, Attendance, Guardian, UserRole, Section
+from PROTECHAPP.models import CustomUser, Student, Attendance, Guardian, UserRole, Section, AdvisoryAssignment
 import io
 from datetime import datetime
 
@@ -242,6 +242,85 @@ def teacher_advisory_attendance(request):
         'late_count': late_count,
     }
     return render(request, 'teacher/advisory/attendance.html', context)
+
+@login_required
+@user_passes_test(is_advisory_teacher)
+@require_GET
+def get_latest_teacher_attendance(request):
+    """
+    API endpoint for real-time attendance updates for advisory teacher
+    Returns the latest attendance records with optional filters
+    """
+    from django.db.models import Q
+    from django.views.decorators.http import require_GET
+    
+    try:
+        # Get the teacher's advisory section
+        teacher = request.user
+        try:
+            advisory_assignment = AdvisoryAssignment.objects.get(teacher=teacher)
+            section = advisory_assignment.section
+        except AdvisoryAssignment.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No advisory section assigned'
+            }, status=400)
+        
+        # Get all filters from query parameters
+        search_query = request.GET.get('search', '')
+        status_filter = request.GET.get('status', '')
+        date_filter = request.GET.get('date', '')
+        limit = request.GET.get('limit', 50)
+        
+        try:
+            limit = int(limit)
+        except (ValueError, TypeError):
+            limit = 50
+        
+        # Build base queryset for this section only, ordered by latest first
+        records = Attendance.objects.filter(student__section=section).select_related('student', 'student__grade', 'student__section').order_by('-date', '-time_in')[:limit]
+        
+        # Apply filters
+        if search_query:
+            records = records.filter(
+                Q(student__first_name__icontains=search_query) |
+                Q(student__last_name__icontains=search_query) |
+                Q(student__lrn__icontains=search_query)
+            )
+        if status_filter:
+            records = records.filter(status=status_filter)
+        if date_filter:
+            records = records.filter(date=date_filter)
+        
+        attendance_data = []
+        for record in records:
+            attendance_data.append({
+                'id': record.id,
+                'lrn': record.student.lrn,
+                'full_name': f"{record.student.first_name} {record.student.last_name}",
+                'grade': record.student.grade.name if record.student.grade else '',
+                'section': record.student.section.name if record.student.section else '',
+                'date': record.date.strftime('%Y-%m-%d'),
+                'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
+                'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
+                'status': record.status,
+                'profile_pic': record.student.profile_pic or None,
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'records': attendance_data,
+            'count': len(attendance_data),
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in get_latest_teacher_attendance: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 @login_required
 @user_passes_test(is_advisory_teacher)
