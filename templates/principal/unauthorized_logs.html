@@ -386,6 +386,86 @@
     // Real-time polling for new logs
     let pollTimeout;
     
+    function updateTableWithNewLogs(logs) {
+        const tbody = document.querySelector('tbody');
+        if (!tbody) return;
+        
+        // Clear existing rows
+        tbody.innerHTML = '';
+        
+        if (logs.length === 0) {
+            // Show empty state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="text-gray-500 dark:text-gray-400 text-lg font-medium mb-2">No unauthorized faces detected</p>
+                            <p class="text-gray-400 dark:text-gray-500 text-sm">All detected faces have been recognized</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Add new rows
+        logs.forEach(log => {
+            const timestamp = new Date(log.timestamp);
+            const dateStr = timestamp.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            const timeStr = timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors';
+            row.setAttribute('data-log-id', log.id);
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button onclick="viewPhoto('${log.photo_path}')" class="group relative">
+                        <img src="/media/${log.photo_path}" alt="Unauthorized Face" class="h-20 w-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary dark:hover:border-tertiary transition-all cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 transition-all rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                            </svg>
+                        </div>
+                    </button>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">${log.camera_name}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-sm text-gray-900 dark:text-white">${dateStr}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-sm text-gray-900 dark:text-white">${timeStr}</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Update dashboard card for today's count
+        const todayCountElement = document.querySelector('.grid .border-orange-500 h3');
+        if (todayCountElement) {
+            todayCountElement.textContent = logs.length;
+        }
+    }
+    
     function startRealtimePolling() {
         if (pollTimeout) {
             clearTimeout(pollTimeout);
@@ -409,7 +489,7 @@
                 const response = await fetch(`/principal/unauthorized-logs/latest/?${params.toString()}`);
                 const data = await response.json();
                 
-                if (data.status === 'success' && data.logs && data.logs.length > 0) {
+                if (data.status === 'success' && data.logs) {
                     // Check if new logs have been added
                     const currentLogIds = Array.from(document.querySelectorAll('tbody tr[data-log-id]')).map(tr => {
                         return parseInt(tr.getAttribute('data-log-id'));
@@ -417,21 +497,9 @@
                     
                     const hasNewLogs = data.logs.some(log => !currentLogIds.includes(log.id));
                     
-                    if (hasNewLogs) {
-                        // Reload immediately to show new logs (keeping current filters)
-                        const search = searchInput ? searchInput.value : '';
-                        const camera = cameraSelect ? cameraSelect.value : '';
-                        const date = dateInput ? dateInput.value : '';
-                        const perPage = document.getElementById('per-page-select') ? document.getElementById('per-page-select').value : '10';
-                        
-                        let reloadUrl = '{% url "principal_unauthorized_logs" %}?per_page=' + perPage;
-                        if (search) reloadUrl += '&search=' + encodeURIComponent(search);
-                        if (camera) reloadUrl += '&camera=' + encodeURIComponent(camera);
-                        if (date) reloadUrl += '&date=' + encodeURIComponent(date);
-                        
-                        // Reload immediately for real-time update
-                        window.location.href = reloadUrl;
-                        return; // Stop polling after triggering reload
+                    if (hasNewLogs || currentLogIds.length !== data.logs.length) {
+                        // Update table with new data without full page reload
+                        updateTableWithNewLogs(data.logs);
                     }
                 }
             } catch (error) {
