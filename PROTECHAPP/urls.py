@@ -135,6 +135,7 @@ urlpatterns = [
     # admin/attendance routes
     path('admin/attendance-records/', admin_views.admin_attendance_records, name='admin_attendance'),
     path('admin/attendance-records/search/', admin_views.search_attendance_records, name='admin_search_attendance'),
+    path('admin/attendance-records/latest/', admin_views.get_latest_attendance_records, name='admin_latest_attendance'),
     path('admin/attendance-records/create/', admin_views.create_attendance_record, name='admin_create_attendance'),
     path('admin/attendance-records/<int:attendance_id>/', admin_views.get_attendance_record, name='admin_get_attendance'),
     path('admin/attendance-records/<int:attendance_id>/update/', admin_views.update_attendance_record, name='admin_update_attendance'),
@@ -208,6 +209,7 @@ urlpatterns = [
     path('principal/sections/export/', principal_views.export_principal_sections, name='principal_export_sections'),
     path('principal/attendance/', principal_views.principal_attendance, name='principal_attendance'),
     path('principal/attendance/search/', admin_views.search_attendance_records, name='principal_search_attendance'),
+    path('principal/attendance/latest/', principal_views.get_latest_principal_attendance, name='principal_latest_attendance'),
     path('principal/attendance/export/', principal_views.export_principal_attendance, name='principal_export_attendance'),
     path('principal/excused/', principal_views.principal_excused, name='principal_excused'),
     path('principal/excused/search/', admin_views.search_excused_absences, name='principal_search_excused'),
@@ -240,6 +242,7 @@ urlpatterns = [
     path('registrar/grades/<int:grade_id>/sections/', registrar_views.registrar_get_grade_sections, name='registrar_get_grade_sections'),
     # Teacher advisory attendance AJAX search
     path('teacher/advisory/attendance/search/', advisory_teacher_views.teacher_search_attendance_records, name='teacher_search_attendance'),
+    path('teacher/advisory/attendance/latest/', advisory_teacher_views.get_latest_teacher_attendance, name='teacher_latest_attendance'),
     
     # registrar/sections routes
     path('registrar/sections/', registrar_views.registrar_sections, name='registrar_sections'),
@@ -291,6 +294,7 @@ urlpatterns = [
     path('registrar/attendance-records/', registrar_views.registrar_attendance_records, name='registrar_attendance'),
     path('registrar/attendance-records/export/', registrar_views.export_registrar_attendance, name='export_registrar_attendance'),
     path('registrar/attendance-records/search/', registrar_views.registrar_search_attendance_records, name='registrar_search_attendance'),
+    path('registrar/attendance-records/latest/', registrar_views.get_latest_registrar_attendance, name='registrar_latest_attendance'),
     path('registrar/attendance-records/create/', registrar_views.registrar_create_attendance_record, name='registrar_create_attendance'),
     path('registrar/attendance-records/<int:attendance_id>/', registrar_views.registrar_get_attendance_record, name='registrar_get_attendance'),
     path('registrar/attendance-records/<int:attendance_id>/update/', registrar_views.registrar_update_attendance_record, name='registrar_update_attendance'),
@@ -341,11 +345,42 @@ urlpatterns = [
     # Non-Advisory Teacher routes
     path('teacher/non-advisory/dashboard/', non_advisory_teacher_views.teacher_non_advisory_dashboard, name='teacher_non_advisory_dashboard'),
     path('teacher/non-advisory/students/', non_advisory_teacher_views.teacher_non_advisory_students, name='teacher_non_advisory_students'),
+    path('teacher/non-advisory/students/search/', non_advisory_teacher_views.teacher_non_advisory_search_students, name='teacher_non_advisory_search_students'),
+    path('teacher/non-advisory/students/create/', non_advisory_teacher_views.teacher_non_advisory_create_student, name='teacher_non_advisory_create_student'),
+    path('teacher/non-advisory/students/<int:student_id>/', non_advisory_teacher_views.teacher_non_advisory_get_student, name='teacher_non_advisory_get_student'),
+    path('teacher/non-advisory/students/<int:student_id>/update/', non_advisory_teacher_views.teacher_non_advisory_update_student, name='teacher_non_advisory_update_student'),
+    path('teacher/non-advisory/students/<int:student_id>/delete/', non_advisory_teacher_views.teacher_non_advisory_delete_student, name='teacher_non_advisory_delete_student'),
+    path('teacher/non-advisory/students/toggle-status/', non_advisory_teacher_views.teacher_non_advisory_toggle_student_status, name='teacher_non_advisory_toggle_student_status'),
+    path('teacher/non-advisory/students/by-section/', non_advisory_teacher_views.teacher_non_advisory_get_students_by_section, name='teacher_non_advisory_get_students_by_section'),
     path('teacher/non-advisory/students/export/', non_advisory_teacher_views.export_non_advisory_students, name='export_non_advisory_students'),
+
+    path('teacher/non-advisory/sections/by-grade/', non_advisory_teacher_views.teacher_non_advisory_get_sections_by_grade, name='teacher_non_advisory_get_sections_by_grade'),
+
     path('teacher/non-advisory/guardians/', non_advisory_teacher_views.teacher_non_advisory_guardians, name='teacher_non_advisory_guardians'),
+    path('teacher/non-advisory/guardians/search/', non_advisory_teacher_views.teacher_non_advisory_search_guardians, name='teacher_non_advisory_search_guardians'),
+    path('teacher/non-advisory/guardians/create/', non_advisory_teacher_views.teacher_non_advisory_create_guardian, name='teacher_non_advisory_create_guardian'),
+    path('teacher/non-advisory/guardians/<int:guardian_id>/', non_advisory_teacher_views.teacher_non_advisory_get_guardian, name='teacher_non_advisory_get_guardian'),
+    path('teacher/non-advisory/guardians/<int:guardian_id>/details/', non_advisory_teacher_views.teacher_non_advisory_get_guardian_details, name='teacher_non_advisory_get_guardian_details'),
+    path('teacher/non-advisory/guardians/<int:guardian_id>/children/', non_advisory_teacher_views.teacher_non_advisory_get_guardian_children, name='teacher_non_advisory_get_guardian_children'),
+    path('teacher/non-advisory/guardians/<int:guardian_id>/update/', non_advisory_teacher_views.teacher_non_advisory_update_guardian, name='teacher_non_advisory_update_guardian'),
+    path('teacher/non-advisory/guardians/<int:guardian_id>/delete/', non_advisory_teacher_views.teacher_non_advisory_delete_guardian, name='teacher_non_advisory_delete_guardian'),
     path('teacher/non-advisory/guardians/export/', non_advisory_teacher_views.export_non_advisory_guardians, name='export_non_advisory_guardians'),
+
     path('teacher/non-advisory/attendance/', non_advisory_teacher_views.teacher_non_advisory_attendance, name='teacher_non_advisory_attendance'),
+    path('teacher/non-advisory/attendance/search/', non_advisory_teacher_views.teacher_non_advisory_search_attendance_records, name='teacher_non_advisory_search_attendance_records'),
+    path('teacher/non-advisory/attendance/create/', non_advisory_teacher_views.teacher_non_advisory_create_attendance_record, name='teacher_non_advisory_create_attendance_record'),
+    path('teacher/non-advisory/attendance/<int:attendance_id>/', non_advisory_teacher_views.teacher_non_advisory_get_attendance_record, name='teacher_non_advisory_get_attendance_record'),
+    path('teacher/non-advisory/attendance/<int:attendance_id>/update/', non_advisory_teacher_views.teacher_non_advisory_update_attendance_record, name='teacher_non_advisory_update_attendance_record'),
+    path('teacher/non-advisory/attendance/<int:attendance_id>/delete/', non_advisory_teacher_views.teacher_non_advisory_delete_attendance_record, name='teacher_non_advisory_delete_attendance_record'),
+
     path('teacher/non-advisory/excused/', non_advisory_teacher_views.teacher_non_advisory_excused, name='teacher_non_advisory_excused'),
+    path('teacher/non-advisory/excused/search/', non_advisory_teacher_views.teacher_non_advisory_search_excused_absences, name='teacher_non_advisory_search_excused_absences'),
+    path('teacher/non-advisory/excused/create/', non_advisory_teacher_views.teacher_non_advisory_create_excused_absence, name='teacher_non_advisory_create_excused_absence'),
+    path('teacher/non-advisory/excused/<int:excused_id>/', non_advisory_teacher_views.teacher_non_advisory_get_excused_absence, name='teacher_non_advisory_get_excused_absence'),
+    path('teacher/non-advisory/excused/<int:excused_id>/update/', non_advisory_teacher_views.teacher_non_advisory_update_excused_absence, name='teacher_non_advisory_update_excused_absence'),
+    path('teacher/non-advisory/excused/<int:excused_id>/delete/', non_advisory_teacher_views.teacher_non_advisory_delete_excused_absence, name='teacher_non_advisory_delete_excused_absence'),
+    path('teacher/non-advisory/excused/letter/<str:filename>/', non_advisory_teacher_views.teacher_non_advisory_serve_excuse_letter, name='teacher_non_advisory_serve_excuse_letter'),
+
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
