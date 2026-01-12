@@ -359,6 +359,7 @@ urlpatterns = [
     # Password Management
     path('api/change-password/', user_settings_views.change_password, name='change_password'),
     
-    # Account Deletion
+    # Account Management
+    path('api/deactivate-account/', user_settings_views.deactivate_account, name='deactivate_account'),
     path('api/delete-account/', user_settings_views.delete_account, name='delete_account'),
 ]
