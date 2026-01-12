@@ -46,6 +46,10 @@ def is_admin_or_teacher(user):
     """Allow admins, principals, registrars and teachers to perform certain actions like imports"""
     return user.is_authenticated and user.role in [UserRole.ADMIN, UserRole.PRINCIPAL, UserRole.REGISTRAR, UserRole.TEACHER]
 
+def is_admin_or_registrar_or_principal(user):
+    """Check if the logged-in user is an admin, registrar, or principal"""
+    return user.is_authenticated and user.role in [UserRole.ADMIN, UserRole.REGISTRAR, UserRole.PRINCIPAL]
+
 def generate_random_password(length=12):
     """Generate a secure random password"""
     characters = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -11055,3 +11059,65 @@ def admin_unauthorized_logs(request):
             'camera_names': [],
         })
 
+
+@login_required
+@user_passes_test(is_admin_or_registrar_or_principal)
+@require_http_methods(['GET'])
+def get_latest_unauthorized_logs(request):
+    """
+    API endpoint for real-time unauthorized logs updates.
+    Returns the latest unauthorized logs with optional filters.
+    """
+    try:
+        # Get all filters from query parameters
+        search_query = request.GET.get('search', '')
+        camera_filter = request.GET.get('camera', '')
+        date_filter = request.GET.get('date', '')
+        limit = request.GET.get('limit', 50)
+
+        try:
+            limit = int(limit)
+        except (ValueError, TypeError):
+            limit = 50
+
+        # Build base queryset ordered by latest first
+        logs = UnauthorizedLog.objects.all().order_by('-timestamp')
+
+        # Apply filters
+        if search_query:
+            logs = logs.filter(camera_name__icontains=search_query)
+        
+        if camera_filter:
+            logs = logs.filter(camera_name=camera_filter)
+        
+        if date_filter:
+            try:
+                filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                logs = logs.filter(timestamp__date=filter_date)
+            except ValueError:
+                pass  # Invalid date format, skip filter
+
+        # Limit results
+        logs = logs[:limit]
+
+        logs_data = []
+        for log in logs:
+            logs_data.append({
+                'id': log.id,
+                'camera_name': log.camera_name,
+                'timestamp': log.timestamp.isoformat(),
+                'photo_path': str(log.photo_path) if log.photo_path else ''
+            })
+
+        return JsonResponse({
+            'status': 'success',
+            'logs': logs_data,
+            'count': len(logs_data),
+        })
+
+    except Exception as e:
+        print(f'Error in get_latest_unauthorized_logs: {e}')
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
