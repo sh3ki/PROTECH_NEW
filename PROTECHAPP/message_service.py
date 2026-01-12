@@ -1,497 +1,303 @@
 """
-Complete Message Service - Handles all Firestore message operations
-Supports both private (1-on-1) and group conversations with full read/unread tracking
+Message Service - PostgreSQL-based messaging implementation
+NO FIREBASE - All operations use Django ORM with PostgreSQL
 """
+
+from django.db.models import Q, Max, Prefetch, Count
+from django.utils import timezone
+from PROTECHAPP.models import Chat, Message, ChatParticipant, MessageNotification, CustomUser
 from datetime import datetime
-from PROTECH.firebase_config import get_firestore_client, is_firebase_configured
+
 
 class MessageService:
     """
-    Complete messaging service for private and group conversations
+    Complete messaging service using PostgreSQL only
+    Handles private and group conversations with read/unread tracking
     """
-    
-    MESSAGES_COLLECTION = 'messages'
-    CONVERSATIONS_COLLECTION = 'conversations'
-    
-    # ============================================================================
-    # CONVERSATION MANAGEMENT
-    # ============================================================================
-    
+
     @staticmethod
     def create_conversation(creator_id, creator_name, title, participant_ids, participant_names, is_group=False):
         """
-        Create a new conversation (private or group)
-        
-        Args:
-            creator_id: ID of user creating the conversation
-            creator_name: Name of creator
-            title: Conversation title (for groups) or None for private
-            participant_ids: List of participant user IDs (including creator)
-            participant_names: List of participant names
-            is_group: True for group chat, False for private
-            
-        Returns:
-            dict: Conversation data with ID
+        Create a new conversation or return existing one
+        For private chats, checks if conversation already exists
+        For group chats, always creates a new one
         """
-        if not is_firebase_configured():
-            return None
-        
         try:
-            db = get_firestore_client()
-            
-            # For private chats, create consistent conversation ID
+            # For private chats, check if conversation already exists
             if not is_group and len(participant_ids) == 2:
-                conversation_id = MessageService._create_conversation_id(participant_ids[0], participant_ids[1])
+                # Find existing private conversation between these two users
+                existing_chat = Chat.objects.filter(
+                    is_group=False,
+                    participants__user_id__in=participant_ids
+                ).annotate(
+                    participant_count=Count('participants')
+                ).filter(
+                    participant_count=2
+                ).distinct().first()
                 
-                # Check if conversation already exists
-                existing_conv = db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id).get()
-                if existing_conv.exists:
-                    conv_data = existing_conv.to_dict()
-                    conv_data['id'] = conversation_id
-                    return conv_data
-            else:
-                conversation_id = None  # Will be auto-generated for groups
+                if existing_chat:
+                    # Check if both participants are actually in this chat
+                    participant_ids_in_chat = set(
+                        existing_chat.participants.values_list('user_id', flat=True)
+                    )
+                    if set(map(str, participant_ids)) == set(map(str, participant_ids_in_chat)):
+                        return MessageService._format_conversation(existing_chat)
             
-            # Create conversation document
-            conversation_data = {
-                'title': title or f"{participant_names[0]} & {participant_names[1]}" if not is_group else title,
-                'is_group': is_group,
-                'creator_id': str(creator_id),
-                'creator_name': creator_name,
-                'participant_ids': [str(pid) for pid in participant_ids],
-                'participant_names': participant_names,
-                'created_at': datetime.now(),
-                'last_message': None,
-                'last_message_time': datetime.now(),
-                'last_message_sender': None,
-                'last_message_sender_id': None
-            }
+            # Generate title if not provided
+            if not title:
+                if is_group:
+                    title = f"Group Chat - {creator_name}"
+                else:
+                    # For private chat, use the other participant's name
+                    other_name = participant_names[0] if participant_names[0] != creator_name else (participant_names[1] if len(participant_names) > 1 else creator_name)
+                    title = other_name
             
-            if conversation_id:
-                # Use specific ID for private chats
-                db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id).set(conversation_data)
-                conversation_data['id'] = conversation_id
-            else:
-                # Auto-generate ID for group chats
-                doc_ref = db.collection(MessageService.CONVERSATIONS_COLLECTION).add(conversation_data)
-                conversation_data['id'] = doc_ref[1].id
+            # Create new conversation
+            chat = Chat.objects.create(
+                name=title,
+                is_group=is_group,
+                created_by_id=creator_id
+            )
             
-            return conversation_data
+            # Add participants
+            for participant_id in participant_ids:
+                ChatParticipant.objects.create(
+                    chat=chat,
+                    user_id=participant_id
+                )
+            
+            return MessageService._format_conversation(chat)
             
         except Exception as e:
-            return None
-    
+            print(f"Error creating conversation: {str(e)}")
+            raise
+
     @staticmethod
     def get_user_conversations(user_id):
         """
-        Get all conversations for a user (both private and group)
-        
-        Args:
-            user_id: ID of the user
-            
-        Returns:
-            list: List of conversations with unread count
+        Get all conversations for a user with unread counts
+        Returns list of conversations ordered by last message time
         """
-        if not is_firebase_configured():
-            return []
-        
         try:
-            db = get_firestore_client()
-            
-            # Get conversations where user is a participant
-            conversations_ref = db.collection(MessageService.CONVERSATIONS_COLLECTION)
-            user_id_str = str(user_id)
-            query = conversations_ref.where('participant_ids', 'array_contains', user_id_str)
+            # Get all chats where user is a participant
+            user_chats = Chat.objects.filter(
+                participants__user_id=user_id
+            ).prefetch_related(
+                'participants__user',
+                Prefetch('messages', queryset=Message.objects.order_by('-sent_at'))
+            ).annotate(
+                last_message_time=Max('messages__sent_at')
+            ).order_by('-last_message_time')
             
             conversations = []
-            for doc in query.stream():
-                conv = doc.to_dict()
-                conv['id'] = doc.id
-                
-                # Get unread count for this conversation
-                conv['unread_count'] = MessageService.get_unread_count_for_conversation(conv['id'], user_id)
-                
-                conversations.append(conv)
-            
-            # Sort by last message time
-            conversations.sort(key=lambda x: x.get('last_message_time', datetime.min), reverse=True)
+            for chat in user_chats:
+                conversations.append(MessageService._format_conversation(chat, user_id))
             
             return conversations
             
         except Exception as e:
-            print(f"Error getting conversations: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Error getting user conversations: {str(e)}")
             return []
-    
+
     @staticmethod
-    def get_conversation(conversation_id):
+    def get_conversation(conversation_id, user_id=None):
         """
         Get a specific conversation by ID
-        
-        Args:
-            conversation_id: ID of the conversation
-            
-        Returns:
-            dict: Conversation data or None
         """
-        if not is_firebase_configured():
-            return None
-        
         try:
-            db = get_firestore_client()
-            doc = db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id).get()
+            chat = Chat.objects.prefetch_related(
+                'participants__user',
+                Prefetch('messages', queryset=Message.objects.order_by('-sent_at'))
+            ).get(id=conversation_id)
             
-            if doc.exists:
-                conv = doc.to_dict()
-                conv['id'] = doc.id
-                return conv
+            return MessageService._format_conversation(chat, user_id)
+            
+        except Chat.DoesNotExist:
             return None
+        except Exception as e:
+            print(f"Error getting conversation: {str(e)}")
+            return None
+
+    @staticmethod
+    def send_message(conversation_id, sender_id, sender_name, message_text):
+        """
+        Send a message in a conversation
+        Creates message and notifications for all participants except sender
+        """
+        try:
+            # Get the chat
+            chat = Chat.objects.get(id=conversation_id)
+            
+            # Create the message
+            message = Message.objects.create(
+                chat=chat,
+                sender_id=sender_id,
+                message=message_text
+            )
+            
+            # Create notifications for all participants except sender
+            participants = ChatParticipant.objects.filter(chat=chat).exclude(user_id=sender_id)
+            
+            for participant in participants:
+                MessageNotification.objects.create(
+                    message=message,
+                    user_id=participant.user_id,
+                    chat=chat,
+                    is_read=False
+                )
+            
+            # Format and return message with sender_name
+            formatted_msg = MessageService._format_message(message)
+            formatted_msg['sender_name'] = sender_name  # Add sender_name to response
+            return formatted_msg
             
         except Exception as e:
-            print(f"Error getting conversation: {e}")
-            return None
-    
+            print(f"Error sending message: {str(e)}")
+            raise
+
     @staticmethod
-    def update_conversation_last_message(conversation_id, message_text, sender_name, sender_id):
+    def get_messages(conversation_id, limit=50, offset=0):
         """
-        Update conversation's last message info
-        
-        Args:
-            conversation_id: ID of the conversation
-            message_text: Last message text
-            sender_name: Name of sender
-            sender_id: ID of sender
+        Get messages for a conversation with pagination
         """
-        if not is_firebase_configured():
-            return
-        
         try:
-            db = get_firestore_client()
-            db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id).update({
-                'last_message': message_text,
-                'last_message_time': datetime.now(),
-                'last_message_sender': sender_name,
-                'last_message_sender_id': str(sender_id)
-            })
+            messages = Message.objects.filter(
+                chat_id=conversation_id
+            ).order_by('sent_at')[offset:offset+limit]
+            
+            return [MessageService._format_message(msg) for msg in messages]
+            
         except Exception as e:
-            print(f"Error updating conversation: {e}")
-    
+            print(f"Error getting messages: {str(e)}")
+            return []
+
     @staticmethod
-    def add_participants_to_group(conversation_id, participant_ids, participant_names):
+    def get_new_messages_since(conversation_id, since_timestamp):
         """
-        Add participants to a group conversation
-        
-        Args:
-            conversation_id: ID of the conversation
-            participant_ids: List of user IDs to add
-            participant_names: List of user names to add
-            
-        Returns:
-            bool: Success status
+        Get new messages since a specific timestamp
+        Used for polling to get real-time updates
         """
-        if not is_firebase_configured():
-            return False
-        
         try:
-            db = get_firestore_client()
-            conv_ref = db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id)
-            conv = conv_ref.get()
+            messages = Message.objects.filter(
+                chat_id=conversation_id,
+                sent_at__gt=since_timestamp
+            ).order_by('sent_at')
             
-            if not conv.exists:
-                return False
+            return [MessageService._format_message(msg) for msg in messages]
             
-            conv_data = conv.to_dict()
-            
-            # Check if it's a group
-            if not conv_data.get('is_group', False):
-                return False
-            
-            # Add new participants (avoid duplicates)
-            current_ids = set(conv_data.get('participant_ids', []))
-            current_names = conv_data.get('participant_names', [])
-            
-            for pid, pname in zip(participant_ids, participant_names):
-                if str(pid) not in current_ids:
-                    current_ids.add(str(pid))
-                    current_names.append(pname)
-            
-            conv_ref.update({
-                'participant_ids': list(current_ids),
-                'participant_names': current_names
-            })
+        except Exception as e:
+            print(f"Error getting new messages: {str(e)}")
+            return []
+
+    @staticmethod
+    def mark_messages_as_read(conversation_id, user_id):
+        """
+        Mark all messages in a conversation as read for a specific user
+        """
+        try:
+            # Get all unread message notifications for this user in this conversation
+            MessageNotification.objects.filter(
+                chat_id=conversation_id,
+                user_id=user_id,
+                is_read=False
+            ).update(is_read=True)
             
             return True
             
         except Exception as e:
-            print(f"Error adding participants: {e}")
+            print(f"Error marking messages as read: {str(e)}")
             return False
-    
-    # ============================================================================
-    # MESSAGE MANAGEMENT
-    # ============================================================================
-    
+
     @staticmethod
-    def send_message(conversation_id, sender_id, sender_name, sender_role, message_text, message_type='text'):
+    def get_unread_count(user_id):
         """
-        Send a message to a conversation
-        
-        Args:
-            conversation_id: ID of the conversation
-            sender_id: ID of the sender
-            sender_name: Name of the sender
-            sender_role: Role of the sender
-            message_text: The message content
-            message_type: Type of message (text, image, file, etc.)
-            
-        Returns:
-            dict: Message data with ID if successful
+        Get total unread message count for a user
         """
-        if not is_firebase_configured():
-            return None
-        
         try:
-            db = get_firestore_client()
-            
-            # Get conversation to get participants
-            conv = db.collection(MessageService.CONVERSATIONS_COLLECTION).document(conversation_id).get()
-            if not conv.exists:
-                return None
-            
-            conv_data = conv.to_dict()
-            participant_ids = conv_data.get('participant_ids', [])
-            
-            # Create message document
-            message_data = {
-                'conversation_id': conversation_id,
-                'sender_id': str(sender_id),
-                'sender_name': sender_name,
-                'sender_role': sender_role,
-                'message': message_text,
-                'message_type': message_type,
-                'timestamp': datetime.now(),
-                'read_by': [str(sender_id)],  # Sender has read their own message
-                'delivered_to': [],
-                'is_deleted': False
-            }
-            
-            # Add message to Firestore
-            doc_ref = db.collection(MessageService.MESSAGES_COLLECTION).add(message_data)
-            message_data['id'] = doc_ref[1].id
-            
-            # Update conversation's last message
-            MessageService.update_conversation_last_message(conversation_id, message_text, sender_name, sender_id)
-            
-            return message_data
-            
-        except Exception as e:
-            print(f"Error sending message: {e}")
-            return None
-    
-    @staticmethod
-    def get_conversation_messages(conversation_id, limit=100):
-        """
-        Get messages in a conversation
-        
-        Args:
-            conversation_id: ID of the conversation
-            limit: Maximum number of messages to retrieve
-            
-        Returns:
-            list: List of messages with 'read' field indicating if all participants read the message
-        """
-        if not is_firebase_configured():
-            return []
-        
-        try:
-            db = get_firestore_client()
-            
-            # Get conversation to know participant count
-            conversation = MessageService.get_conversation(conversation_id)
-            if not conversation:
-                return []
-            
-            participant_ids = conversation.get('participant_ids', [])
-            
-            messages_ref = db.collection(MessageService.MESSAGES_COLLECTION)
-            query = messages_ref.where('conversation_id', '==', conversation_id).where('is_deleted', '==', False).order_by('timestamp').limit(limit)
-            
-            messages = []
-            for doc in query.stream():
-                msg = doc.to_dict()
-                msg['id'] = doc.id
-                
-                # Determine if message is fully read by all participants (except sender)
-                read_by = msg.get('read_by', [])
-                sender_id = str(msg.get('sender_id', ''))
-                
-                # Count how many participants should have read it (all except sender)
-                expected_readers = [str(pid) for pid in participant_ids if str(pid) != sender_id]
-                actual_readers = [str(uid) for uid in read_by]
-                
-                # Check if all expected readers have read it
-                msg['read'] = all(reader in actual_readers for reader in expected_readers) if expected_readers else False
-                
-                messages.append(msg)
-            
-            return messages
-            
-        except Exception as e:
-            print(f"Error getting messages: {e}")
-            return []
-    
-    @staticmethod
-    def mark_messages_as_read(conversation_id, user_id):
-        """
-        Mark all messages in a conversation as read by a user
-        
-        Args:
-            conversation_id: ID of the conversation
-            user_id: ID of the user marking as read
-            
-        Returns:
-            int: Number of messages marked as read
-        """
-        if not is_firebase_configured():
-            return 0
-        
-        try:
-            db = get_firestore_client()
-            
-            # Get unread messages in this conversation
-            messages_ref = db.collection(MessageService.MESSAGES_COLLECTION)
-            query = messages_ref.where('conversation_id', '==', conversation_id).where('is_deleted', '==', False)
-            
-            count = 0
-            for doc in query.stream():
-                msg_data = doc.to_dict()
-                read_by = msg_data.get('read_by', [])
-                
-                # If user hasn't read this message and isn't the sender
-                if str(user_id) not in read_by and msg_data.get('sender_id') != str(user_id):
-                    read_by.append(str(user_id))
-                    doc.reference.update({'read_by': read_by})
-                    count += 1
+            count = MessageNotification.objects.filter(
+                user_id=user_id,
+                is_read=False
+            ).count()
             
             return count
             
         except Exception as e:
-            print(f"Error marking messages as read: {e}")
+            print(f"Error getting unread count: {str(e)}")
             return 0
-    
+
     @staticmethod
-    def delete_message(message_id, user_id):
+    def add_participants_to_group(conversation_id, participant_ids):
         """
-        Soft delete a message (only sender can delete)
-        
-        Args:
-            message_id: ID of the message
-            user_id: ID of the user attempting to delete
-            
-        Returns:
-            bool: Success status
+        Add new participants to a group conversation
         """
-        if not is_firebase_configured():
-            return False
-        
         try:
-            db = get_firestore_client()
-            doc_ref = db.collection(MessageService.MESSAGES_COLLECTION).document(message_id)
-            doc = doc_ref.get()
+            chat = Chat.objects.get(id=conversation_id)
             
-            if doc.exists:
-                msg_data = doc.to_dict()
-                
-                # Only sender can delete
-                if msg_data.get('sender_id') == str(user_id):
-                    doc_ref.update({'is_deleted': True})
-                    return True
+            if not chat.is_group:
+                raise ValueError("Cannot add participants to non-group conversations")
             
-            return False
+            # Add participants
+            for participant_id in participant_ids:
+                # Check if already a participant
+                if not ChatParticipant.objects.filter(chat=chat, user_id=participant_id).exists():
+                    ChatParticipant.objects.create(
+                        chat=chat,
+                        user_id=participant_id
+                    )
+            
+            return True
             
         except Exception as e:
-            print(f"Error deleting message: {e}")
-            return False
-    
-    # ============================================================================
-    # UNREAD TRACKING
-    # ============================================================================
-    
+            print(f"Error adding participants: {str(e)}")
+            raise
+
     @staticmethod
-    def get_unread_count_for_conversation(conversation_id, user_id):
+    def _format_conversation(chat, user_id=None):
         """
-        Get count of unread messages in a conversation for a user
-        
-        Args:
-            conversation_id: ID of the conversation
-            user_id: ID of the user
-            
-        Returns:
-            int: Number of unread messages
+        Format a Chat object into a dictionary
+        Includes unread count if user_id is provided
         """
-        if not is_firebase_configured():
-            return 0
+        # Get participant names
+        participants = chat.participants.select_related('user').all()
+        participant_names = [p.user.get_full_name() for p in participants]
+        participant_ids = [str(p.user_id) for p in participants]
         
-        try:
-            db = get_firestore_client()
-            
-            messages_ref = db.collection(MessageService.MESSAGES_COLLECTION)
-            query = messages_ref.where('conversation_id', '==', conversation_id).where('is_deleted', '==', False)
-            
-            unread_count = 0
-            for doc in query.stream():
-                msg_data = doc.to_dict()
-                read_by = msg_data.get('read_by', [])
-                sender_id = msg_data.get('sender_id')
-                
-                # Count if user hasn't read it and isn't the sender
-                if str(user_id) not in read_by and sender_id != str(user_id):
-                    unread_count += 1
-            
-            return unread_count
-            
-        except Exception as e:
-            print(f"Error getting unread count: {e}")
-            return 0
-    
+        # Get last message
+        last_message_obj = chat.messages.order_by('-sent_at').first()
+        last_message = last_message_obj.message if last_message_obj else None
+        last_message_time = last_message_obj.sent_at if last_message_obj else chat.created_at
+        
+        # Get unread count if user_id provided
+        unread_count = 0
+        if user_id:
+            unread_count = MessageNotification.objects.filter(
+                chat=chat,
+                user_id=user_id,
+                is_read=False
+            ).count()
+        
+        return {
+            'id': str(chat.id),
+            'title': chat.name or 'Unnamed Chat',
+            'is_group': chat.is_group,
+            'participant_names': participant_names,
+            'participant_ids': participant_ids,
+            'last_message': last_message,
+            'last_message_time': last_message_time,
+            'created_at': chat.created_at,
+            'unread_count': unread_count
+        }
+
     @staticmethod
-    def get_total_unread_count(user_id):
+    def _format_message(message):
         """
-        Get total count of unread messages across all conversations
-        
-        Args:
-            user_id: ID of the user
-            
-        Returns:
-            int: Total number of unread messages
+        Format a Message object into a dictionary
         """
-        if not is_firebase_configured():
-            return 0
-        
-        try:
-            conversations = MessageService.get_user_conversations(user_id)
-            total_unread = sum(conv.get('unread_count', 0) for conv in conversations)
-            return total_unread
-            
-        except Exception as e:
-            print(f"Error getting total unread count: {e}")
-            return 0
-    
-    # ============================================================================
-    # UTILITIES
-    # ============================================================================
-    
-    @staticmethod
-    def _create_conversation_id(user1_id, user2_id):
-        """
-        Create a consistent conversation ID from two user IDs (for private chats)
-        
-        Args:
-            user1_id: First user ID
-            user2_id: Second user ID
-            
-        Returns:
-            str: Conversation ID
-        """
-        ids = sorted([str(user1_id), str(user2_id)])
-        return f"private_{ids[0]}_{ids[1]}"
+        return {
+            'id': str(message.id),
+            'sender_id': str(message.sender_id),
+            'sender_name': message.sender.get_full_name(),
+            'message': message.message,
+            'sent_at': message.sent_at.isoformat(),
+            'chat_id': str(message.chat_id)
+        }
