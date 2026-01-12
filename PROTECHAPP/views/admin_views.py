@@ -2788,25 +2788,57 @@ def create_student(request):
         # Handle guardian creation if guardian data is provided
         has_guardian = request.POST.get('has_guardian') == 'true'
         if has_guardian:
-            guardian_first_name = request.POST.get('guardian_first_name', '')
-            guardian_last_name = request.POST.get('guardian_last_name', '')
-            guardian_middle_name = request.POST.get('guardian_middle_name', '')
-            guardian_email = request.POST.get('guardian_email', '')
-            guardian_phone = request.POST.get('guardian_phone_number', '')
-            guardian_relationship = request.POST.get('guardian_relationship', '')
-            
-            # Validate guardian required fields
-            if guardian_first_name and guardian_last_name and guardian_email and guardian_phone and guardian_relationship:
-                guardian = Guardian(
-                    first_name=guardian_first_name,
-                    middle_name=guardian_middle_name,
-                    last_name=guardian_last_name,
-                    email=guardian_email,
-                    phone=guardian_phone,
-                    relationship=guardian_relationship,
-                    student=student
-                )
-                guardian.save()
+            # Check if guardians_data is provided (new multiple guardians format)
+            guardians_data_json = request.POST.get('guardians_data')
+            if guardians_data_json:
+                try:
+                    import json
+                    guardians_data = json.loads(guardians_data_json)
+                    
+                    # Create multiple guardians
+                    for guardian_data in guardians_data:
+                        guardian_first_name = guardian_data.get('first_name', '')
+                        guardian_last_name = guardian_data.get('last_name', '')
+                        guardian_middle_name = guardian_data.get('middle_name', '')
+                        guardian_email = guardian_data.get('email', '')
+                        guardian_phone = guardian_data.get('phone_number', '')
+                        guardian_relationship = guardian_data.get('relationship', '')
+                        
+                        # Validate guardian required fields
+                        if guardian_first_name and guardian_last_name and guardian_email and guardian_phone and guardian_relationship:
+                            guardian = Guardian(
+                                first_name=guardian_first_name,
+                                middle_name=guardian_middle_name,
+                                last_name=guardian_last_name,
+                                email=guardian_email,
+                                phone=guardian_phone,
+                                relationship=guardian_relationship,
+                                student=student
+                            )
+                            guardian.save()
+                except json.JSONDecodeError:
+                    print("Error parsing guardians_data JSON")
+            else:
+                # Fallback to old single guardian format for backward compatibility
+                guardian_first_name = request.POST.get('guardian_first_name', '')
+                guardian_last_name = request.POST.get('guardian_last_name', '')
+                guardian_middle_name = request.POST.get('guardian_middle_name', '')
+                guardian_email = request.POST.get('guardian_email', '')
+                guardian_phone = request.POST.get('guardian_phone_number', '')
+                guardian_relationship = request.POST.get('guardian_relationship', '')
+                
+                # Validate guardian required fields
+                if guardian_first_name and guardian_last_name and guardian_email and guardian_phone and guardian_relationship:
+                    guardian = Guardian(
+                        first_name=guardian_first_name,
+                        middle_name=guardian_middle_name,
+                        last_name=guardian_last_name,
+                        email=guardian_email,
+                        phone=guardian_phone,
+                        relationship=guardian_relationship,
+                        student=student
+                    )
+                    guardian.save()
         
         # Handle face enrollment if face data is provided
         has_face_enrollment = request.POST.get('has_face_enrollment') == 'true'
