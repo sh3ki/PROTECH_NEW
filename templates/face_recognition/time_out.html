@@ -809,6 +809,9 @@
     
     <!-- face-api.js for detection and embeddings -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
+    <script>
+        window.SPOOF_PROOF_ENABLED = {{ spoof_proof_enabled|yesno:"true,false" }};
+    </script>
     
     <!-- Ultra-Fast Face Recognition System -->
     <script src="{% static 'js/ultra-fast-face-recognition.js' %}"></script>
