@@ -781,7 +781,10 @@
             // Populate with attendance records
             attendances.forEach(attendance => {
                 const card = document.createElement('div');
-                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200';
+                // Determine background color based on status
+                const isLate = attendance.status_text && attendance.status_text.toUpperCase().includes('LATE');
+                const bgColor = isLate ? 'bg-yellow-100/60 dark:bg-yellow-900/20' : 'bg-green-100/60 dark:bg-green-900/20';
+                card.className = `info-card group hover:scale-[1.01] transform transition-all duration-200 ${bgColor}`;
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
