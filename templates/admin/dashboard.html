@@ -1,4 +1,5 @@
 {% extends 'components/base_dashboard.html' %}
+{% load static %}
 
 {% block title %}PROTECH - Admin Dashboard{% endblock %}
 {% block page_title %}Admin Dashboard{% endblock %}
@@ -16,32 +17,494 @@ You are logged in as Administrator. You have full control over the system.
 {% block content_title %}System Overview{% endblock %}
 
 {% block dashboard_content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div class="bg-tertiary/10 dark:bg-tertiary/20 p-6 rounded-lg border border-tertiary/20 dark:border-tertiary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Users</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">152</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-green-600 dark:text-green-400 text-sm font-medium">+12%</span>
-            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">from last month</span>
+<!-- Dashboard Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <!-- Total Users Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 border-blue-500 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</h3>
+            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+        </div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ total_users|default:0 }}</div>
+        <div class="flex items-center text-xs">
+            {% if users_percentage_change >= 0 %}
+            <span class="text-green-600 dark:text-green-400 font-medium">↑ {{ users_percentage_change }}%</span>
+            {% else %}
+            <span class="text-red-600 dark:text-red-400 font-medium">↓ {{ users_percentage_change }}%</span>
+            {% endif %}
+            <span class="text-gray-500 dark:text-gray-400 ml-1">from last month</span>
         </div>
     </div>
 
-    <div class="bg-secondary/10 dark:bg-secondary/20 p-6 rounded-lg border border-secondary/20 dark:border-secondary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Students</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">1,284</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-green-600 dark:text-green-400 text-sm font-medium">+3%</span>
-            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">from last month</span>
+    <!-- Attendance Rate Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 border-green-500 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</h3>
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ attendance_rate|default:0 }}%</div>
+        <div class="flex items-center text-xs">
+            {% if attendance_percentage_change >= 0 %}
+            <span class="text-green-600 dark:text-green-400 font-medium">↑ {{ attendance_percentage_change }}%</span>
+            {% else %}
+            <span class="text-red-600 dark:text-red-400 font-medium">↓ {{ attendance_percentage_change }}%</span>
+            {% endif %}
+            <span class="text-gray-500 dark:text-gray-400 ml-1">today</span>
         </div>
     </div>
 
-    <div class="bg-primary/10 dark:bg-primary/20 p-6 rounded-lg border border-primary/20 dark:border-primary/30 shadow-sm">
-        <h2 class="text-xl font-semibold text-primary dark:text-tertiary mb-2">Teachers</h2>
-        <p class="text-3xl font-bold text-gray-700 dark:text-gray-200">48</p>
-        <div class="mt-2 flex items-center">
-            <span class="text-green-600 dark:text-green-400 text-sm font-medium">+5%</span>
-            <span class="text-gray-500 dark:text-gray-400 text-sm ml-2">from last month</span>
+    <!-- Unauthorized Access Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 border-red-500 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Unauthorized Today</h3>
+            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ unauthorized_today|default:0 }}</div>
+        <div class="flex items-center text-xs">
+            {% if unauthorized_percentage_change >= 0 %}
+            <span class="text-red-600 dark:text-red-400 font-medium">↑ {{ unauthorized_percentage_change }}%</span>
+            {% else %}
+            <span class="text-green-600 dark:text-green-400 font-medium">↓ {{ unauthorized_percentage_change }}%</span>
+            {% endif %}
+            <span class="text-gray-500 dark:text-gray-400 ml-1">from yesterday</span>
+        </div>
+    </div>
+
+    <!-- Face Enrollment Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 border-purple-500 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Face Enrolled</h3>
+            <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ face_enrollment_rate|default:0 }}%</div>
+        <div class="flex items-center text-xs">
+            <span class="text-gray-600 dark:text-gray-400">{{ total_face_enrolled|default:0 }} / {{ total_students|default:0 }} students</span>
+        </div>
+    </div>
+
+    <!-- Active Sections Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 border-yellow-500 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Sections</h3>
+            <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+        </div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ total_sections|default:0 }}</div>
+        <div class="flex items-center text-xs">
+            <span class="text-gray-600 dark:text-gray-400">{{ total_grades|default:0 }} grades</span>
         </div>
     </div>
 </div>
+
+<!-- Main Content Grid: Charts (2/3) + Sidebar (1/3) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Charts (2/3 width) -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- 7-Day Attendance Trend Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">7-Day Attendance Trend</h3>
+                <div class="flex items-center space-x-2">
+                    <span class="flex items-center text-sm">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
+                        <span class="text-gray-600 dark:text-gray-400">Present</span>
+                    </span>
+                    <span class="flex items-center text-sm">
+                        <span class="w-3 h-3 bg-red-500 rounded-full mr-1"></span>
+                        <span class="text-gray-600 dark:text-gray-400">Absent</span>
+                    </span>
+                    <span class="flex items-center text-sm">
+                        <span class="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+                        <span class="text-gray-600 dark:text-gray-400">Percentage</span>
+                    </span>
+                </div>
+            </div>
+            <div class="h-80">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Users by Role Distribution Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Users by Role Distribution</h3>
+            </div>
+            <div class="h-64">
+                <canvas id="usersByRoleChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Attendance by Grade Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Attendance by Grade (Today)</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Students</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Present</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Attendance Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for grade_data in grades_attendance %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ grade_data.grade }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700 dark:text-gray-300">{{ grade_data.total }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700 dark:text-gray-300">{{ grade_data.present }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-[100px]">
+                                        <div class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full" style="width: {{ grade_data.rate }}%"></div>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ grade_data.rate }}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No grade data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Sidebar Content (1/3 width) -->
+    <div class="space-y-6">
+        <!-- Recent Unauthorized Access Logs -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                Recent Unauthorized Access
+            </h3>
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                {% for log in recent_unauthorized %}
+                <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 hover:shadow-sm transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                {% if log.student %}
+                                    {{ log.student.first_name }} {{ log.student.last_name }}
+                                {% else %}
+                                    Unknown Person
+                                {% endif %}
+                            </p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ log.timestamp|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
+                            Denied
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">No unauthorized access today</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent User Registrations -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+                Recent User Registrations
+            </h3>
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                {% for user in recent_users %}
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:shadow-sm transition-shadow">
+                    <div class="flex-shrink-0">
+                        {% if user.profile_pic %}
+                        <img src="{{ user.profile_pic }}" alt="{{ user.first_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-blue-500">
+                        {% else %}
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm border-2 border-blue-500">
+                            {{ user.first_name|first }}{{ user.last_name|first }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ user.get_role_display }} • {{ user.created_at|date:"M d" }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">No recent registrations</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- System Status / Quick Info -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                System Status
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Total Students</span>
+                    <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ total_students }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Total Teachers</span>
+                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ total_teachers }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Pending Excused</span>
+                    <span class="text-sm font-bold text-purple-600 dark:text-purple-400">{{ pending_excused }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Present Today</span>
+                    <span class="text-sm font-bold text-yellow-600 dark:text-yellow-400">{{ total_present_today }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Panel -->
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                <a href="{% url 'admin_users' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">Manage Users</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'admin_students' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">Manage Students</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'admin_teachers' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">Manage Teachers</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'admin_attendance_records' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">View Attendance</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'admin_unauthorized_logs' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">Unauthorized Logs</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'admin_settings' %}" class="flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm">
+                    <span class="text-sm font-medium">System Settings</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse chart data from backend
+    const chartData = {{ chart_data|safe }};
+    const usersByRoleData = {{ users_by_role|safe }};
+
+    // 7-Day Attendance Trend Chart (Dual-axis: Bar + Line)
+    const attendanceCtx = document.getElementById('attendanceTrendChart');
+    if (attendanceCtx) {
+        new Chart(attendanceCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Present',
+                        data: chartData.map(d => d.present),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Absent',
+                        data: chartData.map(d => d.absent),
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Percentage',
+                        data: chartData.map(d => d.percentage),
+                        type: 'line',
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 3,
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: { size: 12 }
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Number of Students',
+                            font: { size: 13, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)',
+                            font: { size: 13, weight: 'bold' }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    // Users by Role Pie Chart
+    const usersByRoleCtx = document.getElementById('usersByRoleChart');
+    if (usersByRoleCtx) {
+        new Chart(usersByRoleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: usersByRoleData.map(d => d.role),
+                datasets: [{
+                    data: usersByRoleData.map(d => d.count),
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',   // Students - Blue
+                        'rgba(34, 197, 94, 0.8)',    // Teachers - Green
+                        'rgba(168, 85, 247, 0.8)',   // Principals - Purple
+                        'rgba(234, 179, 8, 0.8)',    // Registrars - Yellow
+                        'rgba(239, 68, 68, 0.8)'     // Admins - Red
+                    ],
+                    borderColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(34, 197, 94)',
+                        'rgb(168, 85, 247)',
+                        'rgb(234, 179, 8)',
+                        'rgb(239, 68, 68)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 15,
+                            font: { size: 13 },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label}: ${value}`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
