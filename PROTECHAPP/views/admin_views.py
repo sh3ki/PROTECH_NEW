@@ -5414,34 +5414,38 @@ def admin_settings(request):
     # Get or create system settings
     settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
     
-    # Convert UTC late_time_cutoff to Asia/Manila for display
+    # Convert UTC class times to Asia/Manila for display
     manila_tz = pytz.timezone('Asia/Manila')
     utc_tz = pytz.UTC
     
-    # Create a datetime object with today's date and the stored UTC time
-    if settings_obj.late_time_cutoff:
-        # Convert to time object if it's a string
-        late_time = settings_obj.late_time_cutoff
-        if isinstance(late_time, str):
-            from datetime import datetime
-            late_time = datetime.strptime(late_time, '%H:%M:%S').time()
-        
-        # Combine today's date with the time and make it timezone-aware in UTC
-        utc_datetime = timezone.datetime.combine(
-            timezone.now().date(),
-            late_time
-        )
-        utc_datetime = utc_tz.localize(utc_datetime)
-        
-        # Convert to Manila timezone
-        manila_datetime = utc_datetime.astimezone(manila_tz)
-        late_cutoff_display = manila_datetime.strftime('%H:%M')
-    else:
-        late_cutoff_display = '08:00'
+    def convert_time_to_manila(time_field):
+        if time_field:
+            # Convert to time object if it's a string
+            if isinstance(time_field, str):
+                from datetime import datetime
+                time_field = datetime.strptime(time_field, '%H:%M:%S').time()
+            
+            # Combine today's date with the time and make it timezone-aware in UTC
+            utc_datetime = timezone.datetime.combine(
+                timezone.now().date(),
+                time_field
+            )
+            utc_datetime = utc_tz.localize(utc_datetime)
+            
+            # Convert to Manila timezone
+            manila_datetime = utc_datetime.astimezone(manila_tz)
+            return manila_datetime.strftime('%H:%M')
+        return None
+    
+    first_class_display = convert_time_to_manila(settings_obj.first_class_start_time) or '08:00'
+    second_class_display = convert_time_to_manila(settings_obj.second_class_start_time)
     
     context = {
         'current_mode': settings_obj.attendance_mode,
-        'late_cutoff_time': late_cutoff_display,
+        'first_class_time': first_class_display,
+        'second_class_time': second_class_display,
+        'grace_period': settings_obj.grace_period_minutes,
+        'has_second_class': settings_obj.second_class_start_time is not None,
         'email_enabled': settings_obj.email_notifications_enabled,
         'sms_enabled': settings_obj.sms_notifications_enabled,
     }
@@ -5472,40 +5476,88 @@ def save_attendance_mode(request):
 @login_required
 @user_passes_test(is_admin)
 @require_http_methods(["POST"])
-def save_late_time_cutoff(request):
-    """Save the late time cutoff setting (converts Manila time to UTC)"""
+def save_class_times(request):
+    """Save class timing settings with validation (converts Manila time to UTC)"""
     from PROTECHAPP.models import SystemSettings
     from django.utils import timezone
     import pytz
     from datetime import datetime
     
-    late_time = request.POST.get('late_time_cutoff')
+    first_class_time = request.POST.get('first_class_start_time')
+    second_class_time = request.POST.get('second_class_start_time')
+    grace_period = request.POST.get('grace_period_minutes')
     
-    if late_time:
-        try:
-            # Parse the time input (format: HH:MM)
-            time_obj = datetime.strptime(late_time, '%H:%M').time()
+    if not first_class_time or not grace_period:
+        messages.error(request, 'First class time and grace period are required.')
+        return redirect('admin_settings')
+    
+    try:
+        # Validate and parse grace period
+        grace_minutes = int(grace_period)
+        if grace_minutes < 0 or grace_minutes > 60:
+            messages.error(request, 'Grace period must be between 0 and 60 minutes.')
+            return redirect('admin_settings')
+        
+        # Parse first class time
+        first_time_obj = datetime.strptime(first_class_time, '%H:%M').time()
+        
+        # Parse second class time if provided
+        second_time_obj = None
+        if second_class_time:
+            second_time_obj = datetime.strptime(second_class_time, '%H:%M').time()
             
-            # Create a datetime object with today's date in Manila timezone
-            manila_tz = pytz.timezone('Asia/Manila')
+            # Validate 4-hour minimum gap
+            first_minutes = first_time_obj.hour * 60 + first_time_obj.minute
+            second_minutes = second_time_obj.hour * 60 + second_time_obj.minute
+            
+            # Handle next-day scenario
+            if second_minutes < first_minutes:
+                second_minutes += 24 * 60
+            
+            gap_minutes = second_minutes - first_minutes
+            
+            if gap_minutes < 240:  # 4 hours = 240 minutes
+                gap_hours = gap_minutes // 60
+                gap_mins = gap_minutes % 60
+                messages.error(
+                    request, 
+                    f'Second class must be at least 4 hours after first class. Current gap: {gap_hours}h {gap_mins}m'
+                )
+                return redirect('admin_settings')
+        
+        # Convert Manila times to UTC
+        manila_tz = pytz.timezone('Asia/Manila')
+        
+        # Convert first class time
+        manila_datetime = manila_tz.localize(
+            datetime.combine(timezone.now().date(), first_time_obj)
+        )
+        first_utc_time = manila_datetime.astimezone(pytz.UTC).time()
+        
+        # Convert second class time if provided
+        second_utc_time = None
+        if second_time_obj:
             manila_datetime = manila_tz.localize(
-                datetime.combine(timezone.now().date(), time_obj)
+                datetime.combine(timezone.now().date(), second_time_obj)
             )
-            
-            # Convert to UTC
-            utc_datetime = manila_datetime.astimezone(pytz.UTC)
-            utc_time = utc_datetime.time()
-            
-            # Save to database
-            settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
-            settings_obj.late_time_cutoff = utc_time
-            settings_obj.save()
-            
-            messages.success(request, f'Late time cutoff successfully set to {late_time} (Manila Time)!')
-        except ValueError:
-            messages.error(request, 'Invalid time format. Please use HH:MM format.')
-    else:
-        messages.error(request, 'Please provide a valid time.')
+            second_utc_time = manila_datetime.astimezone(pytz.UTC).time()
+        
+        # Save to database
+        settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.first_class_start_time = first_utc_time
+        settings_obj.second_class_start_time = second_utc_time
+        settings_obj.grace_period_minutes = grace_minutes
+        settings_obj.save()
+        
+        # Build success message
+        success_msg = f'Class timing successfully configured! First class: {first_class_time}, Grace period: {grace_minutes} minutes'
+        if second_class_time:
+            success_msg += f', Second class: {second_class_time}'
+        
+        messages.success(request, success_msg)
+        
+    except ValueError:
+        messages.error(request, 'Invalid time format. Please use HH:MM format.')
     
     return redirect('admin_settings')
 
