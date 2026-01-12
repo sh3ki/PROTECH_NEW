@@ -127,7 +127,7 @@ def record_attendance_api(request):
                                     try:
                                         subject = f"Student Time In Alert - {student.first_name} {student.last_name}"
                                         message = f"""
-Dear {guardian.first_name} {guardian.last_name},
+Dear Mr./Mrs. {guardian.first_name} {guardian.last_name},
 
 This is to inform you that your child has arrived at school.
 
@@ -236,7 +236,7 @@ Status: {attendance.status}
                                     try:
                                         subject = f"Student Time Out Alert - {student.first_name} {student.last_name}"
                                         message = f"""
-Dear {guardian.first_name} {guardian.last_name},
+Dear Mr./Mrs. {guardian.first_name} {guardian.last_name},
 
 This is to inform you that your child has left school.
 
