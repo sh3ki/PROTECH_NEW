@@ -181,7 +181,7 @@
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {% for student in students %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <tr class="{% if not student.has_timed_in_today %}bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-500 border-2 border-red-300 dark:border-red-700{% else %}hover:bg-gray-50 dark:hover:bg-gray-700/50{% endif %} transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex-shrink-0 h-10 w-10">
                                 {% if student.profile_pic %}
@@ -628,6 +628,9 @@ function loadStudentsFromDOM() {
         const nameText = row.cells[2]?.querySelector('.text-sm.font-bold')?.textContent.trim() || '';
         const nameParts = nameText.split(' ');
         
+        // Check if row has red background (not timed in today)
+        const hasTimedInToday = !row.classList.contains('bg-red-50') && !row.classList.contains('border-red-500');
+        
         return {
             id: row.querySelector('[onclick*="editStudent"]')?.getAttribute('onclick')?.match(/\d+/)?.[0],
             profile_pic: row.querySelector('img')?.src || '',
@@ -637,6 +640,7 @@ function loadStudentsFromDOM() {
             last_name: nameParts[nameParts.length - 1] || '',
             email: row.cells[2]?.querySelector('.text-xs')?.textContent || '',
             status: row.cells[3]?.querySelector('span')?.textContent.trim() || '',
+            has_timed_in_today: hasTimedInToday,
             _rowHTML: row.outerHTML
         };
     });
@@ -821,8 +825,14 @@ function renderStudentsTable(students) {
             'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
             'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
         
+        // Check if student has timed in today
+        const hasTimedInToday = student.has_timed_in_today || false;
+        const rowClass = !hasTimedInToday ? 
+            'bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-500 border-2 border-red-300 dark:border-red-700 transition-colors' : 
+            'hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors';
+        
         return `
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <tr class="${rowClass}">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex-shrink-0 h-10 w-10">
                         ${profilePic}
