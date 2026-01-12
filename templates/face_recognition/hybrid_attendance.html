@@ -462,6 +462,139 @@
     <!-- Camera selection and testing script for BOTH cameras -->
     <script src="{% static 'js/hybrid-camera-manager.js' %}"></script>
     
+    <!-- Attendance List Polling Script -->
+    <script>
+        // Function to fetch TIME IN attendance records
+        async function fetchTimeInAttendance() {
+            try {
+                const response = await fetch('/api/today-attendance/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateTimeInList(data.attendances, data.count);
+                }
+            } catch (error) {
+                console.error('Error fetching time-in attendance:', error);
+            }
+        }
+        
+        // Function to fetch TIME OUT attendance records
+        async function fetchTimeOutAttendance() {
+            try {
+                const response = await fetch('/api/today-timeout/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateTimeOutList(data.attendances, data.count);
+                }
+            } catch (error) {
+                console.error('Error fetching time-out attendance:', error);
+            }
+        }
+        
+        // Function to update TIME IN list UI
+        function updateTimeInList(attendances, count) {
+            const studentList = document.getElementById('timein-student-list');
+            const studentCount = document.getElementById('timein-student-count');
+            
+            // Update count
+            studentCount.textContent = count;
+            
+            // Clear existing content
+            studentList.innerHTML = '';
+            
+            if (attendances.length === 0) {
+                studentList.innerHTML = `
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                        <p>No time-in records yet today</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Populate with attendance records
+            attendances.forEach(attendance => {
+                const card = document.createElement('div');
+                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center">
+                                <h3 class="font-semibold text-gray-800 dark:text-white">${attendance.student_name}</h3>
+                                <span class="ml-2 status-badge ${attendance.status_class}">
+                                    ${attendance.status_text}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: ${attendance.student_id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${attendance.date}</p>
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">${attendance.time_in}</p>
+                        </div>
+                    </div>
+                `;
+                studentList.appendChild(card);
+            });
+        }
+        
+        // Function to update TIME OUT list UI
+        function updateTimeOutList(attendances, count) {
+            const studentList = document.getElementById('timeout-student-list');
+            const studentCount = document.getElementById('timeout-student-count');
+            
+            // Update count
+            studentCount.textContent = count;
+            
+            // Clear existing content
+            studentList.innerHTML = '';
+            
+            if (attendances.length === 0) {
+                studentList.innerHTML = `
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                        <p>No time-out records yet today</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Populate with attendance records
+            attendances.forEach(attendance => {
+                const card = document.createElement('div');
+                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center">
+                                <h3 class="font-semibold text-gray-800 dark:text-white">${attendance.student_name}</h3>
+                                <span class="ml-2 status-badge ${attendance.status_class}">
+                                    ${attendance.status_text}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Student ID: ${attendance.student_id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${attendance.date}</p>
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">${attendance.time_out}</p>
+                        </div>
+                    </div>
+                `;
+                studentList.appendChild(card);
+            });
+        }
+        
+        // Fetch immediately on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTimeInAttendance();
+            fetchTimeOutAttendance();
+            
+            // Poll every 1 second for updates
+            setInterval(() => {
+                fetchTimeInAttendance();
+                fetchTimeOutAttendance();
+            }, 1000);
+        });
+    </script>
+    
     <!-- face-api.js for detection and embeddings -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
     
