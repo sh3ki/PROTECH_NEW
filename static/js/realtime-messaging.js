@@ -598,12 +598,9 @@ class RealtimeMessaging {
             ` : '';
             
             return `
-                <div class="conversation-item ${isActive ? 'active' : ''}" onclick="window.messaging.loadConversation('${conv.id}')" style="cursor: pointer;">
+                <div class="conversation-item ${isActive ? 'active' : ''}" data-conversation-id="${conv.id}">
                     <div class="flex items-start">
-                        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span class="text-primary font-semibold text-lg">${(conv.title || 'Chat').charAt(0).toUpperCase()}</span>
-                        </div>
-                        <div class="ml-3 flex-1 min-w-0">
+                        <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between">
                                 <h4 class="font-semibold text-gray-900 dark:text-white truncate">${conv.title || 'Unnamed Chat'}</h4>
                                 ${unreadBadge}
@@ -619,6 +616,15 @@ class RealtimeMessaging {
                 </div>
             `;
         }).join('');
+        
+        // Add click event listeners to conversation items
+        const conversationItems = container.querySelectorAll('.conversation-item');
+        conversationItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const conversationId = item.getAttribute('data-conversation-id');
+                this.loadConversation(conversationId);
+            });
+        });
     }
 
     renderConversationHeader() {
@@ -956,15 +962,14 @@ class RealtimeMessaging {
     }
 }
 
-// Initialize messaging when page loads
-let messaging;
+// Initialize messaging when page loads - attach to window for global access
 document.addEventListener('DOMContentLoaded', () => {
-    messaging = new RealtimeMessaging();
+    window.messaging = new RealtimeMessaging();
 });
 
 // Clean up on page unload
 window.addEventListener('beforeunload', () => {
-    if (messaging) {
-        messaging.stopPolling();
+    if (window.messaging) {
+        window.messaging.stopPolling();
     }
 });
