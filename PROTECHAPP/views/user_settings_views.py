@@ -19,6 +19,10 @@ from PROTECHAPP.models import CustomUser
 
 logger = logging.getLogger(__name__)
 
+# Create private_profile_pics directory if it doesn't exist (same as admin_views.py)
+PROFILE_PICS_DIR = os.path.join(settings.BASE_DIR, 'private_profile_pics')
+os.makedirs(PROFILE_PICS_DIR, exist_ok=True)
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -51,30 +55,26 @@ def update_profile_picture(request):
                 'message': 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed'
             }, status=400)
         
-        # Create directory if it doesn't exist
-        profile_pics_dir = os.path.join(settings.MEDIA_ROOT, 'profile_pics')
-        os.makedirs(profile_pics_dir, exist_ok=True)
-        
         # Generate unique filename
+        import uuid
         file_extension = os.path.splitext(profile_picture.name)[1]
-        filename = f"user_{request.user.id}_{int(request.user.updated_at.timestamp())}{file_extension}"
+        filename = f"{uuid.uuid4()}_{profile_picture.name}"
         
         # Delete old profile picture if exists
         if request.user.profile_pic:
-            old_pic_path = os.path.join(settings.MEDIA_ROOT, request.user.profile_pic.replace('/media/', ''))
+            old_pic_path = os.path.join(PROFILE_PICS_DIR, request.user.profile_pic)
             if os.path.exists(old_pic_path):
                 try:
                     os.remove(old_pic_path)
                 except Exception as e:
                     logger.warning(f"Could not delete old profile picture: {e}")
         
-        # Save the file
-        fs = FileSystemStorage(location=profile_pics_dir)
+        # Save the file to private_profile_pics directory
+        fs = FileSystemStorage(location=PROFILE_PICS_DIR)
         saved_filename = fs.save(filename, profile_picture)
-        file_url = f'/media/profile_pics/{saved_filename}'
         
         # Optimize image (resize if too large)
-        file_path = os.path.join(profile_pics_dir, saved_filename)
+        file_path = os.path.join(PROFILE_PICS_DIR, saved_filename)
         try:
             with Image.open(file_path) as img:
                 # Convert RGBA to RGB if needed
@@ -91,8 +91,8 @@ def update_profile_picture(request):
         except Exception as e:
             logger.error(f"Error optimizing image: {e}")
         
-        # Update user profile
-        request.user.profile_pic = file_url
+        # Update user profile - store just the filename (not the full path)
+        request.user.profile_pic = saved_filename
         request.user.save()
         
         logger.info(f"Profile picture updated for user {request.user.username}")
@@ -100,7 +100,7 @@ def update_profile_picture(request):
         return JsonResponse({
             'success': True,
             'message': 'Profile picture updated successfully',
-            'profile_pic_url': file_url
+            'profile_pic_url': f'/profile-pics/{saved_filename}/'
         })
         
     except Exception as e:
@@ -120,7 +120,7 @@ def remove_profile_picture(request):
     try:
         # Delete the profile picture file if it exists
         if request.user.profile_pic:
-            pic_path = os.path.join(settings.MEDIA_ROOT, request.user.profile_pic.replace('/media/', ''))
+            pic_path = os.path.join(PROFILE_PICS_DIR, request.user.profile_pic)
             if os.path.exists(pic_path):
                 try:
                     os.remove(pic_path)
@@ -313,7 +313,7 @@ def delete_account(request):
         
         # Delete profile picture if exists
         if user.profile_pic:
-            pic_path = os.path.join(settings.MEDIA_ROOT, user.profile_pic.replace('/media/', ''))
+            pic_path = os.path.join(PROFILE_PICS_DIR, user.profile_pic)
             if os.path.exists(pic_path):
                 try:
                     os.remove(pic_path)
