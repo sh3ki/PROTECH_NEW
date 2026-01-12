@@ -2430,6 +2430,13 @@ function loadStudents(page = 1, itemsPerPage = null) {
 
 // Render students table
 function renderStudentsTable(students) {
+    // Sort students by name (A to Z)
+    students.sort((a, b) => {
+        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+    
     if (students.length === 0) {
         document.getElementById('student-no-results').classList.remove('hidden');
         studentTableContainer.querySelector('.bg-white').classList.add('hidden');
