@@ -96,14 +96,52 @@ def record_attendance_api(request):
             if not attendance.time_in:
                 attendance.time_in = current_time_utc
                 
-                # Validate against UTC cutoff (8:00 AM Manila = 00:00 AM UTC)
-                # Manila 8:00 AM is UTC 00:00 (midnight UTC)
-                cutoff_time_utc = datetime_time(0, 0)  # Midnight UTC = 8:00 AM Manila
-                if current_time_utc > cutoff_time_utc:
-                    attendance.status = 'LATE'
-                else:
-                    attendance.status = 'ON TIME'
+                # Get class timing settings from SystemSettings
+                from PROTECHAPP.models import SystemSettings
+                settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
                 
+                # Calculate attendance status based on class timing and grace period
+                # Status is "Present" if within grace period, "Late" after grace period + 1 minute
+                status = 'LATE'  # Default to late
+                
+                # Check against first class
+                if settings_obj.first_class_start_time:
+                    grace_period = settings_obj.grace_period_minutes
+                    first_class_time = settings_obj.first_class_start_time
+                    
+                    # Calculate late threshold: class_start + grace_period + 1 minute
+                    from datetime import timedelta
+                    first_class_datetime = datetime.combine(today, first_class_time)
+                    late_threshold = first_class_datetime + timedelta(minutes=grace_period + 1)
+                    late_threshold_time = late_threshold.time()
+                    
+                    # Present window: 2 hours before class start to end of grace period
+                    present_start = first_class_datetime - timedelta(hours=2)
+                    present_end = first_class_datetime + timedelta(minutes=grace_period)
+                    
+                    current_datetime = datetime.combine(today, current_time_utc)
+                    
+                    if present_start <= current_datetime <= present_end:
+                        status = 'ON TIME'
+                
+                # Check against second class if it exists
+                if status == 'LATE' and settings_obj.second_class_start_time:
+                    second_class_time = settings_obj.second_class_start_time
+                    grace_period = settings_obj.grace_period_minutes
+                    
+                    from datetime import timedelta
+                    second_class_datetime = datetime.combine(today, second_class_time)
+                    
+                    # Present window: 2 hours before class start to end of grace period
+                    present_start = second_class_datetime - timedelta(hours=2)
+                    present_end = second_class_datetime + timedelta(minutes=grace_period)
+                    
+                    current_datetime = datetime.combine(today, current_time_utc)
+                    
+                    if present_start <= current_datetime <= present_end:
+                        status = 'ON TIME'
+                
+                attendance.status = status
                 attendance.save()
                 
                 # Convert to Manila time for display
