@@ -178,6 +178,7 @@ urlpatterns = [
     path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
     path('admin/settings/save-attendance-mode/', admin_views.save_attendance_mode, name='save_attendance_mode'),
     path('admin/settings/save-class-times/', admin_views.save_class_times, name='save_class_times'),
+    path('admin/settings/save-gate-mode/', admin_views.save_gate_mode, name='save_gate_mode'),
     path('admin/settings/save-notification-settings/', admin_views.save_notification_settings, name='save_notification_settings'),
     path('admin/settings/save-display-mode/', admin_views.save_display_mode, name='save_display_mode'),
     path('admin/settings/save-spoof-proofing/', admin_views.save_spoof_proofing, name='save_spoof_proofing'),
