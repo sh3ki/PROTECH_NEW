@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/today-attendance/', face_recognition_views.get_today_attendance, name='get_today_attendance'),
     path('api/today-timeout/', face_recognition_views.get_today_timeout, name='get_today_timeout'),
     path('api/save-unauthorized-face/', face_recognition_views.save_unauthorized_face, name='save_unauthorized_face'),
+    path('api/delete-unauthorized-log/', face_recognition_views.delete_unauthorized_log, name='delete_unauthorized_log'),
     
     # Gate Control API routes
     path('api/gate/trigger/', face_recognition_views.trigger_gate, name='trigger_gate'),
