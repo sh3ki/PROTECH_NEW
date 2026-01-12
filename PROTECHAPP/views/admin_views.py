@@ -5706,12 +5706,8 @@ def get_backup_status(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_messages(request):
-    """View for messages"""
-    from django.conf import settings
-    context = {
-        'firebase_config': settings.FIREBASE_WEB_CONFIG
-    }
-    return render(request, 'admin/messages.html', context)
+    """View for messages - now using PostgreSQL with polling"""
+    return render(request, 'admin/messages.html')
 
 
 @login_required
