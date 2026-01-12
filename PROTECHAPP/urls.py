@@ -336,6 +336,7 @@ urlpatterns = [
     path('teacher/advisory/attendance/export/', advisory_teacher_views.export_advisory_attendance, name='export_advisory_attendance'),
     path('teacher/advisory/excused/', advisory_teacher_views.teacher_advisory_excused, name='teacher_advisory_excused'),
     path('teacher/advisory/excused/export/', advisory_teacher_views.export_advisory_excused, name='export_advisory_excused'),
+    path('teacher/advisory/calendar/', advisory_teacher_views.teacher_advisory_calendar, name='teacher_advisory_calendar'),
     path('teacher/advisory/messages/', advisory_teacher_views.teacher_advisory_messages, name='teacher_advisory_messages'),
     path('teacher/advisory/settings/', advisory_teacher_views.teacher_advisory_settings, name='teacher_advisory_settings'),
 
@@ -383,6 +384,7 @@ urlpatterns = [
     path('teacher/non-advisory/excused/<int:excused_id>/delete/', non_advisory_teacher_views.teacher_non_advisory_delete_excused_absence, name='teacher_non_advisory_delete_excused_absence'),
     path('teacher/non-advisory/excused/letter/<str:filename>/', non_advisory_teacher_views.teacher_non_advisory_serve_excuse_letter, name='teacher_non_advisory_serve_excuse_letter'),
 
+    path('teacher/non-advisory/calendar/', non_advisory_teacher_views.teacher_non_advisory_calendar, name='teacher_non_advisory_calendar'),
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
