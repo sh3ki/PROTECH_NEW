@@ -5448,6 +5448,7 @@ def admin_settings(request):
         'has_second_class': settings_obj.second_class_start_time is not None,
         'email_enabled': settings_obj.email_notifications_enabled,
         'sms_enabled': settings_obj.sms_notifications_enabled,
+        'display_mode': settings_obj.recognition_display_mode,
     }
     return render(request, 'admin/settings.html', context)
 
@@ -5595,6 +5596,34 @@ def save_notification_settings(request):
         messages.success(request, f'Notification settings updated: {" and ".join(statuses)}')
     except Exception as e:
         messages.error(request, f'Error saving notification settings: {str(e)}')
+    
+    return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def save_display_mode(request):
+    """Save recognition display mode setting"""
+    from PROTECHAPP.models import SystemSettings
+    
+    display_mode = request.POST.get('recognition_display_mode')
+    
+    if display_mode not in ['SCROLLABLE', 'LATEST']:
+        messages.error(request, 'Invalid display mode selected.')
+        return redirect('admin_settings')
+    
+    try:
+        # Get or create settings
+        settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.recognition_display_mode = display_mode
+        settings_obj.save()
+        
+        # Build success message
+        mode_name = 'Scrollable List' if display_mode == 'SCROLLABLE' else 'Latest Only'
+        messages.success(request, f'Recognition display mode updated to: {mode_name}')
+    except Exception as e:
+        messages.error(request, f'Error saving display mode: {str(e)}')
     
     return redirect('admin_settings')
 
