@@ -171,7 +171,7 @@
                 
                 if (isMobile) {
                     // Mobile: button at ~1/4 screen width, sidebar hidden by default
-                    btn.style.left = '90px';
+                    btn.style.left = '-7px';
                     if (icon) {
                         // Right-pointing chevron (closed state)
                         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
@@ -203,7 +203,7 @@
                 <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <!-- Page title (centered on mobile with padding for toggle button, left on desktop) -->
-                        <div class="flex-1 flex items-center justify-center lg:justify-start pl-10 lg:pl-0">
+                        <div class="flex-1 flex items-center justify-center lg:justify-start pl-6 lg:pl-0">
                             <h1 class="text-xl font-semibold text-gray-800 dark:text-white">{% block page_title %}Dashboard{% endblock %}</h1>
                         </div>
                         
@@ -361,7 +361,7 @@
             // Update button position and icon for mobile closed state
             if (btn) {
                 btn.style.transition = 'left 0.3s ease-in-out';
-                btn.style.left = '90px';
+                btn.style.left = '-7px';
                 if (icon) {
                     // Right-pointing chevron (closed state)
                     icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
