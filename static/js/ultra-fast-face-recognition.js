@@ -532,6 +532,11 @@ class UltraFastFaceRecognition {
                     this.saveUnauthorizedFace(detection).catch(error => {
                         console.error('Failed to save unauthorized face:', error);
                     });
+                } else if (detection.status === 'spoof' && this.spoofProofEnabled) {
+                    // Log spoof attempts as unauthorized when spoof-proofing is on
+                    this.saveUnauthorizedFace(detection).catch(error => {
+                        console.error('Failed to save spoof attempt:', error);
+                    });
                 }
             }
         }
