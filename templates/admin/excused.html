@@ -724,6 +724,14 @@ function renderExcusedTable(records) {
             tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-gray-500 dark:text-gray-400">No excused absences found.</td></tr>`;
             return;
         }
+        
+        // Sort records by student name (A to Z)
+        records.sort((a, b) => {
+            const nameA = a.student.full_name.toLowerCase();
+            const nameB = b.student.full_name.toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        
         records.forEach(record => {
             let statusBadge = '';
             switch (record.status) {
