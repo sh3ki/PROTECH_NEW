@@ -622,33 +622,33 @@ function fetchAttendanceHistory(studentId) {
         headers: {
             'X-CSRFToken': csrfToken,
             'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin'
+        }
     })
     .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch attendance history');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         return response.json();
     })
     .then(data => {
-        // Store student information if provided
-        if (data.student) {
-            const studentInfo = data.student;
-            console.log('Student Info:', studentInfo);
-            // Update modal with additional student details if needed
-        }
-        
-        attendanceHistoryData = data.attendance_history || [];
+        console.log('Fetched attendance data:', data);
+        attendanceHistoryData = data.records || [];
         filteredHistoryData = [...attendanceHistoryData];
+        
+        console.log('Total records:', attendanceHistoryData.length);
+        console.log('Filtered records:', filteredHistoryData.length);
+        
+        // Hide loading
         document.getElementById('history-loading').classList.add('hidden');
         
-        if (attendanceHistoryData.length === 0) {
-            document.getElementById('history-empty').classList.remove('hidden');
-        } else {
-            renderAttendanceHistory();
-        }
+        // Populate year filter
+        populateYearFilter();
+        
+        // Render the history
+        renderAttendanceHistory();
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Error fetching attendance history:', error);
         document.getElementById('history-loading').classList.add('hidden');
         document.getElementById('history-empty').classList.remove('hidden');
     });
@@ -728,9 +728,12 @@ function renderAttendanceHistory() {
     const historyLoading = document.getElementById('history-loading');
     const historyEmpty = document.getElementById('history-empty');
     
+    console.log('renderAttendanceHistory called with', filteredHistoryData.length, 'records');
+    
     historyLoading.classList.add('hidden');
     
     if (filteredHistoryData.length === 0) {
+        console.log('No filtered records - showing empty state');
         historyContent.classList.add('hidden');
         historyEmpty.classList.remove('hidden');
         return;
@@ -760,11 +763,15 @@ function renderAttendanceHistory() {
         groupedData[key].records.push(record);
     });
     
+    console.log('Grouped data:', groupedData);
+    
     // Sort groups by year and month
     const sortedGroups = Object.values(groupedData).sort((a, b) => {
         if (b.year !== a.year) return b.year - a.year;
         return monthOrder.indexOf(b.month) - monthOrder.indexOf(a.month);
     });
+    
+    console.log('Sorted groups:', sortedGroups);
     
     // Render grouped records
     let html = '';
