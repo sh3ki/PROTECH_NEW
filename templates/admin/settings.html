@@ -158,6 +158,106 @@
         </form>
     </div>
 
+    <!-- Notification Settings Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-6">
+        <div class="flex items-center gap-3 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary dark:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Attendance Notifications</h2>
+        </div>
+        
+        <p class="text-accent dark:text-gray-400 mb-6">
+            Control whether parents and guardians receive email and SMS notifications when students check in or out.
+        </p>
+
+        <form method="POST" action="{% url 'save_notification_settings' %}" class="space-y-6" x-data="{ emailEnabled: {{ email_enabled|yesno:'true,false' }}, smsEnabled: {{ sms_enabled|yesno:'true,false' }} }">
+            {% csrf_token %}
+            
+            <!-- Email Notifications Toggle -->
+            <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center"
+                         :class="emailEnabled ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                             :class="emailEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-600'"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-primary dark:text-tertiary text-lg">Email Notifications</div>
+                        <div class="text-sm text-accent dark:text-gray-400">
+                            Send email alerts to parents when students check in/out
+                        </div>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="email_notifications_enabled" class="sr-only peer" 
+                           {% if email_enabled %}checked{% endif %}
+                           x-model="emailEnabled">
+                    <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <!-- SMS Notifications Toggle -->
+            <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center"
+                         :class="smsEnabled ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                             :class="smsEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-600'"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-primary dark:text-tertiary text-lg">SMS Notifications</div>
+                        <div class="text-sm text-accent dark:text-gray-400">
+                            Send SMS alerts to parents when students check in/out
+                        </div>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="sms_notifications_enabled" class="sr-only peer" 
+                           {% if sms_enabled %}checked{% endif %}
+                           x-model="smsEnabled">
+                    <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                </label>
+            </div>
+
+            <!-- Info Card -->
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
+                <div class="flex gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-sm text-amber-800 dark:text-amber-300">
+                        <p class="font-semibold mb-2">Important Notes:</p>
+                        <ul class="list-disc list-inside space-y-1 text-amber-700 dark:text-amber-400">
+                            <li>Disabling notifications will stop sending alerts to ALL parents and guardians</li>
+                            <li>Email notifications require valid email addresses in parent/guardian profiles</li>
+                            <li>SMS notifications require valid Philippine mobile numbers (+63 format)</li>
+                            <li>Changes take effect immediately for all future attendance records</li>
+                            <li>Notifications are sent in real-time when students check in or out</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="submit" 
+                        class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                    </svg>
+                    Save Notification Settings
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Backup & Recovery Settings Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-6" x-data="backupManager()">
         <div class="flex items-center gap-3 mb-6">
