@@ -14,12 +14,6 @@
                 DETECT<br>TO PROTECT
             </span>
         </div>
-        <!-- Mobile menu close button -->
-        <button id="sidebar-close-btn" class="lg:hidden text-white hover:text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
     </div>
     
     <!-- User info section -->
@@ -100,56 +94,58 @@
         @apply bg-secondary/10 dark:bg-tertiary/20 text-primary dark:text-tertiary;
     }
     
-    /* Sidebar collapse styles */
-    #sidebar.collapsed {
-        width: 4.5rem !important;
-    }
-    
-    #sidebar.collapsed .sidebar-text {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        overflow: hidden !important;
-    }
-    
-    #sidebar.collapsed .menu-item {
-        justify-content: center;
-        padding-left: 0;
-        padding-right: 0;
-        height: 2.75rem;
-    }
-    
-    #sidebar.collapsed .menu-item svg:first-child {
-        margin-right: 0;
-    }
-    
-    #sidebar.collapsed .user-info-section .ml-3 {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    
-    #sidebar.collapsed .sidebar-header {
-        justify-content: center;
-    }
-    
-    #sidebar.collapsed .sidebar-logo span {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    
-    #sidebar.collapsed .sidebar-logo {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    #sidebar.collapsed #sidebar-collapse-btn {
-        transform: rotate(180deg);
-    }
-    
-    /* Position button based on sidebar state */
-    #sidebar.collapsed ~ #sidebar-collapse-btn {
-        left: 3.5rem;
+    /* Sidebar collapse styles - ONLY on desktop (lg and up) */
+    @media (min-width: 1024px) {
+        #sidebar.collapsed {
+            width: 4.5rem !important;
+        }
+        
+        #sidebar.collapsed .sidebar-text {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
+        
+        #sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+            height: 2.75rem;
+        }
+        
+        #sidebar.collapsed .menu-item svg:first-child {
+            margin-right: 0;
+        }
+        
+        #sidebar.collapsed .user-info-section .ml-3 {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        #sidebar.collapsed .sidebar-header {
+            justify-content: center;
+        }
+        
+        #sidebar.collapsed .sidebar-logo span {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        #sidebar.collapsed .sidebar-logo {
+            justify-content: center;
+            width: 100%;
+        }
+        
+        #sidebar.collapsed #sidebar-collapse-btn {
+            transform: rotate(180deg);
+        }
+        
+        /* Position button based on sidebar state */
+        #sidebar.collapsed ~ #sidebar-collapse-btn {
+            left: 3.5rem;
+        }
     }
     
     #sidebar {
@@ -204,58 +200,113 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile sidebar toggle
-    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-    if (sidebarCloseBtn) {
-        sidebarCloseBtn.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('sidebar').classList.remove('translate-x-0');
-        });
-    }
-    
-    // Desktop sidebar collapse toggle
+    // Universal sidebar toggle button (works for both mobile and desktop)
     const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
     const sidebar = document.getElementById('sidebar');
     
     if (sidebarCollapseBtn && sidebar) {
         sidebarCollapseBtn.addEventListener('click', function() {
-            const chevronIcon = document.getElementById('chevron-icon');
-            const isCollapsed = sidebar.classList.contains('collapsed');
+            const isMobile = window.innerWidth < 1024; // lg breakpoint
             
-            // Only add animation class when user manually clicks the button
-            document.body.classList.add('sidebar-toggling');
-            
-            // Enable button transition with same timing as sidebar
-            sidebarCollapseBtn.style.transition = 'left 0.3s ease-in-out';
-            
-            sidebar.classList.toggle('collapsed');
-            
-            // Update button position and icon simultaneously
-            if (isCollapsed) {
-                // Expanding
-                sidebarCollapseBtn.style.left = '240px';
-                if (chevronIcon) {
-                    chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+            if (isMobile) {
+                // Mobile: toggle sidebar slide in/out
+                const isOpen = sidebar.classList.contains('translate-x-0');
+                if (isOpen) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
                 }
             } else {
-                // Collapsing
-                sidebarCollapseBtn.style.left = '56px';
-                if (chevronIcon) {
-                    chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                // Desktop: toggle collapse/expand
+                const chevronIcon = document.getElementById('chevron-icon');
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                
+                // Only add animation class when user manually clicks the button
+                document.body.classList.add('sidebar-toggling');
+                
+                // Enable button transition with same timing as sidebar
+                sidebarCollapseBtn.style.transition = 'left 0.3s ease-in-out';
+                
+                sidebar.classList.toggle('collapsed');
+                
+                // Update button position and icon simultaneously
+                if (isCollapsed) {
+                    // Expanding
+                    sidebarCollapseBtn.style.left = '240px';
+                    if (chevronIcon) {
+                        chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                    }
+                } else {
+                    // Collapsing
+                    sidebarCollapseBtn.style.left = '56px';
+                    if (chevronIcon) {
+                        chevronIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                    }
                 }
+                
+                // Save state to localStorage
+                const newCollapsedState = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebarCollapsed', newCollapsedState);
+                
+                // Remove animation class and button transition after transition completes
+                setTimeout(() => {
+                    document.body.classList.remove('sidebar-toggling');
+                    sidebarCollapseBtn.style.transition = '';
+                }, 300);
             }
-            
-            // Save state to localStorage
-            const newCollapsedState = sidebar.classList.contains('collapsed');
-            localStorage.setItem('sidebarCollapsed', newCollapsedState);
-            
-            // Remove animation class and button transition after transition completes
-            setTimeout(() => {
-                document.body.classList.remove('sidebar-toggling');
-                sidebarCollapseBtn.style.transition = '';
-            }, 300);
         });
     }
+    
+    // Handle window resize to adjust button position
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            const btn = document.getElementById('sidebar-collapse-btn');
+            const icon = document.getElementById('chevron-icon');
+            const sidebar = document.getElementById('sidebar');
+            const isMobile = window.innerWidth < 1024;
+            
+            if (btn && sidebar) {
+                if (isMobile) {
+                    // Mobile: reset to appropriate mobile state
+                    const isOpen = sidebar.classList.contains('translate-x-0');
+                    if (isOpen) {
+                        btn.style.left = '246px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                        }
+                    } else {
+                        btn.style.left = '90px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                        }
+                    }
+                } else {
+                    // Desktop: ensure sidebar is visible and button positioned correctly
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                    const backdrop = document.getElementById('sidebar-backdrop');
+                    if (backdrop) {
+                        backdrop.classList.add('hidden');
+                    }
+                    
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    if (isCollapsed) {
+                        btn.style.left = '56px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M6 5l7 7-7 7" />';
+                        }
+                    } else {
+                        btn.style.left = '240px';
+                        if (icon) {
+                            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />';
+                        }
+                    }
+                }
+            }
+        }, 100);
+    });
     
     // Setup collapsible menus
     const collapsibleMenus = document.querySelectorAll('.collapsible-menu');
