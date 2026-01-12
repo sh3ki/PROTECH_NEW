@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
-from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, ExcusedAbsence, UserRole, AdvisoryAssignment
+from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, ExcusedAbsence, UserRole, AdvisoryAssignment, UnauthorizedLog
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -1195,3 +1195,134 @@ def export_principal_excused(request):
         return export_principal_data_to_word(data, headers, f'{filename}.docx', title)
     else:
         return export_principal_data_to_excel(data, headers, f'{filename}.xlsx', title)
+
+
+@login_required
+@user_passes_test(is_principal)
+def principal_unauthorized_logs(request):
+    """Principal view for unauthorized face logs with pagination"""
+    from PROTECHAPP.models import UnauthorizedLog
+    from datetime import date
+    
+    try:
+        # Get query parameters
+        search_query = request.GET.get('search', '')
+        camera_filter = request.GET.get('camera', '')
+        date_filter = request.GET.get('date', '')
+        per_page = request.GET.get('per_page', 10)
+        page_number = request.GET.get('page', 1)
+        
+        # Start with all unauthorized logs
+        logs = UnauthorizedLog.objects.all()
+        
+        # Apply search filter
+        if search_query:
+            logs = logs.filter(camera_name__icontains=search_query)
+        
+        # Apply camera filter
+        if camera_filter:
+            logs = logs.filter(camera_name=camera_filter)
+        
+        # Apply date filter
+        if date_filter:
+            logs = logs.filter(timestamp__date=date_filter)
+        else:
+            # Default to today's logs
+            logs = logs.filter(timestamp__date=date.today())
+        
+        # Order by newest first
+        logs = logs.order_by('-timestamp')
+        
+        # Get total count before pagination
+        total_logs = UnauthorizedLog.objects.count()
+        
+        # Get distinct camera names for filter dropdown
+        camera_names = UnauthorizedLog.objects.values_list('camera_name', flat=True).distinct().order_by('camera_name')
+        
+        # Pagination
+        from django.core.paginator import Paginator
+        try:
+            per_page = int(per_page)
+        except (ValueError, TypeError):
+            per_page = 10
+        
+        paginator = Paginator(logs, per_page)
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'logs': page_obj,
+            'total_logs': total_logs,
+            'camera_names': camera_names,
+            'search_query': search_query,
+            'camera_filter': camera_filter,
+            'date_filter': date_filter,
+        }
+        
+        return render(request, 'principal/unauthorized_logs.html', context)
+    except Exception as e:
+        print(f"Error in principal_unauthorized_logs: {e}")
+        messages.error(request, f'Error loading unauthorized logs: {str(e)}')
+        return render(request, 'principal/unauthorized_logs.html', {
+            'logs': [],
+            'total_logs': 0,
+            'camera_names': [],
+        })
+
+
+@login_required
+@user_passes_test(is_principal)
+@require_GET
+def get_latest_principal_unauthorized_logs(request):
+    """
+    API endpoint for real-time unauthorized logs updates for principal.
+    Returns the latest unauthorized logs with optional filters.
+    """
+    from PROTECHAPP.models import UnauthorizedLog
+    from datetime import date
+    
+    try:
+        # Get filters
+        search_query = request.GET.get('search', '')
+        camera_filter = request.GET.get('camera', '')
+        date_filter = request.GET.get('date', '')
+        limit = request.GET.get('limit', 50)
+        
+        try:
+            limit = int(limit)
+        except (ValueError, TypeError):
+            limit = 50
+        
+        logs = UnauthorizedLog.objects.all().order_by('-timestamp')
+        
+        # Apply filters
+        if search_query:
+            logs = logs.filter(camera_name__icontains=search_query)
+        if camera_filter:
+            logs = logs.filter(camera_name=camera_filter)
+        if date_filter:
+            logs = logs.filter(timestamp__date=date_filter)
+        else:
+            logs = logs.filter(timestamp__date=date.today())
+        
+        logs = logs[:limit]
+        
+        logs_data = []
+        for log in logs:
+            logs_data.append({
+                'id': log.id,
+                'photo_path': log.photo_path,
+                'camera_name': log.camera_name,
+                'timestamp': log.timestamp.isoformat(),
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'logs': logs_data,
+            'count': len(logs_data),
+        })
+    except Exception as e:
+        print(f'Error in get_latest_principal_unauthorized_logs: {e}')
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
