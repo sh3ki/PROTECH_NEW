@@ -598,7 +598,7 @@ class RealtimeMessaging {
             ` : '';
             
             return `
-                <div class="conversation-item ${isActive ? 'active' : ''}" onclick="messaging.loadConversation('${conv.id}')">
+                <div class="conversation-item ${isActive ? 'active' : ''}" onclick="window.messaging.loadConversation('${conv.id}')" style="cursor: pointer;">
                     <div class="flex items-start">
                         <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                             <span class="text-primary font-semibold text-lg">${(conv.title || 'Chat').charAt(0).toUpperCase()}</span>
