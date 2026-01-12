@@ -5607,14 +5607,22 @@ def admin_dashboard(request):
     chart_data = []
     for i in range(6, -1, -1):
         date_to_check = current_date_only - timedelta(days=i)
+        
+        # Get all active students for accurate total
+        active_students_count = Student.objects.filter(status='ACTIVE').count()
+        
+        # Get attendance records for this specific date
         day_records = Attendance.objects.filter(date=date_to_check)
         
+        # Count present (ON TIME + LATE)
         present_count = day_records.filter(Q(status='ON TIME') | Q(status='LATE')).count()
-        absent_count = day_records.filter(status='ABSENT').count()
+        
+        # Count absent - students who have no attendance record or marked absent
+        absent_count = active_students_count - present_count
         
         # Calculate percentage for that day
-        if total_students > 0:
-            day_percentage = round((present_count / total_students) * 100, 1)
+        if active_students_count > 0:
+            day_percentage = round((present_count / active_students_count) * 100, 1)
         else:
             day_percentage = 0
         
