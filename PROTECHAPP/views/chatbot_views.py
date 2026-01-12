@@ -1,6 +1,6 @@
 """
 PROTECH AI Chatbot Views
-Handles AI assistant interactions using Google Gemini API
+Handles AI assistant interactions using OpenAI API (primary) and Google Gemini API (backup)
 """
 
 from django.http import JsonResponse
@@ -10,13 +10,19 @@ from django.conf import settings
 from decouple import config
 import json
 import google.generativeai as genai
+import openai
 from datetime import datetime
 import warnings
 
 # Suppress the deprecation warning
 warnings.filterwarnings('ignore', category=FutureWarning, module='google.generativeai')
 
-# Initialize Gemini with API key
+# Initialize OpenAI API key (PRIMARY)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
+
+# Initialize Gemini with API key (BACKUP)
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -241,7 +247,7 @@ Remember: You are here to assist users with navigating and understanding the PRO
 def chatbot_message(request):
     """
     Handle chatbot messages from users
-    Processes user queries and returns AI-generated responses using Gemini
+    Processes user queries and returns AI-generated responses using OpenAI (primary) or Gemini (backup)
     """
     try:
         data = json.loads(request.body)
@@ -254,7 +260,8 @@ def chatbot_message(request):
                 'error': 'Message cannot be empty'
             }, status=400)
         
-        if not GEMINI_API_KEY:
+        # Check if at least one API is configured
+        if not OPENAI_API_KEY and not GEMINI_API_KEY:
             return JsonResponse({
                 'success': False,
                 'error': 'AI service is not configured. Please contact administrator.'
@@ -269,7 +276,7 @@ def chatbot_message(request):
             user_role = getattr(request.user, 'role', 'Unknown')
             user_email = getattr(request.user, 'email', 'Unknown')
         
-        # Build conversation context for Gemini with detailed user status
+        # Build conversation context with detailed user status
         conversation_context = SYSTEM_PROMPT + "\n\n"
         
         # Add detailed user context with clear role information
@@ -336,23 +343,59 @@ def chatbot_message(request):
         conversation_context += "YOUR RESPONSE (remember to use proper role-specific links in Markdown format):\n"
         conversation_context += "Assistant:"
         
-        try:
-            # Initialize Gemini model
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            # Generate response
-            response = model.generate_content(conversation_context)
-            
-            assistant_message = response.text
-            
+        assistant_message = None
+        used_service = None
+        
+        # TRY PRIMARY: OpenAI API
+        if OPENAI_API_KEY:
+            try:
+                print(f"[CHATBOT] Attempting OpenAI API...")
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": SYSTEM_PROMPT
+                        },
+                        {
+                            "role": "user",
+                            "content": conversation_context
+                        }
+                    ],
+                    temperature=0.7,
+                    max_tokens=2000
+                )
+                assistant_message = response['choices'][0]['message']['content']
+                used_service = "OpenAI"
+                print(f"[CHATBOT] OpenAI API successful!")
+                
+            except Exception as openai_error:
+                print(f"[CHATBOT] OpenAI API error: {openai_error}")
+                print(f"[CHATBOT] Falling back to Gemini API...")
+        
+        # FALLBACK: Gemini API
+        if not assistant_message and GEMINI_API_KEY:
+            try:
+                print(f"[CHATBOT] Attempting Gemini API as fallback...")
+                model = genai.GenerativeModel('gemini-2.5-flash')
+                response = model.generate_content(conversation_context)
+                assistant_message = response.text
+                used_service = "Gemini (Fallback)"
+                print(f"[CHATBOT] Gemini API successful as fallback!")
+                
+            except Exception as gemini_error:
+                print(f"[CHATBOT] Gemini API fallback error: {gemini_error}")
+                assistant_message = None
+        
+        # Check if we got a response
+        if assistant_message:
             return JsonResponse({
                 'success': True,
                 'message': assistant_message,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat(),
+                'service': used_service
             })
-            
-        except Exception as gemini_error:
-            print(f"Gemini API error: {gemini_error}")
+        else:
             return JsonResponse({
                 'success': False,
                 'error': 'AI service temporarily unavailable. Please try again later.'
@@ -365,7 +408,7 @@ def chatbot_message(request):
         }, status=400)
     
     except Exception as e:
-        print(f"Chatbot error: {e}")
+        print(f"[CHATBOT] Unexpected error: {e}")
         return JsonResponse({
             'success': False,
             'error': 'An unexpected error occurred. Please try again.'
