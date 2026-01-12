@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
-from PROTECHAPP.views import admin_views, advisory_teacher_views, non_advisory_teacher_views, registrar_views, principal_views, public_views, face_recognition_views, message_views, chatbot_views
+from PROTECHAPP.views import admin_views, advisory_teacher_views, non_advisory_teacher_views, registrar_views, principal_views, public_views, face_recognition_views, message_views, chatbot_views, user_settings_views
 
 urlpatterns = [
     # Public routes
@@ -344,4 +344,21 @@ urlpatterns = [
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
+
+# ==========================
+#  USER SETTINGS API ROUTES (All User Types)
+# ==========================
+
+    # Profile Picture Management
+    path('api/update-profile-picture/', user_settings_views.update_profile_picture, name='update_profile_picture'),
+    path('api/remove-profile-picture/', user_settings_views.remove_profile_picture, name='remove_profile_picture'),
+    
+    # Profile Information
+    path('api/update-profile/', user_settings_views.update_profile, name='update_profile'),
+    
+    # Password Management
+    path('api/change-password/', user_settings_views.change_password, name='change_password'),
+    
+    # Account Deletion
+    path('api/delete-account/', user_settings_views.delete_account, name='delete_account'),
 ]
