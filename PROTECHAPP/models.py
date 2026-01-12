@@ -316,10 +316,22 @@ class SystemSettings(models.Model):
     face_confidence_max = models.FloatField(default=0.9)
     attendance_time_in = models.TimeField(default='07:00:00')
     attendance_time_out = models.TimeField(default='16:00:00')
-    late_time_cutoff = models.TimeField(
-        default='08:00:00',
-        help_text="Time cutoff for late arrival (stored in UTC, displayed in Asia/Manila)"
+    
+    # Class Timing Settings (replaces late_time_cutoff)
+    first_class_start_time = models.TimeField(
+        default='07:00:00',
+        help_text="Time when the first class session begins (stored in UTC, displayed in Asia/Manila)"
     )
+    second_class_start_time = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="Optional: Time when the second class session begins (must be at least 4 hours after first class)"
+    )
+    grace_period_minutes = models.IntegerField(
+        default=5,
+        help_text="Grace period in minutes after class start time before marking as late"
+    )
+    
     attendance_mode = models.CharField(
         max_length=20, 
         choices=AttendanceMode.choices, 
