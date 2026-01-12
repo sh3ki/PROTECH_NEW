@@ -44,30 +44,35 @@
 {% block content %}
 <!-- Header -->
 <div class="mb-6">
-            <h1 class="text-3xl font-bold text-primary dark:text-tertiary">Calendar</h1>
-            <p class="text-accent dark:text-gray-400 mt-1">View events and announcements</p>
-        </div>
+    <h1 class="text-3xl font-bold text-primary dark:text-tertiary">Calendar</h1>
+    <p class="text-accent dark:text-gray-400 mt-1">View events and announcements</p>
+</div>
 
-        <!-- Calendar -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-            <div id='calendar'></div>
-        </div>
 <!-- Calendar -->
-<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-    <div id='calendar'> id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Event Details</h2>
-            <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        
-        <div class="p-6">
-            <div id="eventDetailsContent">
-                <!-- Content will be loaded dynamically -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+    <div id='calendar'></div>
+</div>
+
+<!-- Event Details Modal -->
+<div id="eventDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Event Details</h2>
+                    <button onclick="closeEventDetailsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <div id="eventDetailsContent">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -161,18 +166,20 @@
         `;
         
         document.getElementById('eventDetailsContent').innerHTML = content;
-        document.getElementById('eventDetailsModal').style.display = 'flex';
+        const modal = document.getElementById('eventDetailsModal');
+        modal.classList.remove('hidden');
     }
     
     function closeEventDetailsModal() {
-        document.getElementById('eventDetailsModal').style.display = 'none';
+        const modal = document.getElementById('eventDetailsModal');
+        modal.classList.add('hidden');
     }
     
     // Close modals when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('eventDetailsModal');
         if (event.target === modal) {
-            modal.style.display = 'none';
+            modal.classList.add('hidden');
         }
     }
 </script>
