@@ -1430,10 +1430,19 @@ function fetchAttendanceHistory(studentId) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Fetched attendance data:', data);
         attendanceHistoryData = data.records || [];
         filteredHistoryData = [...attendanceHistoryData];
+        
+        console.log('Total records:', attendanceHistoryData.length);
+        console.log('Filtered records:', filteredHistoryData.length);
         
         // Populate year filter
         populateYearFilter();
