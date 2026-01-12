@@ -144,10 +144,7 @@ class Attendance(models.Model):
     sent_sms = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        unique_together = ['student', 'date']
-    
+
     def __str__(self):
         return f"{self.student} - {self.date} ({self.get_status_display()})"
 
@@ -304,6 +301,11 @@ class AttendanceMode(models.TextChoices):
     SEPARATE = 'SEPARATE', 'Separate (Time In & Time Out on different screens)'
     HYBRID = 'HYBRID', 'Hybrid (Time In & Time Out on same screen)'
 
+
+class GateMode(models.TextChoices):
+    CLOSED = 'CLOSED', 'Closed Gate'
+    OPEN = 'OPEN', 'Open Gate'
+
 class SystemSettings(models.Model):
     sms_gateway_url = models.CharField(max_length=255, blank=True, null=True)
     sms_api_key = models.CharField(max_length=255, blank=True, null=True)
@@ -363,6 +365,13 @@ class SystemSettings(models.Model):
     spoof_proof_enabled = models.BooleanField(
         default=True,
         help_text="Require facial micro-movements (blink/landmark motion) to block photo/video spoofs"
+    )
+
+    gate_mode = models.CharField(
+        max_length=10,
+        choices=GateMode.choices,
+        default=GateMode.CLOSED,
+        help_text="Select gate behavior: Closed applies class timing rules; Open allows free entry/exit and marks all logs On Time"
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
