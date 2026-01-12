@@ -4428,6 +4428,31 @@ def get_latest_attendance_records(request):
         
         attendance_data = []
         for record in records:
+            # Convert times to Asia/Manila timezone (+8 hours)
+            from datetime import datetime, timedelta
+            time_in_display = ''
+            time_out_display = ''
+            
+            if record.time_in:
+                # Add 8 hours to time_in
+                if isinstance(record.time_in, datetime):
+                    time_in_manila = record.time_in + timedelta(hours=8)
+                    time_in_display = time_in_manila.strftime('%H:%M:%S')
+                else:
+                    # If it's already a time object
+                    dt = datetime.combine(datetime.today(), record.time_in) + timedelta(hours=8)
+                    time_in_display = dt.time().strftime('%H:%M:%S')
+            
+            if record.time_out:
+                # Add 8 hours to time_out
+                if isinstance(record.time_out, datetime):
+                    time_out_manila = record.time_out + timedelta(hours=8)
+                    time_out_display = time_out_manila.strftime('%H:%M:%S')
+                else:
+                    # If it's already a time object
+                    dt = datetime.combine(datetime.today(), record.time_out) + timedelta(hours=8)
+                    time_out_display = dt.time().strftime('%H:%M:%S')
+            
             attendance_data.append({
                 'id': record.id,
                 'lrn': record.student.lrn,
@@ -4435,8 +4460,8 @@ def get_latest_attendance_records(request):
                 'grade': record.student.grade.name if record.student.grade else '',
                 'section': record.student.section.name if record.student.section else '',
                 'date': record.date.strftime('%Y-%m-%d'),
-                'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
-                'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
+                'time_in': time_in_display,
+                'time_out': time_out_display,
                 'status': record.status,
                 'profile_pic': record.student.profile_pic or None,
             })
@@ -4500,6 +4525,31 @@ def search_attendance_records(request):
 
     attendance_data = []
     for record in page_obj:
+        # Convert times to Asia/Manila timezone (+8 hours)
+        from datetime import datetime, timedelta
+        time_in_display = ''
+        time_out_display = ''
+        
+        if record.time_in:
+            # Add 8 hours to time_in
+            if isinstance(record.time_in, datetime):
+                time_in_manila = record.time_in + timedelta(hours=8)
+                time_in_display = time_in_manila.strftime('%H:%M:%S')
+            else:
+                # If it's already a time object
+                dt = datetime.combine(datetime.today(), record.time_in) + timedelta(hours=8)
+                time_in_display = dt.time().strftime('%H:%M:%S')
+        
+        if record.time_out:
+            # Add 8 hours to time_out
+            if isinstance(record.time_out, datetime):
+                time_out_manila = record.time_out + timedelta(hours=8)
+                time_out_display = time_out_manila.strftime('%H:%M:%S')
+            else:
+                # If it's already a time object
+                dt = datetime.combine(datetime.today(), record.time_out) + timedelta(hours=8)
+                time_out_display = dt.time().strftime('%H:%M:%S')
+        
         attendance_data.append({
             'id': record.id,
             'lrn': record.student.lrn,
@@ -4507,8 +4557,8 @@ def search_attendance_records(request):
             'grade': record.student.grade.name if record.student.grade else '',
             'section': record.student.section.name if record.student.section else '',
             'date': record.date.strftime('%Y-%m-%d'),
-            'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
-            'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
+            'time_in': time_in_display,
+            'time_out': time_out_display,
             'status': record.status,
             'profile_pic': record.student.profile_pic or None,
         })
@@ -4539,14 +4589,39 @@ def get_attendance_record(request, attendance_id):
     try:
         record = get_object_or_404(Attendance, id=attendance_id)
         
+        # Convert times to Asia/Manila timezone (+8 hours)
+        from datetime import datetime, timedelta
+        time_in_display = None
+        time_out_display = None
+        
+        if record.time_in:
+            # Add 8 hours to time_in
+            if isinstance(record.time_in, datetime):
+                time_in_manila = record.time_in + timedelta(hours=8)
+                time_in_display = time_in_manila.strftime('%H:%M:%S')
+            else:
+                # If it's already a time object
+                dt = datetime.combine(datetime.today(), record.time_in) + timedelta(hours=8)
+                time_in_display = dt.time().strftime('%H:%M:%S')
+        
+        if record.time_out:
+            # Add 8 hours to time_out
+            if isinstance(record.time_out, datetime):
+                time_out_manila = record.time_out + timedelta(hours=8)
+                time_out_display = time_out_manila.strftime('%H:%M:%S')
+            else:
+                # If it's already a time object
+                dt = datetime.combine(datetime.today(), record.time_out) + timedelta(hours=8)
+                time_out_display = dt.time().strftime('%H:%M:%S')
+        
         data = {
             'id': record.id,
             'student_id': record.student.id,
             'student_name': f"{record.student.first_name} {record.student.last_name}",
             'lrn': record.student.lrn,
             'date': record.date.strftime('%Y-%m-%d'),
-            'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else None,
-            'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else None,
+            'time_in': time_in_display,
+            'time_out': time_out_display,
             'status': record.status,
             'notes': record.notes or '',
             'section': record.student.section.name if record.student.section else '',
