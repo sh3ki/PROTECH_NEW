@@ -689,74 +689,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle export format selection
     exportSectionsOptions.forEach(option => {
-        option.addEventListener('click', function(e) {
+        option.addEventListener('click', async (e) => {
             e.preventDefault();
-            e.stopPropagation();
-
-            const format = this.getAttribute('data-format');
+            const format = option.dataset.format;
             exportSectionsDropdown.classList.add('hidden');
 
-            // Show loading state
-            sectionTableLoading.classList.remove('hidden');
+            // Get current search and filter values
+            const searchValue = document.getElementById('section-search')?.value || '';
+            const gradeValue = document.getElementById('grade-filter')?.value || '';
+            const advisorValue = document.getElementById('advisor-filter')?.value || '';
 
-            // Get current filter parameters
-            const searchQuery = sectionSearch ? sectionSearch.value : '';
-            const gradeFilterValue = gradeFilter ? gradeFilter.value : '';
-            const advisorFilterValue = advisorFilter ? advisorFilter.value : '';
-
-            // Build query parameters
-            const params = new URLSearchParams();
-            if (searchQuery) params.append('search', searchQuery);
-            if (gradeFilterValue) params.append('grade', gradeFilterValue);
-            if (advisorFilterValue) params.append('advisor', advisorFilterValue);
-            params.append('format', format);
-
-            // Make the export request
-            const exportUrl = `/admin/sections/export/?${params.toString()}`;
-
-            fetch(exportUrl, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => {
-                sectionTableLoading.classList.add('hidden');
-
-                if (!response.ok) {
-                    throw new Error(`Export failed with status ${response.status}`);
-                }
-
-                // Get the filename from the response headers
-                const contentDisposition = response.headers.get('content-disposition');
-                let filename = `sections_export.${format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : 'pdf'}`;
-                if (contentDisposition) {
-                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                    if (filenameMatch) filename = filenameMatch[1];
-                }
-
-                // Convert response to blob and download
-                return response.blob().then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-
-                    // Clean up
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(link);
-
-                    showToast(`Sections exported successfully as ${format.toUpperCase()}!`, 'success');
-                });
-            })
-            .catch(error => {
-                sectionTableLoading.classList.add('hidden');
-                console.error('Export error:', error);
-                showToast('Failed to export sections: ' + error.message, 'error');
+            // Build URL with search and filter parameters
+            const params = new URLSearchParams({
+                format: format,
+                search: searchValue,
+                grade: gradeValue,
+                advisor: advisorValue
             });
+
+            try {
+                showToast(`Generating ${format.toUpperCase()} export...`, 'info', 3000);
+                
+                const response = await fetch(`/admin/sections/export/?${params.toString()}`);
+                
+                // Check if response is JSON (error) or blob (file)
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    showToast(data.error || 'Export failed', 'error');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Set filename based on format
+                let filename = 'sections_export';
+                if (format === 'excel') filename += '.xlsx';
+                else if (format === 'pdf') filename += '.pdf';
+                else if (format === 'word') filename += '.docx';
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast(`${format.toUpperCase()} file downloaded successfully!`, 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Failed to export file', 'error');
+            }
         });
     });
     
@@ -1288,258 +1273,251 @@ document.addEventListener('DOMContentLoaded', function() {
     if (printSectionsBtn) {
         printSectionsBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            printPage();
+            generateSectionPrintDocument();
         });
     }
     
-    // Print page function - fetch all sections with current filters
-    function printPage() {
-        showLoading();
+    // Generate Section Print Document - matches grades page layout
+    function generateSectionPrintDocument() {
+        showToast('Preparing print document...', 'info');
         
-        // Get current filter parameters
-        const searchQuery = sectionSearch ? sectionSearch.value : '';
-        const gradeValue = gradeFilter ? gradeFilter.value : '';
-        const advisorValue = advisorFilter ? advisorFilter.value : '';
+        // Get current search and filter values
+        const searchQuery = document.getElementById('section-search')?.value || '';
+        const gradeValue = document.getElementById('grade-filter')?.value || '';
+        const advisorValue = document.getElementById('advisor-filter')?.value || '';
         
-        // Build query parameters (without pagination to get all results)
+        // Build query parameters
         const params = new URLSearchParams();
         if (searchQuery) params.append('search', searchQuery);
         if (gradeValue) params.append('grade', gradeValue);
         if (advisorValue) params.append('advisor', advisorValue);
-        params.append('all', 'true');  // Special flag to get all sections
+        params.append('all', 'true');
         
-        // Fetch all sections for printing
+        // Fetch all sections data (without pagination for printing)
         fetch(`/admin/sections/search/?${params.toString()}`, {
-            method: 'GET',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
         .then(data => {
-            hideLoading();
-            if (data.status === 'success') {
-                generatePrintHTML(data.sections);
-            } else {
-                showToast('Failed to fetch sections for printing', 'error');
+            if (!data.sections || data.sections.length === 0) {
+                showToast('No sections available to print', 'warning');
+                return;
             }
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Print error:', error);
-            showToast('Failed to generate print document', 'error');
-        });
-    }
-    
-    // Generate print HTML from section data
-    function generatePrintHTML(sections) {
-        // Calculate statistics
-        const totalSections = sections.length;
-        const sectionsWithStudents = sections.filter(s => s.student_count > 0).length;
-        const sectionsWithAdvisors = sections.filter(s => s.advisor_name && s.advisor_name !== 'No Advisor').length;
-        const totalStudents = sections.reduce((sum, s) => sum + (s.student_count || 0), 0);
-        
-        // Generate table HTML
-        let tableHTML = `
-            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
-                <thead>
-                    <tr style="background-color: #1F4E78; color: white;">
-                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Section Name</th>
-                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Grade</th>
-                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Students</th>
-                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Advisor</th>
-                        <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Created At</th>
+            
+            const sections = data.sections;
+            const totalSections = sections.length;
+            const totalStudents = sections.reduce((sum, s) => sum + (s.student_count || 0), 0);
+            const sectionsWithAdvisors = sections.filter(s => s.advisor_name && s.advisor_name !== 'No Advisor').length;
+            
+            // Build table HTML
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead style="background-color: #1F4E78; color: white;">
+                        <tr>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Section Name</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Grade</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Total Students</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px;">Advisor</th>
+                            <th style="border: 1px solid #CCCCCC; padding: 12px 10px; text-align: center; font-weight: bold; font-size: 11px;">Date Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            sections.forEach((section, index) => {
+                const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
+                
+                // Format date
+                let createdAt = '';
+                if (section.created_at) {
+                    const date = new Date(section.created_at);
+                    createdAt = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } else if (section.created_at_display) {
+                    createdAt = section.created_at_display;
+                }
+                
+                tableHTML += `
+                    <tr style="background-color: ${bgColor};">
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.grade_name || ''}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${section.student_count || 0}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.advisor_name || 'No Advisor'}</td>
+                        <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${createdAt}</td>
                     </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        sections.forEach((section, index) => {
-            const bgColor = index % 2 === 0 ? '#FFFFFF' : '#F9F9F9';
-            const createdAt = new Date(section.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
+                `;
             });
             
             tableHTML += `
-                <tr style="background-color: ${bgColor};">
-                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.name || ''}</td>
-                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.grade_name || ''}</td>
-                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${section.student_count || 0}</td>
-                    <td style="border: 1px solid #DDD; padding: 10px; font-size: 10px;">${section.advisor_name || 'No Advisor'}</td>
-                    <td style="border: 1px solid #DDD; padding: 10px; text-align: center; font-size: 10px;">${createdAt}</td>
-                </tr>
+                    </tbody>
+                </table>
             `;
-        });
-        
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        
-        // Format date nicely
-        const now = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
-        const formattedDate = now.toLocaleString('en-US', options);
-        
-        // Create hidden iframe for printing
-        const printContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Section Management Report - PROTECH</title>
-                <style>
-                    @page {
-                        size: A4 portrait;
-                        margin: 0.5in;
-                    }
-                    body {
-                        margin: 0;
-                        padding: 20px;
-                        font-family: Arial, sans-serif;
-                        background: white;
-                    }
-                    .header {
-                        text-align: center;
-                        margin-bottom: 25px;
-                        border-bottom: 3px solid #1F4E78;
-                        padding-bottom: 15px;
-                    }
-                    .header .institution {
-                        color: #1F4E78;
-                        margin: 0 0 8px 0;
-                        font-size: 18px;
-                        font-weight: bold;
-                        letter-spacing: 0.5px;
-                    }
-                    .header h1 {
-                        color: #1F4E78;
-                        margin: 0 0 6px 0;
-                        font-size: 22px;
-                        font-weight: bold;
-                        letter-spacing: 1px;
-                    }
-                    .header .timestamp {
-                        color: #666;
-                        margin: 0 0 6px 0;
-                        font-size: 11px;
-                    }
-                    .header .summary {
-                        color: #333;
-                        margin: 0;
-                        font-size: 11px;
-                        font-weight: 500;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 15px;
-                    }
-                    thead {
-                        background-color: #1F4E78;
-                        color: white;
-                    }
-                    th {
-                        border: 1px solid #CCCCCC;
-                        padding: 12px 10px;
-                        text-align: left;
-                        font-weight: bold;
-                        font-size: 11px;
-                    }
-                    th:nth-child(3) {
-                        text-align: center;
-                    }
-                    th:nth-child(5) {
-                        text-align: center;
-                    }
-                    td {
-                        border: 1px solid #DDD;
-                        padding: 10px;
-                        font-size: 10px;
-                    }
-                    td:nth-child(3) {
-                        text-align: center;
-                    }
-                    td:nth-child(5) {
-                        text-align: center;
-                    }
-                    tbody tr:nth-child(even) {
-                        background-color: #F9F9F9;
-                    }
-                    tbody tr:hover {
-                        background-color: #E8F4F8;
-                    }
-                    .footer {
-                        margin-top: 25px;
-                        text-align: center;
-                        border-top: 2px solid #DDD;
-                        padding-top: 15px;
-                    }
-                    .footer .total {
-                        font-size: 12px;
-                        color: #333;
-                        font-weight: bold;
-                        margin-bottom: 8px;
-                    }
-                    .footer .system-name {
-                        font-size: 10px;
-                        color: #999;
-                        font-style: italic;
-                    }
-                    @media print {
+            
+            // Format date nicely
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+            const formattedDate = now.toLocaleString('en-US', options);
+            
+            // Create hidden iframe for printing
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Section Management Report - PROTECH</title>
+                    <style>
+                        @page {
+                            size: A4 portrait;
+                            margin: 0.5in;
+                        }
                         body {
                             margin: 0;
-                            padding: 15px;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 25px;
+                            border-bottom: 3px solid #1F4E78;
+                            padding-bottom: 15px;
+                        }
+                        .header .institution {
+                            color: #1F4E78;
+                            margin: 0 0 8px 0;
+                            font-size: 18px;
+                            font-weight: bold;
+                            letter-spacing: 0.5px;
+                        }
+                        .header h1 {
+                            color: #1F4E78;
+                            margin: 0 0 6px 0;
+                            font-size: 22px;
+                            font-weight: bold;
+                            letter-spacing: 1px;
+                        }
+                        .header .timestamp {
+                            color: #666;
+                            margin: 0 0 6px 0;
+                            font-size: 11px;
+                        }
+                        .header .summary {
+                            color: #333;
+                            margin: 0;
+                            font-size: 11px;
+                            font-weight: 500;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 15px;
+                        }
+                        thead {
+                            background-color: #1F4E78;
+                            color: white;
+                        }
+                        th {
+                            border: 1px solid #CCCCCC;
+                            padding: 12px 10px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 11px;
+                        }
+                        th:nth-child(3), th:nth-child(5) {
+                            text-align: center;
+                        }
+                        td {
+                            border: 1px solid #DDD;
+                            padding: 10px;
+                            font-size: 10px;
+                        }
+                        td:nth-child(3), td:nth-child(5) {
+                            text-align: center;
+                        }
+                        tbody tr:nth-child(even) {
+                            background-color: #F9F9F9;
                         }
                         tbody tr:hover {
-                            background-color: transparent;
+                            background-color: #E8F4F8;
                         }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div class="institution">PROTECH - DETECT TO PROTECT</div>
-                    <h1>SECTION MANAGEMENT REPORT</h1>
-                    <p class="timestamp">Generated on ${formattedDate}</p>
-                    <p class="summary">Total Sections: ${totalSections} | With Students: ${sectionsWithStudents} | With Advisors: ${sectionsWithAdvisors} | Total Students: ${totalStudents}</p>
-                </div>
-                ${tableHTML}
-                <div class="footer">
-                    <div class="total">Total Sections: ${totalSections}</div>
-                    <div class="system-name">PROTECH - Section Management System</div>
-                </div>
-            </body>
-            </html>
-        `;
-        
-        // Create or reuse hidden iframe
-        let printFrame = document.getElementById('print-frame');
-        if (!printFrame) {
-            printFrame = document.createElement('iframe');
-            printFrame.id = 'print-frame';
-            printFrame.style.position = 'fixed';
-            printFrame.style.right = '0';
-            printFrame.style.bottom = '0';
-            printFrame.style.width = '0';
-            printFrame.style.height = '0';
-            printFrame.style.border = '0';
-            document.body.appendChild(printFrame);
-        }
-        
-        // Write content to iframe and print
-        const frameDoc = printFrame.contentWindow.document;
-        frameDoc.open();
-        frameDoc.write(printContent);
-        frameDoc.close();
-        
-        // Wait for content to load then print
-        setTimeout(() => {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-        }, 250);
+                        .footer {
+                            margin-top: 25px;
+                            text-align: center;
+                            border-top: 2px solid #DDD;
+                            padding-top: 15px;
+                        }
+                        .footer .total {
+                            font-size: 12px;
+                            color: #333;
+                            font-weight: bold;
+                            margin-bottom: 8px;
+                        }
+                        .footer .system-name {
+                            font-size: 10px;
+                            color: #999;
+                            font-style: italic;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 15px;
+                            }
+                            tbody tr:hover {
+                                background-color: transparent;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="institution">PROTECH - DETECT TO PROTECT</div>
+                        <h1>SECTION MANAGEMENT REPORT</h1>
+                        <p class="timestamp">Generated on ${formattedDate}</p>
+                        <p class="summary">Total Sections: ${totalSections} | With Advisors: ${sectionsWithAdvisors} | Total Students: ${totalStudents}</p>
+                    </div>
+                    ${tableHTML}
+                    <div class="footer">
+                        <div class="total">Total Sections: ${totalSections}</div>
+                        <div class="system-name">PROTECH - Section Management System</div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create or reuse hidden iframe
+            let printFrame = document.getElementById('print-frame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'print-frame';
+                printFrame.style.position = 'fixed';
+                printFrame.style.right = '0';
+                printFrame.style.bottom = '0';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+            }
+            
+            // Write content to iframe and print
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+            
+            // Wait for content to load then print
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        })
+        .catch(error => {
+            console.error('Print error:', error);
+            showToast('Failed to generate print document', 'error');
+        });
     }
     
     // Initialize grade filter and fetch sections on page load
