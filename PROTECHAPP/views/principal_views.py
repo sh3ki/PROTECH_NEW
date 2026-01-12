@@ -936,7 +936,7 @@ def export_principal_guardians(request):
     """Export guardians data"""
     format_type = request.GET.get('format', 'excel')
     
-    guardians = Guardian.objects.prefetch_related('students').order_by('id')
+    guardians = Guardian.objects.prefetch_related('students').order_by('-created_at')
     
     headers = ['ID', 'Last Name', 'First Name', 'Middle Name', 'Email', 'Phone', 'Relationship', 'Children Count']
     data = []
