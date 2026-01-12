@@ -1106,3 +1106,144 @@ def teacher_advisory_calendar(request):
     except Exception:
         return redirect('login')
     return render(request, 'teacher/advisory/calendar.html')
+
+
+@login_required
+def get_teacher_advisory_calendar_events(request):
+    """API endpoint to get all calendar events for advisory teachers"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+    except Exception:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    from PROTECHAPP.models import CalendarEvent
+    
+    events = CalendarEvent.objects.all()
+    events_data = []
+    
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'title': event.title,
+            'start': event.start_date.isoformat(),
+            'end': event.end_date.isoformat(),
+            'description': event.description,
+            'location': event.location,
+            'event_type': event.event_type,
+            'target_role': event.target_role,
+            'target_role_display': event.get_target_role_display() if event.target_role else None,
+            'created_by': f"{event.created_by.first_name} {event.created_by.last_name}",
+        })
+    
+    return JsonResponse(events_data, safe=False)
+
+
+@login_required
+def add_teacher_advisory_calendar_event(request):
+    """API endpoint to add a new event for advisory teachers"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    except Exception:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        from PROTECHAPP.models import CalendarEvent
+        from datetime import datetime
+        
+        try:
+            title = request.POST.get('title')
+            description = request.POST.get('description', '')
+            location = request.POST.get('location', '')
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            
+            # Convert datetime strings to datetime objects
+            start_dt = datetime.fromisoformat(start_date)
+            end_dt = datetime.fromisoformat(end_date)
+            
+            event = CalendarEvent.objects.create(
+                title=title,
+                description=description,
+                location=location,
+                event_type='EVENT',
+                start_date=start_dt,
+                end_date=end_dt,
+                created_by=request.user
+            )
+            
+            return JsonResponse({'success': True, 'event_id': event.id})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def add_teacher_advisory_calendar_announcement(request):
+    """API endpoint to add a new announcement for advisory teachers"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    except Exception:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        from PROTECHAPP.models import CalendarEvent
+        from datetime import datetime
+        
+        try:
+            title = request.POST.get('title')
+            description = request.POST.get('description', '')
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            target_role = request.POST.get('target_role')
+            
+            # Convert datetime strings to datetime objects
+            start_dt = datetime.fromisoformat(start_date)
+            end_dt = datetime.fromisoformat(end_date)
+            
+            event = CalendarEvent.objects.create(
+                title=title,
+                description=description,
+                event_type='ANNOUNCEMENT',
+                start_date=start_dt,
+                end_date=end_dt,
+                target_role=target_role,
+                created_by=request.user
+            )
+            
+            return JsonResponse({'success': True, 'event_id': event.id})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def delete_teacher_advisory_calendar_event(request, event_id):
+    """API endpoint to delete an event for advisory teachers"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    except Exception:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'DELETE':
+        from PROTECHAPP.models import CalendarEvent
+        
+        try:
+            event = CalendarEvent.objects.get(id=event_id)
+            event.delete()
+            return JsonResponse({'success': True})
+        except CalendarEvent.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Event not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
