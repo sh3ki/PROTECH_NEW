@@ -273,6 +273,372 @@
     </div>
 </div>
 
+<!-- Add/Edit Student Multi-Step Modal -->
+<div id="student-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 opacity-0">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-r from-primary to-secondary dark:from-tertiary dark:to-primary px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="student-modal-title" class="text-xl font-bold text-white">Add Student</h3>
+                        <p id="student-modal-subtitle" class="text-white/80 text-sm">Step 1: Student Information</p>
+                    </div>
+                </div>
+                <button id="close-student-modal" type="button" class="text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 p-2 rounded-full">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Progress Indicator -->
+            <div class="mt-4 flex items-center justify-between px-4">
+                <div class="flex-1 flex items-center">
+                    <div id="step-1-indicator" class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-white text-primary font-bold flex items-center justify-center text-sm">1</div>
+                        <span class="ml-2 text-white text-sm font-medium">Student</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/30 mx-2"></div>
+                </div>
+                <div class="flex-1 flex items-center">
+                    <div id="step-2-indicator" class="flex items-center opacity-50">
+                        <div class="w-8 h-8 rounded-full bg-white/30 text-white font-bold flex items-center justify-center text-sm">2</div>
+                        <span class="ml-2 text-white text-sm font-medium">Guardian</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/30 mx-2"></div>
+                </div>
+                <div class="flex-1 flex items-center">
+                    <div id="step-3-indicator" class="flex items-center opacity-50">
+                        <div class="w-8 h-8 rounded-full bg-white/30 text-white font-bold flex items-center justify-center text-sm">3</div>
+                        <span class="ml-2 text-white text-sm font-medium">Face Enrollment</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="absolute -bottom-1 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-8 max-h-[calc(95vh-200px)] overflow-y-auto custom-scrollbar">
+            <!-- Step 1: Student Information -->
+            <div id="step-1-content" class="step-content">
+                <form id="student-form" class="space-y-6" enctype="multipart/form-data">
+                <!-- Profile Picture Upload -->
+                <div class="group">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Profile Picture
+                        <span class="text-gray-500 text-xs ml-2">(Optional)</span>
+                    </label>
+                    <div class="flex flex-col items-center">
+                        <div class="relative">
+                            <div class="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-300" id="student-profile-pic-container">
+                                <img id="student-profile-pic-preview" src="#" alt="Preview" class="w-full h-full object-cover opacity-0 transition-opacity duration-300">
+                                <div id="student-default-profile-icon" class="absolute inset-0 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <input type="file" id="student-profile-pic" name="profile_pic" accept="image/*" class="hidden">
+                            <button type="button" id="student-upload-trigger" class="inline-flex items-center px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                Choose Photo
+                            </button>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                JPG, PNG or GIF (max. 2MB)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LRN Field -->
+                <div class="group">
+                    <label for="student-lrn" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-6a2 2 0 01-2-2v-4a2 2 0 012-2z" />
+                        </svg>
+                        Learner Reference Number (LRN)
+                        <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-tertiary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                            </svg>
+                        </div>
+                        <input type="text" id="student-lrn" name="lrn" required 
+                            class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter 12-digit LRN">
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Example: 123456789012
+                    </div>
+                </div>
+
+                <!-- Name Fields Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- First Name -->
+                    <div class="group">
+                        <label for="student-first-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            First Name
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <input type="text" id="student-first-name" name="first_name" required 
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter first name">
+                    </div>
+
+                    <!-- Middle Name -->
+                    <div class="group">
+                        <label for="student-middle-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Middle Name
+                            <span class="text-gray-500 text-xs ml-2">(Optional)</span>
+                        </label>
+                        <input type="text" id="student-middle-name" name="middle_name"
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter middle name">
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="group">
+                        <label for="student-last-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Last Name
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <input type="text" id="student-last-name" name="last_name" required 
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter last name">
+                    </div>
+                </div>
+
+                <!-- Note about section assignment -->
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Student will be automatically assigned to your advisory section: {{ section.grade.name }} - {{ section.name }}
+                    </p>
+                </div>
+                </form>
+            </div>
+            
+            <!-- Step 2: Guardian Information (Optional) -->
+            <div id="step-2-content" class="step-content hidden max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        This step is optional. You can add guardian information now or skip to continue. You can also add multiple guardians.
+                    </p>
+                </div>
+                
+                <div id="guardians-container">
+                    <!-- Guardian forms will be added here dynamically -->
+                </div>
+                
+                <!-- Add Another Guardian Button -->
+                <button type="button" id="add-another-guardian-btn" class="w-full flex items-center justify-center px-6 py-3 mt-4 border-2 border-dashed border-primary/50 dark:border-tertiary/50 hover:border-primary dark:hover:border-tertiary rounded-xl text-primary dark:text-tertiary hover:bg-primary/5 dark:hover:bg-tertiary/5 transition-all duration-300 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add Another Guardian
+                </button>
+            </div>
+            
+            <!-- Step 3: Face Enrollment (Optional) -->
+            <div id="step-3-content" class="step-content hidden">
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        This step is optional. Enroll face for attendance tracking or skip to save the student.
+                    </p>
+                </div>
+
+                <!-- Face Enrollment Reminders -->
+                <div class="mb-6 p-5 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-300 dark:border-yellow-700">
+                    <h4 class="font-bold text-yellow-900 dark:text-yellow-200 mb-3 flex items-center text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Important Reminders for Face Enrollment
+                    </h4>
+                    <ul class="space-y-2 text-sm text-yellow-900 dark:text-yellow-200">
+                        <li class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Ensure proper lighting</strong> - Face should be well-lit and clearly visible</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Face should not be covered</strong> - Remove any obstructions</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Remove accessories</strong> - Take off eyeglasses, caps, hats, sunglasses, shades, masks, and any other face coverings</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Face Capture Interface -->
+                <div id="face-capture-container" class="space-y-6">
+                    <!-- Camera Preview -->
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden relative" style="min-height: 400px;">
+                        <video id="modal-camera-video" autoplay muted playsinline class="w-full h-auto" style="transform: scaleX(-1); max-height: 400px;"></video>
+                        <canvas id="modal-camera-canvas" class="hidden"></canvas>
+                        
+                        <!-- Camera Overlay -->
+                        <div id="modal-camera-overlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+                            <button type="button" id="modal-start-camera-btn" class="px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-tertiary dark:to-primary text-white rounded-xl font-semibold shadow-lg flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <span>Start Camera</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Face Detection Indicator -->
+                        <div id="modal-face-detection-indicator" class="hidden absolute top-4 left-4 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span>Face Detected</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Capture Instructions -->
+                    <div id="modal-capture-instructions" class="hidden">
+                        <div class="bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-tertiary/20 dark:to-primary/20 rounded-xl p-4 border border-primary/20 dark:border-tertiary/30">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="modal-capture-step-text">Step 1: Look straight at the camera</span>
+                            </h4>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Position your face in the center and click capture when ready.</p>
+                        </div>
+                        
+                        <!-- Progress Indicator -->
+                        <div class="flex items-center justify-center space-x-4 mt-4">
+                            <div id="modal-pose-1-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Front</span>
+                            </div>
+                            <div id="modal-pose-2-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 opacity-50">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Left</span>
+                            </div>
+                            <div id="modal-pose-3-indicator" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 opacity-50">
+                                <div class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Right</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Captured Images Preview -->
+                    <div id="modal-captured-images" class="hidden grid grid-cols-3 gap-4">
+                        <div class="relative">
+                            <img id="modal-preview-front" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Front">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Front</span>
+                        </div>
+                        <div class="relative">
+                            <img id="modal-preview-left" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Left">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Left</span>
+                        </div>
+                        <div class="relative">
+                            <img id="modal-preview-right" class="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600" alt="Right">
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">Right</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Capture Button -->
+                    <button type="button" id="modal-capture-btn" class="hidden w-full px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-tertiary dark:to-primary text-white rounded-xl font-semibold shadow-lg flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Capture Photo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center">
+                <!-- Back Button (hidden on step 1) -->
+                <button type="button" id="back-step-btn" class="hidden group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                </button>
+                
+                <div class="flex space-x-4 ml-auto">
+                    <!-- Cancel Button -->
+                    <button type="button" id="cancel-student-btn" class="group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                    
+                    <!-- Skip Button (shown on steps 2 & 3) -->
+                    <button type="button" id="skip-step-btn" class="hidden group flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Skip
+                    </button>
+                    
+                    <!-- Next/Save Button -->
+                    <button type="button" id="next-step-btn" class="group flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/70 dark:from-tertiary dark:to-primary dark:hover:from-tertiary/90 dark:hover:to-primary/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span id="next-step-text" class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            Next Step
+                        </span>
+                        <svg id="save-spinner" class="hidden animate-spin ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Import Students Modal -->
 <div id="import-students-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
@@ -574,9 +940,26 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
-// Global variables
+// Global variables for multi-step modal
+let currentModalStep = 1;
+let studentFormData = {};
+let guardianFormData = []; // Changed to array to support multiple guardians
+let guardianCounter = 0; // Track number of guardians added
+let faceEnrollmentData = {
+    images: { front: null, left: null, right: null },
+    captured: { front: false, left: false, right: false },
+    embeddings: []
+};
+let modalVideoStream = null;
+let modalCurrentPose = 1; // 1: front, 2: left, 3: right
+let modalFaceApiLoaded = false;
+let modalDetectorOptions = null;
+let currentStudentData = null;
+
+// Original global variables
 let allStudents = [];
 let filteredStudents = [];
 let currentPage = 1;
@@ -1509,45 +1892,63 @@ if (submitImportBtn) {
                 importResults.classList.remove('hidden');
                 
                 if (data.status === 'success') {
-                    importResults.innerHTML = `
-                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    let resultsHTML = `
+                        <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-6 rounded-lg">
                             <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl mr-3 mt-0.5"></i>
-                                <div>
-                                    <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">${data.message}</h5>
-                                    <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
-                                        ${data.students_created > 0 ? `<li>• Students created: ${data.students_created}</li>` : ''}
-                                        ${data.guardians_created > 0 ? `<li>• Guardians created: ${data.guardians_created}</li>` : ''}
-                                    </ul>
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h3 class="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">Import Successful!</h3>
+                                    <div class="text-sm text-green-700 dark:text-green-400 space-y-1">
+                                        <p><span class="font-semibold">Total Students:</span> ${data.total || 0}</p>
+                                        <p><span class="font-semibold">Successfully Imported:</span> ${data.success_count || data.students_created || 0}</p>
+                                        ${data.skipped_count ? `<p><span class="font-semibold">Skipped (Duplicates):</span> ${data.skipped_count}</p>` : ''}
+                                        ${data.updated_count ? `<p><span class="font-semibold">Updated:</span> ${data.updated_count}</p>` : ''}
+                                        ${data.guardians_created ? `<p><span class="font-semibold">Guardians Created:</span> ${data.guardians_created}</p>` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    showToast('Students imported successfully!', 'success');
                     
-                    // Refresh the table
-                    loadStudents(currentPage);
+                    importResults.innerHTML = resultsHTML;
+                    showToast(data.message || 'Students imported successfully!', 'success');
+                    
+                    // Auto-reload after short delay
+                    setTimeout(() => {
+                        closeImportModalFunc();
+                        location.reload();
+                    }, 2000);
                 } else {
-                    let errorHtml = `
-                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    let resultsHTML = `
+                        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-6 rounded-lg">
                             <div class="flex items-start">
-                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Import Failed</h5>
-                                    <p class="text-sm text-red-700 dark:text-red-300">${data.message}</p>
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Import Failed</h3>
+                                    <p class="text-sm text-red-700 dark:text-red-400 mb-3">${data.message}</p>
+                                    ${data.errors && data.errors.length > 0 ? `
+                                        <div class="text-sm text-red-700 dark:text-red-400">
+                                            <p class="font-semibold mb-2">Errors:</p>
+                                            <ul class="list-disc list-inside space-y-1 max-h-48 overflow-y-auto">
+                                                ${data.errors.map(error => `<li>${error}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
                     `;
                     
-                    if (data.errors && data.errors.length > 0) {
-                        errorHtml += '<ul class="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">';
-                        data.errors.forEach(error => {
-                            errorHtml += `<li>• ${error}</li>`;
-                        });
-                        errorHtml += '</ul>';
-                    }
-                    
-                    errorHtml += '</div></div></div>';
-                    importResults.innerHTML = errorHtml;
-                    showToast('Import failed. Please check the errors.', 'error');
+                    importResults.innerHTML = resultsHTML;
+                    showToast(data.message || 'Import failed. Please check the errors.', 'error');
                 }
                 
                 // restore button
@@ -1561,18 +1962,26 @@ if (submitImportBtn) {
             clearInterval(progressInterval);
             importProgress.classList.add('hidden');
             importResults.classList.remove('hidden');
-            importResults.innerHTML = `
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            
+            let resultsHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-6 rounded-lg">
                     <div class="flex items-start">
-                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mr-3 mt-0.5"></i>
-                        <div>
-                            <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">Network Error</h5>
-                            <p class="text-sm text-red-700 dark:text-red-300">${error.message}</p>
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Network Error</h3>
+                            <p class="text-sm text-red-700 dark:text-red-400">${error.message || 'Failed to connect to server. Please try again.'}</p>
                         </div>
                     </div>
                 </div>
             `;
-            showToast('Failed to import students. Please try again.', 'error');
+            
+            importResults.innerHTML = resultsHTML;
+            showToast('An error occurred during import', 'error');
+            
             // restore button
             if (submitImportBtn) {
                 submitImportBtn.disabled = false;
@@ -1582,13 +1991,735 @@ if (submitImportBtn) {
     });
 }
 
-// Add student button
-const addStudentBtn = document.getElementById('add-student-btn');
-if (addStudentBtn) {
-    addStudentBtn.addEventListener('click', function() {
-        alert('Open Add Student modal (not implemented)');
+// =============================================
+// MULTI-STEP MODAL FUNCTIONS
+// =============================================
+
+// Update step UI
+function updateStepUI(step) {
+    currentModalStep = step;
+    
+    // Hide all step contents
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Show current step content
+    document.getElementById(`step-${step}-content`).classList.remove('hidden');
+    
+    // Update step indicators
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step-${i}-indicator`);
+        if (i < step) {
+            // Completed step
+            indicator.classList.remove('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white/30', 'bg-gray-400');
+            indicator.querySelector('div').classList.add('bg-green-500', 'text-white');
+            indicator.querySelector('div').innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>';
+        } else if (i === step) {
+            // Current step
+            indicator.classList.remove('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white/30', 'bg-green-500');
+            indicator.querySelector('div').classList.add('bg-white', 'text-primary');
+            indicator.querySelector('div').textContent = i;
+        } else {
+            // Future step
+            indicator.classList.add('opacity-50');
+            indicator.querySelector('div').classList.remove('bg-white', 'bg-green-500', 'text-primary');
+            indicator.querySelector('div').classList.add('bg-white/30', 'text-white');
+            indicator.querySelector('div').textContent = i;
+        }
+    }
+    
+    // Update subtitle
+    const subtitles = [
+        'Step 1: Student Information',
+        'Step 2: Guardian Information (Optional)',
+        'Step 3: Face Enrollment (Optional)'
+    ];
+    document.getElementById('student-modal-subtitle').textContent = subtitles[step - 1];
+    
+    // Update buttons visibility
+    const backBtn = document.getElementById('back-step-btn');
+    const skipBtn = document.getElementById('skip-step-btn');
+    const nextBtn = document.getElementById('next-step-btn');
+    const nextText = document.getElementById('next-step-text');
+    
+    if (step === 1) {
+        backBtn.classList.add('hidden');
+        skipBtn.classList.add('hidden');
+        nextText.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            Next Step
+        `;
+    } else if (step === 2) {
+        backBtn.classList.remove('hidden');
+        skipBtn.classList.remove('hidden');
+        nextText.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            Next Step
+        `;
+    } else if (step === 3) {
+        backBtn.classList.remove('hidden');
+        skipBtn.classList.remove('hidden');
+        nextText.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Save Student
+        `;
+    }
+}
+
+// Handle next step
+async function handleNextStep() {
+    if (currentModalStep === 1) {
+        if (!validateStudentForm()) return;
+        storeStudentFormData();
+        // Add first guardian form if none exists
+        if (guardianCounter === 0) {
+            addGuardianForm();
+        }
+        updateStepUI(2);
+    } else if (currentModalStep === 2) {
+        if (!validateGuardianForm()) return;
+        storeGuardianFormData();
+        updateStepUI(3);
+    } else if (currentModalStep === 3) {
+        await saveStudent();
+    }
+}
+
+// Handle back step
+function handleBackStep() {
+    if (currentModalStep === 2) {
+        updateStepUI(1);
+    } else if (currentModalStep === 3) {
+        updateStepUI(2);
+    }
+}
+
+// Handle skip step
+function handleSkipStep() {
+    if (currentModalStep === 2) {
+        guardianFormData = []; // Clear any guardian data
+        updateStepUI(3);
+    } else if (currentModalStep === 3) {
+        saveStudent(); // Skip face enrollment and save
+    }
+}
+
+// =============================================
+// GUARDIAN MANAGEMENT FUNCTIONS
+// =============================================
+
+// Create guardian form HTML
+function createGuardianFormHTML(index) {
+    return `
+        <div class="guardian-form bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl p-6 mb-4 relative" data-guardian-index="${index}">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Guardian ${index + 1}
+                </h4>
+                <button type="button" onclick="removeGuardianForm(${index})" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Name Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">First Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="guardian_first_name_${index}" required
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter first name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Middle Name</label>
+                        <input type="text" name="guardian_middle_name_${index}"
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter middle name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Last Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="guardian_last_name_${index}" required
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="Enter last name">
+                    </div>
+                </div>
+                
+                <!-- Contact Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Relationship <span class="text-red-500">*</span></label>
+                        <select name="guardian_relationship_${index}" required
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300">
+                            <option value="">Select relationship</option>
+                            <option value="Mother">Mother</option>
+                            <option value="Father">Father</option>
+                            <option value="Grandmother">Grandmother</option>
+                            <option value="Grandfather">Grandfather</option>
+                            <option value="Aunt">Aunt</option>
+                            <option value="Uncle">Uncle</option>
+                            <option value="Sister">Sister</option>
+                            <option value="Brother">Brother</option>
+                            <option value="Legal Guardian">Legal Guardian</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contact Number <span class="text-red-500">*</span></label>
+                        <input type="tel" name="guardian_contact_${index}" required
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                            placeholder="09XXXXXXXXX">
+                    </div>
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+                    <input type="email" name="guardian_email_${index}"
+                        class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-tertiary/20 focus:border-primary dark:focus:border-tertiary dark:bg-gray-700 dark:text-white transition-all duration-300 placeholder-gray-400"
+                        placeholder="guardian@example.com">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Add guardian form
+function addGuardianForm() {
+    const container = document.getElementById('guardians-container');
+    const newForm = document.createElement('div');
+    newForm.innerHTML = createGuardianFormHTML(guardianCounter);
+    container.appendChild(newForm.firstElementChild);
+    guardianCounter++;
+    
+    // Limit to 3 guardians
+    if (guardianCounter >= 3) {
+        document.getElementById('add-another-guardian-btn').style.display = 'none';
+    }
+}
+
+// Remove guardian form
+function removeGuardianForm(index) {
+    const form = document.querySelector(`[data-guardian-index="${index}"]`);
+    if (form) {
+        form.remove();
+        renumberGuardians();
+    }
+}
+
+// Renumber guardians after removal
+function renumberGuardians() {
+    const forms = document.querySelectorAll('.guardian-form');
+    guardianCounter = forms.length;
+    
+    forms.forEach((form, idx) => {
+        form.setAttribute('data-guardian-index', idx);
+        form.querySelector('h4').innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Guardian ${idx + 1}
+        `;
+        
+        // Update name attributes
+        form.querySelectorAll('input, select').forEach(input => {
+            const name = input.getAttribute('name');
+            if (name) {
+                const baseName = name.replace(/_\d+$/, '');
+                input.setAttribute('name', `${baseName}_${idx}`);
+            }
+        });
+    });
+    
+    // Show add button if less than 3 guardians
+    document.getElementById('add-another-guardian-btn').style.display = guardianCounter < 3 ? 'block' : 'none';
+}
+
+// =============================================
+// VALIDATION AND DATA STORAGE FUNCTIONS
+// =============================================
+
+// Validate student form
+function validateStudentForm() {
+    const lrn = document.getElementById('student-lrn').value;
+    const firstName = document.getElementById('student-first-name').value;
+    const lastName = document.getElementById('student-last-name').value;
+    
+    if (!lrn || !firstName || !lastName) {
+        showToast('Please fill in all required student fields', 'error');
+        return false;
+    }
+    
+    if (lrn.length !== 12 || isNaN(lrn)) {
+        showToast('LRN must be exactly 12 digits', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Store student form data
+function storeStudentFormData() {
+    const formData = new FormData(document.getElementById('student-form'));
+    studentFormData = Object.fromEntries(formData.entries());
+}
+
+// Validate guardian form
+function validateGuardianForm() {
+    const guardianForms = document.querySelectorAll('.guardian-form');
+    
+    // If no guardians added, that's okay (optional)
+    if (guardianForms.length === 0) {
+        return true;
+    }
+    
+    // Validate each guardian form
+    for (let form of guardianForms) {
+        const requiredInputs = form.querySelectorAll('input[required], select[required]');
+        for (let input of requiredInputs) {
+            if (!input.value.trim()) {
+                showToast('Please fill in all required guardian fields', 'error');
+                input.focus();
+                return false;
+            }
+        }
+        
+        // Validate contact number format
+        const contactInput = form.querySelector('input[type="tel"]');
+        if (contactInput && contactInput.value) {
+            const contact = contactInput.value.replace(/\D/g, '');
+            if (contact.length !== 11 || !contact.startsWith('09')) {
+                showToast('Contact number must be 11 digits starting with 09', 'error');
+                contactInput.focus();
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// Store guardian form data
+function storeGuardianFormData() {
+    guardianFormData = [];
+    const guardianForms = document.querySelectorAll('.guardian-form');
+    
+    guardianForms.forEach((form, index) => {
+        const guardian = {
+            first_name: form.querySelector(`[name="guardian_first_name_${index}"]`).value,
+            middle_name: form.querySelector(`[name="guardian_middle_name_${index}"]`).value,
+            last_name: form.querySelector(`[name="guardian_last_name_${index}"]`).value,
+            relationship: form.querySelector(`[name="guardian_relationship_${index}"]`).value,
+            contact_number: form.querySelector(`[name="guardian_contact_${index}"]`).value,
+            email: form.querySelector(`[name="guardian_email_${index}"]`).value
+        };
+        guardianFormData.push(guardian);
     });
 }
+
+// Save student (final step)
+async function saveStudent() {
+    const nextBtn = document.getElementById('next-step-btn');
+    const spinner = document.getElementById('save-spinner');
+    const nextText = document.getElementById('next-step-text');
+    
+    // Disable button and show spinner
+    nextBtn.disabled = true;
+    nextText.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    
+    try {
+        const formData = new FormData();
+        
+        // Add student data
+        Object.keys(studentFormData).forEach(key => {
+            if (studentFormData[key]) {
+                formData.append(key, studentFormData[key]);
+            }
+        });
+        
+        // Add profile picture if selected
+        const profilePic = document.getElementById('student-profile-pic').files[0];
+        if (profilePic) {
+            formData.append('profile_pic', profilePic);
+        }
+        
+        // Add guardian data
+        formData.append('guardians', JSON.stringify(guardianFormData));
+        
+        // Add face enrollment data if available
+        if (faceEnrollmentData.embeddings.length > 0) {
+            formData.append('face_embeddings', JSON.stringify(faceEnrollmentData.embeddings));
+            
+            // Add face images
+            if (faceEnrollmentData.images.front) {
+                formData.append('face_image_front', faceEnrollmentData.images.front);
+            }
+            if (faceEnrollmentData.images.left) {
+                formData.append('face_image_left', faceEnrollmentData.images.left);
+            }
+            if (faceEnrollmentData.images.right) {
+                formData.append('face_image_right', faceEnrollmentData.images.right);
+            }
+        }
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const response = await fetch('/teacher/advisory/students/add/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message || 'Student added successfully!', 'success');
+            closeStudentModal();
+            // Reload students list
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Failed to add student', 'error');
+            nextBtn.disabled = false;
+            nextText.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error saving student:', error);
+        showToast('An error occurred while saving student', 'error');
+        nextBtn.disabled = false;
+        nextText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+    }
+}
+
+// =============================================
+// FACE ENROLLMENT FUNCTIONS
+// =============================================
+
+// Load face API models
+async function loadModalFaceApi() {
+    if (modalFaceApiLoaded) return true;
+    
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/static/models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/static/models');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/static/models');
+        
+        modalDetectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+        modalFaceApiLoaded = true;
+        return true;
+    } catch (error) {
+        console.error('Error loading face-api models:', error);
+        showToast('Failed to load face recognition models', 'error');
+        return false;
+    }
+}
+
+// Start camera
+async function startModalCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        const video = document.getElementById('modal-camera-video');
+        video.srcObject = stream;
+        modalVideoStream = stream;
+        
+        document.getElementById('modal-camera-overlay').classList.add('hidden');
+        document.getElementById('modal-capture-instructions').classList.remove('hidden');
+        document.getElementById('modal-capture-btn').classList.remove('hidden');
+        
+        startFaceDetection();
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        showToast('Failed to access camera', 'error');
+    }
+}
+
+// Stop camera
+function stopModalCamera() {
+    if (modalVideoStream) {
+        modalVideoStream.getTracks().forEach(track => track.stop());
+        modalVideoStream = null;
+    }
+}
+
+// Start face detection
+function startFaceDetection() {
+    const video = document.getElementById('modal-camera-video');
+    const indicator = document.getElementById('modal-face-detection-indicator');
+    
+    setInterval(async () => {
+        if (!modalVideoStream || !modalFaceApiLoaded) return;
+        
+        const detections = await faceapi.detectAllFaces(video, modalDetectorOptions);
+        
+        if (detections.length > 0) {
+            indicator.classList.remove('hidden');
+        } else {
+            indicator.classList.add('hidden');
+        }
+    }, 500);
+}
+
+// Capture image
+async function captureModalImage() {
+    const video = document.getElementById('modal-camera-video');
+    const canvas = document.getElementById('modal-camera-canvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Detect face in captured image
+    const detections = await faceapi
+        .detectSingleFace(canvas, modalDetectorOptions)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+    
+    if (!detections) {
+        showToast('No face detected. Please try again.', 'error');
+        return;
+    }
+    
+    // Store embedding
+    faceEnrollmentData.embeddings.push(Array.from(detections.descriptor));
+    
+    // Convert canvas to blob and store
+    canvas.toBlob(blob => {
+        if (modalCurrentPose === 1) {
+            faceEnrollmentData.images.front = blob;
+            faceEnrollmentData.captured.front = true;
+            document.getElementById('modal-preview-front').src = URL.createObjectURL(blob);
+        } else if (modalCurrentPose === 2) {
+            faceEnrollmentData.images.left = blob;
+            faceEnrollmentData.captured.left = true;
+            document.getElementById('modal-preview-left').src = URL.createObjectURL(blob);
+        } else if (modalCurrentPose === 3) {
+            faceEnrollmentData.images.right = blob;
+            faceEnrollmentData.captured.right = true;
+            document.getElementById('modal-preview-right').src = URL.createObjectURL(blob);
+        }
+        
+        // Show captured images
+        document.getElementById('modal-captured-images').classList.remove('hidden');
+        
+        // Update progress
+        const poseIndicators = ['modal-pose-1-indicator', 'modal-pose-2-indicator', 'modal-pose-3-indicator'];
+        document.getElementById(poseIndicators[modalCurrentPose - 1]).classList.remove('opacity-50');
+        
+        // Move to next pose or finish
+        modalCurrentPose++;
+        if (modalCurrentPose <= 3) {
+            const poseTexts = [
+                'Step 1: Look straight at the camera',
+                'Step 2: Turn your head slightly to the left',
+                'Step 3: Turn your head slightly to the right'
+            ];
+            document.getElementById('modal-capture-step-text').textContent = poseTexts[modalCurrentPose - 1];
+        } else {
+            // All poses captured
+            stopModalCamera();
+            document.getElementById('modal-camera-video').style.display = 'none';
+            document.getElementById('modal-capture-btn').classList.add('hidden');
+            document.getElementById('modal-capture-instructions').innerHTML = `
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                    <h4 class="font-semibold text-green-900 dark:text-green-200 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Face enrollment completed!
+                    </h4>
+                    <p class="text-sm text-green-800 dark:text-green-300">All face images have been captured successfully.</p>
+                </div>
+            `;
+        }
+    }, 'image/jpeg');
+}
+
+// Modal functions
+function openStudentModal(studentData = null) {
+    currentStudentData = studentData;
+    const modal = document.getElementById('student-modal');
+    const modalTitle = document.getElementById('student-modal-title');
+    
+    // Reset form and data
+    currentModalStep = 1;
+    studentFormData = {};
+    guardianFormData = [];
+    guardianCounter = 0;
+    faceEnrollmentData = {
+        images: { front: null, left: null, right: null },
+        captured: { front: false, left: false, right: false },
+        embeddings: []
+    };
+    modalCurrentPose = 1;
+    
+    // Clear forms
+    document.getElementById('student-form').reset();
+    document.getElementById('guardians-container').innerHTML = '';
+    
+    // Reset profile picture preview
+    const profilePicPreview = document.getElementById('student-profile-pic-preview');
+    const defaultIcon = document.getElementById('student-default-profile-icon');
+    if (profilePicPreview && defaultIcon) {
+        profilePicPreview.classList.add('opacity-0');
+        profilePicPreview.classList.remove('opacity-100');
+        defaultIcon.classList.remove('opacity-0');
+    }
+    
+    // Set modal title
+    modalTitle.textContent = studentData ? 'Edit Student' : 'Add Student';
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('.bg-white').classList.remove('scale-95');
+    }, 10);
+    
+    // Initialize UI
+    updateStepUI(1);
+    
+    // If editing, populate form
+    if (studentData) {
+        populateStudentForm(studentData);
+    }
+}
+
+function closeStudentModal() {
+    const modal = document.getElementById('student-modal');
+    
+    // Stop camera if running
+    stopModalCamera();
+    
+    // Animate out
+    modal.classList.add('opacity-0');
+    modal.querySelector('.bg-white').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        
+        // Reset form
+        document.getElementById('student-form').reset();
+        currentModalStep = 1;
+        studentFormData = {};
+        guardianFormData = [];
+        guardianCounter = 0;
+    }, 300);
+}
+
+function populateStudentForm(student) {
+    document.getElementById('student-lrn').value = student.lrn || '';
+    document.getElementById('student-first-name').value = student.first_name || '';
+    document.getElementById('student-middle-name').value = student.middle_name || '';
+    document.getElementById('student-last-name').value = student.last_name || '';
+}
+
+// Event listeners for modal buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Close modal button
+    const closeModalBtn = document.getElementById('close-student-modal');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeStudentModal);
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancel-student-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeStudentModal);
+    }
+    
+    // Next/Save button
+    const nextBtn = document.getElementById('next-step-btn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', handleNextStep);
+    }
+    
+    // Back button
+    const backBtn = document.getElementById('back-step-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', handleBackStep);
+    }
+    
+    // Skip button
+    const skipBtn = document.getElementById('skip-step-btn');
+    if (skipBtn) {
+        skipBtn.addEventListener('click', handleSkipStep);
+    }
+    
+    // Add guardian button
+    const addGuardianBtn = document.getElementById('add-another-guardian-btn');
+    if (addGuardianBtn) {
+        addGuardianBtn.addEventListener('click', addGuardianForm);
+    }
+    
+    // Add student button
+    const addStudentBtn = document.getElementById('add-student-btn');
+    if (addStudentBtn) {
+        addStudentBtn.addEventListener('click', function() {
+            openStudentModal();
+        });
+    }
+    
+    // Start camera button
+    const startCameraBtn = document.getElementById('modal-start-camera-btn');
+    if (startCameraBtn) {
+        startCameraBtn.addEventListener('click', async function() {
+            if (await loadModalFaceApi()) {
+                await startModalCamera();
+            }
+        });
+    }
+    
+    // Capture button
+    const captureBtn = document.getElementById('modal-capture-btn');
+    if (captureBtn) {
+        captureBtn.addEventListener('click', captureModalImage);
+    }
+    
+    // Profile picture handling
+    const uploadTrigger = document.getElementById('student-upload-trigger');
+    const profilePicInput = document.getElementById('student-profile-pic');
+    const profilePicPreview = document.getElementById('student-profile-pic-preview');
+    const defaultIcon = document.getElementById('student-default-profile-icon');
+    
+    if (uploadTrigger && profilePicInput) {
+        uploadTrigger.addEventListener('click', () => profilePicInput.click());
+        
+        profilePicInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePicPreview.src = e.target.result;
+                    profilePicPreview.classList.remove('opacity-0');
+                    profilePicPreview.classList.add('opacity-100');
+                    defaultIcon.classList.add('opacity-0');
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+});
 
 // Initialize Export Dropdown Functionality
 function initializeExportDropdown() {
