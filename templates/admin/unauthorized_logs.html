@@ -573,8 +573,6 @@
     
     // Perform actual delete
     function performDelete(logIds) {
-    // Perform actual delete
-    function performDelete(logIds) {
         fetch('/api/delete-unauthorized-log/', {
             method: 'POST',
             headers: {
@@ -607,6 +605,98 @@
         if (e.key === 'Escape') {
             closePhotoModal();
         }
+    });
+    
+    // Real-time polling system for unauthorized logs
+    let pollInterval = 5000; // Poll every 5 seconds
+    let pollTimeout = null;
+    let lastPolledLogs = [];
+    
+    function startRealtimePolling() {
+        if (pollTimeout) {
+            clearTimeout(pollTimeout);
+        }
+        
+        pollTimeout = setTimeout(async () => {
+            try {
+                // Get current filters
+                const searchInput = document.getElementById('log-search');
+                const cameraSelect = document.getElementById('camera-filter');
+                const dateInput = document.getElementById('date-filter');
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (searchInput && searchInput.value) params.append('search', searchInput.value);
+                if (cameraSelect && cameraSelect.value) params.append('camera', cameraSelect.value);
+                if (dateInput && dateInput.value) params.append('date', dateInput.value);
+                params.append('limit', 50);
+                
+                // Fetch latest unauthorized logs
+                const response = await fetch(`/api/unauthorized-logs/latest/?${params.toString()}`);
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.logs && data.logs.length > 0) {
+                    // Check if new logs have been added
+                    const currentLogIds = Array.from(document.querySelectorAll('tbody tr[data-log-id]')).map(tr => {
+                        return parseInt(tr.getAttribute('data-log-id'));
+                    });
+                    
+                    const hasNewLogs = data.logs.some(log => !currentLogIds.includes(log.id));
+                    
+                    if (hasNewLogs) {
+                        // Reload the page to show new logs
+                        const currentUrl = new URL(window.location.href);
+                        const search = searchInput ? searchInput.value : '';
+                        const camera = cameraSelect ? cameraSelect.value : '';
+                        const date = dateInput ? dateInput.value : '';
+                        const perPage = document.getElementById('per-page-select') ? document.getElementById('per-page-select').value : '10';
+                        
+                        let reloadUrl = '{% url "admin_unauthorized_logs" %}?per_page=' + perPage;
+                        if (search) reloadUrl += '&search=' + encodeURIComponent(search);
+                        if (camera) reloadUrl += '&camera=' + encodeURIComponent(camera);
+                        if (date) reloadUrl += '&date=' + encodeURIComponent(date);
+                        
+                        showToast('New unauthorized face detected!', 'warning');
+                        
+                        // Reload after a short delay to show the toast
+                        setTimeout(() => {
+                            window.location.href = reloadUrl;
+                        }, 1000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for unauthorized log updates:', error);
+            }
+            
+            // Schedule next poll
+            startRealtimePolling();
+        }, pollInterval);
+    }
+    
+    function stopRealtimePolling() {
+        if (pollTimeout) {
+            clearTimeout(pollTimeout);
+            pollTimeout = null;
+        }
+    }
+    
+    // Start polling when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        startRealtimePolling();
+    });
+    
+    // Stop polling when the page is hidden and resume when visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopRealtimePolling();
+        } else {
+            startRealtimePolling();
+        }
+    });
+    
+    // Clean up polling when page is unloaded
+    window.addEventListener('beforeunload', function() {
+        stopRealtimePolling();
     });
 </script>
 
