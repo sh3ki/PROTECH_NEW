@@ -5623,6 +5623,7 @@ def admin_settings(request):
         'email_enabled': settings_obj.email_notifications_enabled,
         'sms_enabled': settings_obj.sms_notifications_enabled,
         'display_mode': settings_obj.recognition_display_mode,
+        'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
     }
     return render(request, 'admin/settings.html', context)
 
@@ -5799,6 +5800,28 @@ def save_display_mode(request):
     except Exception as e:
         messages.error(request, f'Error saving display mode: {str(e)}')
     
+    return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def save_spoof_proofing(request):
+    """Toggle spoof-proof liveness requirement for face recognition."""
+    from PROTECHAPP.models import SystemSettings
+
+    enabled = request.POST.get('spoof_proof_enabled') == 'on'
+
+    try:
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.spoof_proof_enabled = enabled
+        settings_obj.save()
+
+        status_label = 'enabled' if enabled else 'disabled'
+        messages.success(request, f'Spoof-proof liveness has been {status_label}.')
+    except Exception as e:
+        messages.error(request, f'Error saving spoof-proof setting: {str(e)}')
+
     return redirect('admin_settings')
 
 
