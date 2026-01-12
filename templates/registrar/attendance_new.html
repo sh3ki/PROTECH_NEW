@@ -1163,6 +1163,88 @@ function confirmDeleteAttendance() {
     });
 }
 
+// Real-time attendance polling system
+let pollInterval = 5000; // Poll every 5 seconds
+let pollTimeout = null;
+let lastPolledRecords = [];
+
+function startRealtimePolling() {
+    if (pollTimeout) {
+        clearTimeout(pollTimeout);
+    }
+    
+    pollTimeout = setTimeout(async () => {
+        try {
+            // Get current filters
+            const searchInput = document.getElementById('attendance-search');
+            const gradeSelect = document.getElementById('grade-filter');
+            const sectionSelect = document.getElementById('section-filter');
+            const statusSelect = document.getElementById('status-filter');
+            const dateInput = document.getElementById('date-filter');
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchInput && searchInput.value) params.append('search', searchInput.value);
+            if (gradeSelect && gradeSelect.value) params.append('grade', gradeSelect.value);
+            if (sectionSelect && sectionSelect.value) params.append('section', sectionSelect.value);
+            if (statusSelect && statusSelect.value) params.append('status', statusSelect.value);
+            if (dateInput && dateInput.value) params.append('date', dateInput.value);
+            params.append('limit', 50);
+            
+            // Fetch latest attendance records
+            const response = await fetch(`/registrar/attendance-records/latest/?${params.toString()}`);
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.records && data.records.length > 0) {
+                // Check if new records have been added
+                const currentRecords = Array.from(document.querySelectorAll('#attendance-table tbody tr')).map(tr => {
+                    const idCell = tr.querySelector('td:first-child');
+                    return idCell ? idCell.textContent.trim() : null;
+                });
+                
+                const hasNewRecords = data.records.some(record => !currentRecords.includes(record.lrn));
+                
+                if (hasNewRecords) {
+                    // Reload the table with the latest data
+                    loadAttendanceRecords(1);
+                    showToast('Attendance updated with new records!', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error polling for attendance updates:', error);
+        }
+        
+        // Schedule next poll
+        startRealtimePolling();
+    }, pollInterval);
+}
+
+function stopRealtimePolling() {
+    if (pollTimeout) {
+        clearTimeout(pollTimeout);
+        pollTimeout = null;
+    }
+}
+
+// Start polling when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startRealtimePolling();
+});
+
+// Stop polling when the page is hidden and resume when visible
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopRealtimePolling();
+    } else {
+        startRealtimePolling();
+    }
+});
+
+// Clean up polling when page is unloaded
+window.addEventListener('beforeunload', function() {
+    stopRealtimePolling();
+});
+
 // Only keep one definition for each function. Remove all duplicate function definitions below this line.
 </script>
 
