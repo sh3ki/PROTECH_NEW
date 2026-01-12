@@ -605,10 +605,25 @@ def check_gate_queue(request):
     """
     API endpoint for Arduino to check if there are queued gate operations
     Returns the number of cycles to perform
+    
+    This endpoint is controlled by the Prototype Gate System setting.
+    When disabled, it returns 0 cycles regardless of queue status.
     """
+    from PROTECHAPP.models import SystemSettings
+    
     global gate_queue
     
     try:
+        # Check if prototype gate system is enabled
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        if not getattr(settings_obj, 'prototype_gate_system_enabled', True):
+            # Prototype gate system is disabled - return 0 cycles
+            return JsonResponse({
+                'success': True,
+                'cycles': 0,
+                'message': 'Prototype Gate System is disabled'
+            })
+        
         queue_length = len(gate_queue)
         
         if queue_length > 0:
