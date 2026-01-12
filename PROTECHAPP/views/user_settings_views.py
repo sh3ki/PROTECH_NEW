@@ -8,7 +8,7 @@ import json
 import logging
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, update_session_auth_hash
+from django.contrib.auth import authenticate, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import FileSystemStorage
@@ -340,4 +340,39 @@ def delete_account(request):
         return JsonResponse({
             'success': False,
             'message': 'An error occurred while deleting account'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def deactivate_account(request):
+    """
+    Deactivates the user's account (sets is_active=False).
+    User will be logged out and unable to login until reactivated by admin.
+    """
+    try:
+        user = request.user
+        user_id = user.id
+        username = user.username
+        
+        # Deactivate the account
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+        
+        # Log the deactivation
+        logger.warning(f"Account deactivated: User ID {user_id}, Username: {username}")
+        
+        # Logout the user
+        logout(request)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Account deactivated successfully. You will be redirected to login.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error deactivating account: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred while deactivating account'
         }, status=500)
