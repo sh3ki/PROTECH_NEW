@@ -1247,3 +1247,46 @@ def delete_teacher_advisory_calendar_event(request, event_id):
             return JsonResponse({'success': False, 'message': str(e)})
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def get_student_attendance_history(request, student_id):
+    """API endpoint to get attendance history for a specific student"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return JsonResponse({'error': 'Unauthorized', 'records': []}, status=403)
+    except Exception:
+        return JsonResponse({'error': 'Unauthorized', 'records': []}, status=403)
+    
+    try:
+        # Get the student and verify they belong to the teacher's section
+        student = Student.objects.get(id=student_id)
+        
+        # Verify the student is in the teacher's advisory section
+        if request.user.section != student.section:
+            return JsonResponse({'error': 'Unauthorized', 'records': []}, status=403)
+        
+        # Get all attendance records for this student
+        attendance_records = Attendance.objects.filter(
+            student=student
+        ).order_by('-date', '-time_in')
+        
+        # Format the records
+        records = []
+        for record in attendance_records:
+            records.append({
+                'id': record.id,
+                'date': record.date.strftime('%Y-%m-%d'),
+                'time_in': record.time_in.strftime('%I:%M %p') if record.time_in else None,
+                'time_out': record.time_out.strftime('%I:%M %p') if record.time_out else None,
+                'status': record.status,
+            })
+        
+        return JsonResponse({'records': records})
+        
+    except Student.DoesNotExist:
+        return JsonResponse({'error': 'Student not found', 'records': []}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'records': []}, status=500)
+
