@@ -5625,6 +5625,7 @@ def admin_settings(request):
         'display_mode': settings_obj.recognition_display_mode,
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
         'gate_mode': getattr(settings_obj, 'gate_mode', 'CLOSED'),
+        'prototype_gate_system_enabled': getattr(settings_obj, 'prototype_gate_system_enabled', True),
     }
     return render(request, 'admin/settings.html', context)
 
@@ -5853,6 +5854,28 @@ def save_gate_mode(request):
         messages.success(request, f'Gate mode updated to {label}.')
     except Exception as e:
         messages.error(request, f'Error saving gate mode: {str(e)}')
+
+    return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def save_prototype_gate_system(request):
+    """Toggle prototype gate system and gate queue check on/off."""
+    from PROTECHAPP.models import SystemSettings
+
+    enabled = request.POST.get('prototype_gate_system_enabled') == 'on'
+
+    try:
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.prototype_gate_system_enabled = enabled
+        settings_obj.save()
+
+        status_label = 'enabled' if enabled else 'disabled'
+        messages.success(request, f'Prototype Gate System has been {status_label}.')
+    except Exception as e:
+        messages.error(request, f'Error saving prototype gate system setting: {str(e)}')
 
     return redirect('admin_settings')
 
