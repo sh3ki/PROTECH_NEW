@@ -23,7 +23,7 @@ All endpoints require authentication (user must be logged in).
 {
   "success": true,
   "message": "Profile picture updated successfully",
-  "profile_pic_url": "/media/profile_pics/user_1_1234567890.jpg"
+  "profile_pic_url": "/profile-pics/550e8400-e29b-41d4-a716-446655440000_photo.jpg/"
 }
 ```
 
@@ -35,7 +35,8 @@ All endpoints require authentication (user must be logged in).
 - Automatic image optimization (resized to max 800x800)
 - RGBA to RGB conversion for compatibility
 - Old profile picture automatically deleted
-- Unique filename generation based on user ID and timestamp
+- Unique filename generation using UUID
+- Stored in private directory for security
 
 ---
 
@@ -202,9 +203,11 @@ All endpoints require authentication (user must be logged in).
 ### File Security
 - Restricted file types (images only)
 - File size limits (5MB maximum)
-- Unique filename generation prevents overwriting
+- Unique filename generation using UUID prevents overwriting
 - Automatic cleanup of old files
 - Image optimization reduces attack surface
+- Files stored in private directory outside web root
+- Served via authenticated Django view (not direct static access)
 
 ### Error Handling
 - Try-except blocks on all operations
@@ -262,12 +265,12 @@ const response = await fetch('/api/update-profile-picture/', {
 
 ## Database Schema
 
-### CustomUser Model Fields Used
+### Profile Pictures
 ```python
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
-    profile_pic = models.CharField(max_length=255, blank=True, null=True)
+    profile_pic = models.CharField(max_length=255, blank=True, null=True)  # Stores filename only
     role = models.CharField(max_length=20, choices=UserRole.choices)
     is_new = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -278,20 +281,23 @@ class CustomUser(AbstractUser):
     # - last_login, date_joined
 ```
 
+**Note:** Profile pictures are stored in `private_profile_pics/` directory (outside MEDIA_ROOT) and accessed via `/profile-pics/{filename}/` URL through an authenticated Django view for security.
+
 ---
 
 ## File Storage
 
 ### Profile Pictures
-- **Location:** `MEDIA_ROOT/profile_pics/`
-- **Naming:** `user_{user_id}_{timestamp}.{extension}`
-- **Accessible at:** `/media/profile_pics/{filename}`
+- **Location:** `PROFILE_ROOT/private_profile_pics/`
+- **Naming:** `{uuid}_{original_filename}.{extension}`
+- **Accessible at:** `/profile-pics/{filename}/`
 - **Automatic cleanup:** Old pictures deleted on update/removal
+- **Security:** Files stored outside MEDIA_ROOT in private directory, served via Django view with authentication
 
 ### Storage Settings (settings.py)
 ```python
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Profile pictures stored in private directory (not in MEDIA_ROOT)
+PROFILE_PICS_DIR = os.path.join(BASE_DIR, 'private_profile_pics')
 ```
 
 ---
@@ -372,10 +378,12 @@ ERROR 2026-01-12 10:32:00 user_settings_views Error updating profile: Validation
 ## Troubleshooting
 
 ### Profile Picture Upload Fails
-1. Check `MEDIA_ROOT` directory permissions
-2. Verify disk space available
-3. Check file size limits in web server config
-4. Ensure PIL/Pillow is installed: `pip install Pillow`
+1. Check `private_profile_pics` directory exists in BASE_DIR
+2. Check directory permissions (must be writable by Django)
+3. Verify disk space available
+4. Check file size limits in web server config
+5. Ensure PIL/Pillow is installed: `pip install Pillow`
+6. Verify the `/profile-pics/` URL is properly configured in urls.py
 
 ### Username/Email Already Exists Errors
 1. Database uniqueness constraints are enforced
