@@ -776,7 +776,8 @@
             // Populate with attendance records
             attendances.forEach(attendance => {
                 const card = document.createElement('div');
-                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200';
+                // All time out records get slight red background
+                card.className = 'info-card group hover:scale-[1.01] transform transition-all duration-200 bg-red-100/60 dark:bg-red-900/20';
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
