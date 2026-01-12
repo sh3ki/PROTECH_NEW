@@ -225,6 +225,72 @@
         {% endif %}
     </div>
 
+    <!-- Prototype Gate System Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-6">
+        <div class="flex items-center gap-3 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary dark:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-primary dark:text-tertiary">Prototype Gate System</h2>
+        </div>
+
+        <p class="text-accent dark:text-gray-400 mb-6">
+            Enable or disable the prototype gate system and gate queue check functionality. When enabled, the system checks gate queue status during attendance operations.
+        </p>
+
+        <form method="POST" action="{% url 'save_prototype_gate_system' %}" class="space-y-6">
+            {% csrf_token %}
+            <div class="flex items-center justify-between p-5 border-2 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <div>
+                    <div class="font-semibold text-primary dark:text-tertiary text-lg">Gate Queue Check</div>
+                    <div class="text-sm text-accent dark:text-gray-400">Checks gate queue and enforces queue-based attendance logic</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="prototype_gate_system_enabled" class="sr-only peer" {% if prototype_gate_system_enabled %}checked{% endif %}>
+                    <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ prototype_gate_system_enabled|yesno:"Enabled,Disabled" }}</span>
+                </label>
+            </div>
+
+            <!-- Info Card -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                <div class="flex gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-sm text-blue-800 dark:text-blue-300">
+                        <p class="font-semibold mb-2">System Status:</p>
+                        <ul class="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-400">
+                            <li><strong>When Enabled (ON):</strong> Gate queue checks are active and will enforce queue-based attendance rules</li>
+                            <li><strong>When Disabled (OFF):</strong> Gate queue checks are bypassed, attendance operates without queue validation</li>
+                            <li>Default: <strong>Enabled (ON)</strong></li>
+                            <li>Changes take effect immediately on all gate operations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z" />
+                    </svg>
+                    Save Prototype Gate System
+                </button>
+            </div>
+        </form>
+
+        {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300{% else %}bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
     <!-- Class Timing Settings Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-6">
         <div class="flex items-center gap-3 mb-6">
