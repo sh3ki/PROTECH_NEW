@@ -435,3 +435,18 @@ class BackupLog(models.Model):
         ordering = ['-created_at']
         verbose_name = "Backup Log"
         verbose_name_plural = "Backup Logs"
+
+# 20. Unauthorized Face Log Table
+class UnauthorizedLog(models.Model):
+    photo_path = models.CharField(max_length=500, help_text="Path to the unauthorized face photo")
+    camera_name = models.CharField(max_length=100, help_text="Name of the camera that captured the photo")
+    timestamp = models.DateTimeField(default=timezone.now, help_text="When the unauthorized face was detected")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Unauthorized Face - {self.camera_name} at {self.timestamp}"
+    
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = "Unauthorized Log"
+        verbose_name_plural = "Unauthorized Logs"
