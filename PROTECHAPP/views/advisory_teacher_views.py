@@ -1094,3 +1094,15 @@ def import_advisory_students(request):
             'status': 'error',
             'message': f'Error importing students: {str(e)}'
         }, status=500)
+
+
+@login_required
+def teacher_advisory_calendar(request):
+    """View for advisory teacher calendar"""
+    # Runtime authorization check
+    try:
+        if not is_advisory_teacher(request.user):
+            return redirect('login')
+    except Exception:
+        return redirect('login')
+    return render(request, 'teacher/advisory/calendar.html')
