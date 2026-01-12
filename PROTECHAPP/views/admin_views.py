@@ -5624,6 +5624,7 @@ def admin_settings(request):
         'sms_enabled': settings_obj.sms_notifications_enabled,
         'display_mode': settings_obj.recognition_display_mode,
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+        'gate_mode': getattr(settings_obj, 'gate_mode', 'CLOSED'),
     }
     return render(request, 'admin/settings.html', context)
 
@@ -5659,6 +5660,12 @@ def save_class_times(request):
     import pytz
     from datetime import datetime
     
+    # Block edits when gate is open
+    settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+    if getattr(settings_obj, 'gate_mode', 'CLOSED') == GateMode.OPEN:
+        messages.error(request, 'Class timing is locked in Open Gate mode.')
+        return redirect('admin_settings')
+
     first_class_time = request.POST.get('first_class_start_time')
     second_class_time = request.POST.get('second_class_start_time')
     grace_period = request.POST.get('grace_period_minutes')
@@ -5821,6 +5828,31 @@ def save_spoof_proofing(request):
         messages.success(request, f'Spoof-proof liveness has been {status_label}.')
     except Exception as e:
         messages.error(request, f'Error saving spoof-proof setting: {str(e)}')
+
+    return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def save_gate_mode(request):
+    """Persist gate mode (Closed or Open) in system settings."""
+    from PROTECHAPP.models import SystemSettings, GateMode
+
+    gate_mode = request.POST.get('gate_mode') or GateMode.CLOSED
+
+    if gate_mode not in [GateMode.CLOSED, GateMode.OPEN]:
+        messages.error(request, 'Invalid gate mode selected.')
+        return redirect('admin_settings')
+
+    try:
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.gate_mode = gate_mode
+        settings_obj.save()
+        label = 'Open Gate' if gate_mode == GateMode.OPEN else 'Closed Gate'
+        messages.success(request, f'Gate mode updated to {label}.')
+    except Exception as e:
+        messages.error(request, f'Error saving gate mode: {str(e)}')
 
     return redirect('admin_settings')
 
