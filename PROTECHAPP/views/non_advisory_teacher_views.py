@@ -43,7 +43,7 @@ def teacher_non_advisory_students(request):
 @user_passes_test(is_teacher)
 def teacher_non_advisory_guardians(request):
     """View for guardians listing"""
-    guardians = Guardian.objects.all()
+    guardians = Guardian.objects.all().order_by('-created_at')
     context = {
         'guardians': guardians
     }
@@ -145,7 +145,7 @@ def export_non_advisory_guardians(request):
         return JsonResponse({'success': False, 'error': f'Required library not installed: {str(e)}'}, status=500)
     
     export_format = request.GET.get('format', 'excel')
-    guardians = Guardian.objects.all().select_related('student').order_by('id')
+    guardians = Guardian.objects.all().select_related('student').order_by('-created_at')
     
     headers = ['ID', 'First Name', 'Middle Name', 'Last Name', 'Relationship', 'Contact Number', 'Email', 'Student Name']
     data_rows = []
