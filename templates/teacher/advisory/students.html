@@ -880,6 +880,15 @@
                         <option value="EXCUSED">Excused</option>
                     </select>
                 </div>
+                <div class="flex-1 min-w-[180px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">&nbsp;</label>
+                    <button id="show-calendar-btn" class="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        View Calendar
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -934,6 +943,97 @@
                 Total Records: <span id="total-records" class="font-semibold">0</span>
             </div>
             <button id="close-history-btn" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 font-semibold">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Calendar Modal -->
+<div id="attendance-calendar-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm hidden items-center justify-center z-[10000] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0 modal-content">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-2xl font-bold text-white">Attendance Calendar</h3>
+                    <p class="text-blue-100 text-sm" id="calendar-student-name"></p>
+                </div>
+            </div>
+            <button id="close-calendar-modal" class="text-white hover:bg-white/20 rounded-full p-2 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Calendar Navigation -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <button id="calendar-prev-month" class="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h4 class="text-xl font-bold text-gray-900 dark:text-white" id="calendar-month-year">January 2026</h4>
+                <button id="calendar-next-month" class="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="bg-white dark:bg-gray-800 px-8 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap gap-4 justify-center text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-green-500 rounded"></div>
+                    <span class="text-gray-700 dark:text-gray-300">On Time</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                    <span class="text-gray-700 dark:text-gray-300">Late</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-red-500 rounded"></div>
+                    <span class="text-gray-700 dark:text-gray-300">Absent</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span class="text-gray-700 dark:text-gray-300">Excused</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                    <span class="text-gray-700 dark:text-gray-300">No Record</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="p-8 overflow-y-auto max-h-[calc(95vh-280px)]">
+            <div class="grid grid-cols-7 gap-2">
+                <!-- Day Headers -->
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Sun</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Mon</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Tue</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Wed</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Thu</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Fri</div>
+                <div class="text-center font-bold text-gray-700 dark:text-gray-300 py-2">Sat</div>
+                <!-- Calendar Days (populated by JavaScript) -->
+                <div id="calendar-days-grid" class="col-span-7 grid grid-cols-7 gap-2">
+                    <!-- Days will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-8 py-4 flex items-center justify-end border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
+            <button id="close-calendar-btn" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 font-semibold">
                 Close
             </button>
         </div>
@@ -1732,6 +1832,195 @@ if (dayHistFilter) {
 
 if (statusHistoryFilter) {
     statusHistoryFilter.addEventListener('change', filterAttendanceHistory);
+}
+
+// Attendance Calendar Modal Functions
+let calendarCurrentMonth = new Date().getMonth();
+let calendarCurrentYear = new Date().getFullYear();
+
+function openAttendanceCalendar() {
+    const modal = document.getElementById('attendance-calendar-modal');
+    const studentNameEl = document.getElementById('calendar-student-name');
+    const historyStudentName = document.getElementById('history-student-name');
+    
+    // Set student name
+    if (historyStudentName) {
+        studentNameEl.textContent = historyStudentName.textContent;
+    }
+    
+    // Reset to current month/year
+    calendarCurrentMonth = new Date().getMonth();
+    calendarCurrentYear = new Date().getFullYear();
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+        modal.querySelector('.modal-content').classList.remove('opacity-0');
+    }, 10);
+    
+    // Render calendar
+    renderAttendanceCalendar();
+}
+
+function closeAttendanceCalendar() {
+    const modal = document.getElementById('attendance-calendar-modal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('.modal-content').classList.add('scale-95');
+    modal.querySelector('.modal-content').classList.add('opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function renderAttendanceCalendar() {
+    const monthYearEl = document.getElementById('calendar-month-year');
+    const daysGridEl = document.getElementById('calendar-days-grid');
+    
+    // Month names
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    // Update month/year display
+    monthYearEl.textContent = `${monthNames[calendarCurrentMonth]} ${calendarCurrentYear}`;
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(calendarCurrentYear, calendarCurrentMonth, 1).getDay();
+    const daysInMonth = new Date(calendarCurrentYear, calendarCurrentMonth + 1, 0).getDate();
+    
+    // Create attendance map for quick lookup
+    const attendanceMap = {};
+    attendanceHistoryData.forEach(record => {
+        const date = new Date(record.date);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const day = date.getDate();
+        
+        if (year === calendarCurrentYear && month === calendarCurrentMonth) {
+            attendanceMap[day] = record.status;
+        }
+    });
+    
+    // Clear grid
+    daysGridEl.innerHTML = '';
+    
+    // Add empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'aspect-square';
+        daysGridEl.appendChild(emptyCell);
+    }
+    
+    // Add days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        const status = attendanceMap[day];
+        
+        // Base classes
+        let classes = 'aspect-square flex flex-col items-center justify-center rounded-lg border-2 transition-all cursor-pointer hover:shadow-lg ';
+        
+        // Color based on attendance status
+        if (status) {
+            switch(status.toUpperCase()) {
+                case 'ON TIME':
+                    classes += 'bg-green-500 border-green-600 text-white hover:bg-green-600';
+                    break;
+                case 'LATE':
+                    classes += 'bg-yellow-500 border-yellow-600 text-white hover:bg-yellow-600';
+                    break;
+                case 'ABSENT':
+                    classes += 'bg-red-500 border-red-600 text-white hover:bg-red-600';
+                    break;
+                case 'EXCUSED':
+                    classes += 'bg-blue-500 border-blue-600 text-white hover:bg-blue-600';
+                    break;
+                default:
+                    classes += 'bg-gray-300 dark:bg-gray-600 border-gray-400 dark:border-gray-500 text-gray-800 dark:text-gray-200';
+            }
+        } else {
+            classes += 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600';
+        }
+        
+        dayCell.className = classes;
+        dayCell.innerHTML = `
+            <div class="text-lg font-bold">${day}</div>
+            ${status ? `<div class="text-xs mt-1">${status === 'ON TIME' ? 'On Time' : status.charAt(0) + status.slice(1).toLowerCase()}</div>` : ''}
+        `;
+        
+        // Add click event to show details
+        if (status) {
+            dayCell.addEventListener('click', () => {
+                showDayAttendanceDetails(day, status);
+            });
+        }
+        
+        daysGridEl.appendChild(dayCell);
+    }
+}
+
+function showDayAttendanceDetails(day, status) {
+    // Find the full record for this day
+    const record = attendanceHistoryData.find(r => {
+        const date = new Date(r.date);
+        return date.getFullYear() === calendarCurrentYear && 
+               date.getMonth() === calendarCurrentMonth && 
+               date.getDate() === day;
+    });
+    
+    if (record) {
+        const message = `
+            Date: ${record.date}
+            Status: ${record.status}
+            Time In: ${record.time_in || 'N/A'}
+            Time Out: ${record.time_out || 'N/A'}
+        `;
+        alert(message);
+    }
+}
+
+function changeCalendarMonth(direction) {
+    calendarCurrentMonth += direction;
+    
+    if (calendarCurrentMonth < 0) {
+        calendarCurrentMonth = 11;
+        calendarCurrentYear--;
+    } else if (calendarCurrentMonth > 11) {
+        calendarCurrentMonth = 0;
+        calendarCurrentYear++;
+    }
+    
+    renderAttendanceCalendar();
+}
+
+// Event listeners for calendar modal
+const showCalendarBtn = document.getElementById('show-calendar-btn');
+const closeCalendarModal = document.getElementById('close-calendar-modal');
+const closeCalendarBtn = document.getElementById('close-calendar-btn');
+const calendarPrevMonth = document.getElementById('calendar-prev-month');
+const calendarNextMonth = document.getElementById('calendar-next-month');
+
+if (showCalendarBtn) {
+    showCalendarBtn.addEventListener('click', openAttendanceCalendar);
+}
+
+if (closeCalendarModal) {
+    closeCalendarModal.addEventListener('click', closeAttendanceCalendar);
+}
+
+if (closeCalendarBtn) {
+    closeCalendarBtn.addEventListener('click', closeAttendanceCalendar);
+}
+
+if (calendarPrevMonth) {
+    calendarPrevMonth.addEventListener('click', () => changeCalendarMonth(-1));
+}
+
+if (calendarNextMonth) {
+    calendarNextMonth.addEventListener('click', () => changeCalendarMonth(1));
 }
 
 // Import Modal Functionality
