@@ -169,6 +169,7 @@ urlpatterns = [
     path('admin/settings/save-attendance-mode/', admin_views.save_attendance_mode, name='save_attendance_mode'),
     path('admin/settings/save-class-times/', admin_views.save_class_times, name='save_class_times'),
     path('admin/settings/save-notification-settings/', admin_views.save_notification_settings, name='save_notification_settings'),
+    path('admin/settings/save-display-mode/', admin_views.save_display_mode, name='save_display_mode'),
     path('admin/settings/download-backup/', admin_views.download_database_backup, name='download_database_backup'),
     path('admin/settings/backup-status/', admin_views.get_backup_status, name='get_backup_status'),
 
