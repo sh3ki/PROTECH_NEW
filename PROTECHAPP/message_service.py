@@ -130,7 +130,7 @@ class MessageService:
             return None
 
     @staticmethod
-    def send_message(conversation_id, sender_id, sender_name, message_text):
+    def send_message(conversation_id, sender_id, sender_name, message_text, sender_role=None, message_type='text'):
         """
         Send a message in a conversation
         Creates message and notifications for all participants except sender
