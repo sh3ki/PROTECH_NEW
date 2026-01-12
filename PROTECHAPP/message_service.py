@@ -3,7 +3,7 @@ Message Service - PostgreSQL-based messaging implementation
 NO FIREBASE - All operations use Django ORM with PostgreSQL
 """
 
-from django.db.models import Q, Max, Prefetch, Count
+from django.db.models import Q, Max, Prefetch, Count, F
 from django.utils import timezone
 from PROTECHAPP.models import Chat, Message, ChatParticipant, MessageNotification, CustomUser
 from datetime import datetime
@@ -24,24 +24,30 @@ class MessageService:
         """
         try:
             # For private chats, check if conversation already exists
-            if not is_group and len(participant_ids) == 2:
-                # Find existing private conversation between these two users
-                existing_chat = Chat.objects.filter(
-                    is_group=False,
-                    participants__user_id__in=participant_ids
-                ).annotate(
-                    participant_count=Count('participants')
-                ).filter(
-                    participant_count=2
-                ).distinct().first()
+            if not is_group:
+                # Ensure we have exactly 2 participants for private chat
+                if len(participant_ids) < 2:
+                    participant_ids.append(creator_id)
+                participant_ids = list(set(participant_ids))  # Remove duplicates
                 
-                if existing_chat:
-                    # Check if both participants are actually in this chat
-                    participant_ids_in_chat = set(
-                        existing_chat.participants.values_list('user_id', flat=True)
+                if len(participant_ids) == 2:
+                    # Find existing private conversation between these exact two users
+                    # First filter by both user IDs
+                    chats_with_first = Chat.objects.filter(
+                        is_group=False,
+                        participants__user_id=participant_ids[0]
                     )
-                    if set(map(str, participant_ids)) == set(map(str, participant_ids_in_chat)):
-                        return MessageService._format_conversation(existing_chat)
+                    chats_with_both = chats_with_first.filter(
+                        participants__user_id=participant_ids[1]
+                    ).annotate(
+                        participant_count=Count('participants')
+                    ).filter(
+                        participant_count=2  # Exactly 2 participants
+                    ).first()
+                    
+                    if chats_with_both:
+                        print(f"DEBUG: Found existing chat {chats_with_both.id} between users {participant_ids}")
+                        return MessageService._format_conversation(chats_with_both, creator_id)
             
             # Generate title if not provided
             if not title:
@@ -80,6 +86,8 @@ class MessageService:
         """
         try:
             # Get all chats where user is a participant
+            # Sort by last message time (most recent first) like Facebook Messenger
+            # Chats with messages come first, then by created_at for new chats
             user_chats = Chat.objects.filter(
                 participants__user_id=user_id
             ).prefetch_related(
@@ -87,7 +95,10 @@ class MessageService:
                 Prefetch('messages', queryset=Message.objects.order_by('-sent_at'))
             ).annotate(
                 last_message_time=Max('messages__sent_at')
-            ).order_by('-last_message_time')
+            ).order_by(
+                F('last_message_time').desc(nulls_last=True),  # Most recent messages first
+                '-created_at'  # Then by creation time for new chats
+            )
             
             conversations = []
             for chat in user_chats:
@@ -156,14 +167,14 @@ class MessageService:
             raise
 
     @staticmethod
-    def get_messages(conversation_id, limit=50, offset=0):
+    def get_conversation_messages(conversation_id, limit=50, offset=0):
         """
         Get messages for a conversation with pagination
         """
         try:
             messages = Message.objects.filter(
                 chat_id=conversation_id
-            ).order_by('sent_at')[offset:offset+limit]
+            ).select_related('sender').order_by('sent_at')[offset:offset+limit]
             
             return [MessageService._format_message(msg) for msg in messages]
             
