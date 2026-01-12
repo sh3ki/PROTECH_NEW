@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_GET
 from PROTECHAPP.models import CustomUser, Student, Section, Grade, Guardian, Attendance, ExcusedAbsence, UserRole, AdvisoryAssignment
 import openpyxl
 from openpyxl import Workbook
@@ -559,6 +560,80 @@ def principal_attendance(request):
         'page_range': page_range,
     }
     return render(request, 'principal/attendance.html', context)
+
+@login_required
+@user_passes_test(is_principal)
+@require_GET
+def get_latest_principal_attendance(request):
+    """
+    API endpoint for real-time attendance updates for principal
+    Returns the latest attendance records with optional filters
+    """
+    from django.db.models import Q
+    
+    try:
+        # Get all filters from query parameters
+        search_query = request.GET.get('search', '')
+        grade_filter = request.GET.get('grade', '')
+        section_filter = request.GET.get('section', '')
+        status_filter = request.GET.get('status', '')
+        date_filter = request.GET.get('date', '')
+        limit = request.GET.get('limit', 50)
+        
+        try:
+            limit = int(limit)
+        except (ValueError, TypeError):
+            limit = 50
+        
+        # Build base queryset ordered by latest first
+        records = Attendance.objects.select_related('student', 'student__grade', 'student__section').all().order_by('-date', '-time_in')[:limit]
+        
+        # Apply filters
+        if search_query:
+            records = records.filter(
+                Q(student__first_name__icontains=search_query) |
+                Q(student__last_name__icontains=search_query) |
+                Q(student__lrn__icontains=search_query) |
+                Q(student__section__name__icontains=search_query)
+            )
+        if grade_filter:
+            records = records.filter(student__grade_id=grade_filter)
+        if section_filter:
+            records = records.filter(student__section_id=section_filter)
+        if status_filter:
+            records = records.filter(status=status_filter)
+        if date_filter:
+            records = records.filter(date=date_filter)
+        
+        attendance_data = []
+        for record in records:
+            attendance_data.append({
+                'id': record.id,
+                'lrn': record.student.lrn,
+                'full_name': f"{record.student.first_name} {record.student.last_name}",
+                'grade': record.student.grade.name if record.student.grade else '',
+                'section': record.student.section.name if record.student.section else '',
+                'date': record.date.strftime('%Y-%m-%d'),
+                'time_in': record.time_in.strftime('%H:%M:%S') if record.time_in else '',
+                'time_out': record.time_out.strftime('%H:%M:%S') if record.time_out else '',
+                'status': record.status,
+                'profile_pic': record.student.profile_pic or None,
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'records': attendance_data,
+            'count': len(attendance_data),
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in get_latest_principal_attendance: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 @login_required
 @user_passes_test(is_principal)
