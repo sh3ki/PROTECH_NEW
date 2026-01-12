@@ -606,20 +606,16 @@ class RealtimeMessaging {
             ` : '';
             
             return `
-                <div class="conversation-item ${isActive ? 'active' : ''}" data-conversation-id="${conv.id}">
-                    <div class="flex items-start">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <h4 class="conversation-title truncate">${conv.title || 'Unnamed Chat'}</h4>
-                                ${unreadBadge}
-                            </div>
-                            <p class="conversation-preview text-sm truncate">
-                                ${conv.last_message || 'No messages yet'}
-                            </p>
-                            <p class="conversation-meta text-xs mt-1">
-                                ${this.formatTimestamp(conv.last_message_time)}
-                            </p>
-                        </div>
+                <div data-conversation-id="${conv.id}" style="padding: 16px; border-bottom: 1px solid #e5e7eb; cursor: pointer; background: ${isActive ? '#eff6ff' : '#ffffff'}; ${isActive ? 'border-left: 4px solid #4F46E5; padding-left: 12px;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${isActive ? '#eff6ff' : '#ffffff'}'">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                        <h4 style="font-weight: 600; color: #1f2937; font-size: 15px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0;">${conv.title || 'Unnamed Chat'}</h4>
+                        <span style="color: #9ca3af; font-size: 11px; margin-left: 8px; white-space: nowrap;">${this.formatTimestamp(conv.last_message_time)}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <p style="color: #6b7280; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0;">
+                            ${conv.last_message || 'No messages yet'}
+                        </p>
+                        ${unreadBadge}
                     </div>
                 </div>
             `;
@@ -627,7 +623,7 @@ class RealtimeMessaging {
         
         // Event delegation for clicks
         container.onclick = (e) => {
-            const item = e.target.closest('.conversation-item');
+            const item = e.target.closest('[data-conversation-id]');
             if (!item) return;
             const conversationId = item.getAttribute('data-conversation-id');
             if (!conversationId) return;
@@ -645,17 +641,17 @@ class RealtimeMessaging {
             : participants.join(', ');
         
         header.innerHTML = `
-            <div class="flex items-center justify-between">
+            <div style="display: flex; align-items: center; justify-between; padding: 16px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 0;">
                 <div>
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    <h3 style="font-size: 18px; font-weight: 700; color: white; margin: 0; letter-spacing: -0.02em;">
                         ${this.currentConversation.title}
                     </h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p style="font-size: 13px; color: rgba(255, 255, 255, 0.8); margin: 4px 0 0 0;">
                         ${participantText}
                     </p>
                 </div>
                 ${this.currentConversation.is_group ? `
-                    <button id="addParticipantsBtn" class="text-primary hover:text-primary/80 font-medium">
+                    <button id="addParticipantsBtn" style="background: rgba(255, 255, 255, 0.2); color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                         + Add Members
                     </button>
                 ` : ''}
@@ -717,12 +713,12 @@ class RealtimeMessaging {
 
     createMessageElement(msg, isSent) {
         return `
-            <div class="message ${isSent ? 'sent' : 'received'}">
-                ${!isSent ? `<div class="sender-name">${msg.sender_name}</div>` : ''}
-                <div class="message-bubble">
+            <div style="display: flex; flex-direction: column; align-items: ${isSent ? 'flex-end' : 'flex-start'}; margin-bottom: 16px; animation: slideIn 0.3s ease-out;">
+                ${!isSent ? `<div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; margin-left: 12px;">${msg.sender_name}</div>` : ''}
+                <div style="max-width: 70%; background: ${isSent ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f3f4f6'}; color: ${isSent ? 'white' : '#1f2937'}; padding: 12px 16px; border-radius: ${isSent ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); word-wrap: break-word;">
                     ${msg.message}
                 </div>
-                <div class="message-time">${this.formatTimestamp(msg.sent_at)}</div>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 4px; ${isSent ? 'margin-right: 12px' : 'margin-left: 12px'};">${this.formatTimestamp(msg.sent_at)}</div>
             </div>
         `;
     }
