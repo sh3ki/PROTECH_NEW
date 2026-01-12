@@ -689,7 +689,10 @@ function getExcuseLetterUrl(filename) {
     if (!filename || filename === 'default-excuse-letter.png') {
         return DEFAULT_EXCUSE_LETTER_IMG;
     }
-    // Return URL to private_excuse_letters folder
+    // Handle filenames that already include the upload folder to avoid double prefixing
+    if (filename.includes('/')) {
+        return `/media/${filename}`;
+    }
     return `/media/private_excuse_letters/${filename}`;
 }
 
