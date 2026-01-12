@@ -7,3 +7,4 @@ from .registrar_views import *
 from .face_recognition_views import *
 from .message_views import *
 from .chatbot_views import *
+from .user_settings_views import *
