@@ -1441,6 +1441,13 @@ function loadGuardians(page = 1, itemsPerPage = null) {
 
 // Render guardians table
 function renderGuardiansTable(guardians) {
+    // Sort guardians by name (A to Z)
+    guardians.sort((a, b) => {
+        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+    
     if (guardians.length === 0) {
         document.getElementById('guardian-no-results').classList.remove('hidden');
         guardianTableContainer.querySelector('.bg-white').classList.add('hidden');
