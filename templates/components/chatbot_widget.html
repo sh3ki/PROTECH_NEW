@@ -1,19 +1,19 @@
 <!-- PROTECH AI Chatbot Widget -->
-<div id="protech-ai-chatbot" class="fixed bottom-4 left-4 lg:bottom-6 lg:left-6 z-[1000]">
+<div id="protech-ai-chatbot" class="fixed bottom-4 right-4 lg:bottom-6 lg:right-6 z-[1000]">
     <!-- Chatbot Toggle Button -->
-    <button id="chatbot-toggle-btn" class="chatbot-toggle-btn bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-tertiary text-white rounded-full w-14 h-14 lg:w-16 lg:h-16 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110">
+    <button id="chatbot-toggle-btn" class="chatbot-toggle-btn bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-tertiary text-white rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110">
         <!-- AI Robot Icon -->
-        <svg id="chatbot-icon" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 lg:h-8 lg:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg id="chatbot-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 lg:h-8 lg:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
         </svg>
         <!-- Close Icon (hidden by default) -->
-        <svg id="chatbot-close-icon" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 lg:h-8 lg:w-8 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg id="chatbot-close-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 lg:h-8 lg:w-8 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
     </button>
 
     <!-- Chatbot Window (hidden by default) -->
-    <div id="chatbot-window" class="chatbot-window hidden fixed lg:absolute inset-4 lg:inset-auto bottom-0 lg:bottom-20 left-0 lg:left-0 w-auto lg:w-80 bg-white dark:bg-gray-800 rounded-t-2xl lg:rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom lg:origin-bottom-left">
+    <div id="chatbot-window" class="chatbot-window hidden fixed lg:absolute bottom-4 right-4 left-4 top-20 lg:inset-auto lg:bottom-20 lg:right-0 lg:left-auto lg:top-auto w-auto lg:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right lg:origin-bottom-right">
         <!-- Chatbot Header -->
         <div class="chatbot-header bg-gradient-to-r from-primary to-secondary text-white p-3 lg:p-4 flex items-center justify-between">
             <div class="flex items-center gap-2 lg:gap-3">
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Chatbot Messages Area -->
-        <div id="chatbot-messages" class="chatbot-messages p-3 lg:p-3 h-[calc(100vh-12rem)] lg:h-80 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <div id="chatbot-messages" class="chatbot-messages p-3 lg:p-3 h-[calc(100%-10rem)] lg:h-80 overflow-y-auto bg-gray-50 dark:bg-gray-900">
             <!-- Welcome Message -->
             <div class="message-bubble bot-message mb-4">
                 <div class="flex items-start gap-2">
@@ -83,23 +83,13 @@
 <style>
 /* Chatbot specific styles */
 .chatbot-window {
-    max-height: 600px;
+    max-height: 500px;
 }
 
-/* Mobile: Full screen chatbot */
+/* Mobile: Centered smaller chatbot with rounded corners */
 @media (max-width: 1023px) {
-    #protech-ai-chatbot {
-        inset: 0 !important;
-    }
-    
-    #chatbot-window {
-        max-height: none !important;
-        height: 100vh !important;
-        border-radius: 0 !important;
-    }
-    
     .chatbot-window {
-        max-height: none !important;
+        max-height: calc(100vh - 8rem) !important;
     }
 }
 
@@ -232,11 +222,11 @@
         if (isUser) {
             messageDiv.innerHTML = `
                 <div class="flex items-start gap-2 justify-end">
-                    <div class="message-content bg-gradient-to-r from-secondary to-tertiary text-white rounded-2xl rounded-br-none p-2.5 lg:p-3 shadow-sm max-w-[80%]">
-                        <p class="text-xs lg:text-sm">${escapeHtml(message)}</p>
+                    <div class="message-content bg-gradient-to-r from-secondary to-tertiary text-white rounded-2xl rounded-br-none p-2.5 lg:p-2.5 shadow-sm max-w-[80%]">
+                        <p class="text-xs lg:text-xs">${escapeHtml(message)}</p>
                     </div>
-                    <div class="w-7 h-7 lg:w-8 lg:h-8 bg-gradient-to-r from-secondary to-tertiary rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-7 h-7 lg:w-7 lg:h-7 bg-gradient-to-r from-secondary to-tertiary rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-4 lg:w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
@@ -245,13 +235,13 @@
         } else {
             messageDiv.innerHTML = `
                 <div class="flex items-start gap-2">
-                    <div class="w-7 h-7 lg:w-8 lg:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-7 h-7 lg:w-7 lg:h-7 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-4 lg:w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                         </svg>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-2.5 lg:p-3 shadow-sm max-w-[80%]">
-                        <p class="text-xs lg:text-sm text-gray-800 dark:text-gray-200">${formatMessage(message)}</p>
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-2.5 lg:p-2.5 shadow-sm max-w-[80%]">
+                        <p class="text-xs lg:text-xs text-gray-800 dark:text-gray-200">${formatMessage(message)}</p>
                     </div>
                 </div>
             `;
@@ -268,8 +258,8 @@
         typingDiv.className = 'message-bubble bot-message mb-4';
         typingDiv.innerHTML = `
             <div class="flex items-start gap-2">
-                <div class="w-7 h-7 lg:w-8 lg:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-7 h-7 lg:w-7 lg:h-7 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-4 lg:w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
                 </div>
