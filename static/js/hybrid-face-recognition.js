@@ -35,6 +35,12 @@ class HybridFaceRecognition {
         this.lastResults = [];
         this.modelsLoaded = false;
         this.detectorOptions = null;
+        this.previousDetections = [];
+        this.motionThreshold = 0.012; // Minimum normalized motion to accept as live
+        this.maxStaticFrames = 6; // Frames a face can stay static before being blocked
+        this.blinkEarThreshold = 0.21; // Eye Aspect Ratio threshold for blink detection
+        this.blinkConsecutiveFrames = 2;
+        this.spoofProofEnabled = window.SPOOF_PROOF_ENABLED !== false;
         
         // Track recognized students
         this.recognizedStudents = new Map();
@@ -210,6 +216,20 @@ class HybridFaceRecognition {
                     labelLines: lines.length ? lines : ['Recognized'],
                     labelColor: '#000000'
                 });
+            } else if (detection.status === 'needs_motion') {
+                this.drawStyledBox(detection.box, {
+                    stroke: '#F97316',
+                    fill: 'rgba(249, 115, 22, 0.18)',
+                    labelLines: ['Move face to verify'],
+                    labelColor: '#FFFFFF'
+                });
+            } else if (detection.status === 'spoof') {
+                this.drawStyledBox(detection.box, {
+                    stroke: '#EF4444',
+                    fill: 'rgba(239, 68, 68, 0.25)',
+                    labelLines: ['Spoof blocked'],
+                    labelColor: '#FFFFFF'
+                });
             } else {
                 this.drawStyledBox(detection.box, {
                     stroke: '#EF4444',
@@ -278,6 +298,151 @@ class HybridFaceRecognition {
         this.ctx.restore();
     }
 
+    evaluateLiveness(detections) {
+        if (!this.spoofProofEnabled) {
+            const liveResults = detections.map(detection => {
+                const box = detection.detection.box;
+                const landmarks = detection.landmarks.positions.map(pt => ({ x: pt.x, y: pt.y }));
+                const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+                return {
+                    status: 'live',
+                    motionScore: 1,
+                    blink: { detected: false, ear: 1 },
+                    landmarks,
+                    center,
+                    staticFrames: 0
+                };
+            });
+            this.previousDetections = liveResults.map(item => ({ center: item.center, landmarks: item.landmarks, staticFrames: 0 }));
+            return liveResults;
+        }
+
+        const results = [];
+        const previous = [...this.previousDetections];
+        const usedPrev = new Set();
+
+        detections.forEach(detection => {
+            const box = detection.detection.box;
+            const landmarks = detection.landmarks.positions.map(pt => ({ x: pt.x, y: pt.y }));
+            const center = {
+                x: box.x + box.width / 2,
+                y: box.y + box.height / 2
+            };
+
+            const prevIndex = this.matchPreviousDetection(center, previous, usedPrev);
+            const prev = prevIndex !== -1 ? previous[prevIndex] : null;
+
+            const centerDelta = prev ? { dx: center.x - prev.center.x, dy: center.y - prev.center.y } : { dx: 0, dy: 0 };
+
+            const motionScore = prev ? this.computeMotionScore(prev.landmarks, landmarks, box, centerDelta) : 0;
+            const blinkInfo = this.detectBlink(landmarks);
+
+            let staticFrames = prev ? prev.staticFrames : 0;
+            let status = 'liveness_required';
+
+            if (motionScore >= this.motionThreshold || blinkInfo.detected) {
+                staticFrames = 0;
+                status = 'live';
+            } else {
+                staticFrames += 1;
+                if (staticFrames >= this.maxStaticFrames) {
+                    status = 'spoof';
+                }
+            }
+
+            results.push({
+                status,
+                motionScore,
+                blink: blinkInfo,
+                landmarks,
+                center,
+                staticFrames
+            });
+        });
+
+        this.previousDetections = results.map(item => ({
+            center: item.center,
+            landmarks: item.landmarks,
+            staticFrames: item.staticFrames
+        }));
+
+        return results;
+    }
+
+    matchPreviousDetection(center, previous, usedPrev) {
+        let bestIndex = -1;
+        let bestDistance = Infinity;
+
+        previous.forEach((prev, idx) => {
+            if (usedPrev.has(idx)) {
+                return;
+            }
+            const dx = center.x - prev.center.x;
+            const dy = center.y - prev.center.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = idx;
+            }
+        });
+
+        if (bestIndex !== -1) {
+            usedPrev.add(bestIndex);
+        }
+
+        return bestIndex;
+    }
+
+    computeMotionScore(prevLandmarks, currentLandmarks, box, centerDelta) {
+        if (!prevLandmarks || !currentLandmarks || !prevLandmarks.length || !currentLandmarks.length) {
+            return 0;
+        }
+
+        const len = Math.min(prevLandmarks.length, currentLandmarks.length);
+        let total = 0;
+
+        for (let i = 0; i < len; i++) {
+            const dx = (currentLandmarks[i].x - prevLandmarks[i].x) - centerDelta.dx;
+            const dy = (currentLandmarks[i].y - prevLandmarks[i].y) - centerDelta.dy;
+            total += Math.hypot(dx, dy);
+        }
+
+        const average = total / len;
+        const normalization = Math.max(box.width + box.height, 1);
+        return average / normalization;
+    }
+
+    detectBlink(landmarks) {
+        if (!landmarks || landmarks.length < 48) {
+            return { detected: false, ear: 1 };
+        }
+
+        const leftEye = [36, 37, 38, 39, 40, 41].map(i => landmarks[i]);
+        const rightEye = [42, 43, 44, 45, 46, 47].map(i => landmarks[i]);
+
+        const leftEAR = this.calculateEAR(leftEye);
+        const rightEAR = this.calculateEAR(rightEye);
+        const ear = (leftEAR + rightEAR) / 2;
+
+        return {
+            detected: ear < this.blinkEarThreshold,
+            ear
+        };
+    }
+
+    calculateEAR(eyePoints) {
+        if (!eyePoints || eyePoints.length < 6) {
+            return 1;
+        }
+
+        const vertical1 = Math.hypot(eyePoints[1].x - eyePoints[5].x, eyePoints[1].y - eyePoints[5].y);
+        const vertical2 = Math.hypot(eyePoints[2].x - eyePoints[4].x, eyePoints[2].y - eyePoints[4].y);
+        const horizontal = Math.hypot(eyePoints[0].x - eyePoints[3].x, eyePoints[0].y - eyePoints[3].y);
+
+        const ear = (vertical1 + vertical2) / (2 * horizontal || 1);
+        return ear;
+    }
+
     async processFrame() {
         if (!this.modelsLoaded || !this.video || this.video.readyState < 2) {
             return;
@@ -297,6 +462,7 @@ class HybridFaceRecognition {
         if (!detections.length) {
             this.currentDetections = [];
             this.lastResults = [];
+            this.previousDetections = [];
             this.updateFPS();
             return;
         }
@@ -309,16 +475,35 @@ class HybridFaceRecognition {
             };
         });
 
+        const livenessStates = this.evaluateLiveness(detections);
+
         const now = Date.now();
         const shouldRecognize = now - this.lastRecognitionTime >= this.processIntervalMs;
 
         let recognitionResults;
 
         if (shouldRecognize) {
-            const descriptors = detections.map(det => Array.from(det.descriptor));
+            const liveDescriptors = [];
+            const liveIndices = [];
 
-            const results = await this.recognizeFaces(descriptors);
-            recognitionResults = this.normalizeResults(results, boxes.length);
+            detections.forEach((det, index) => {
+                const liveState = livenessStates[index];
+                if (liveState && liveState.status === 'live') {
+                    liveDescriptors.push(Array.from(det.descriptor));
+                    liveIndices.push(index);
+                }
+            });
+
+            const recognitionFallback = new Array(detections.length).fill({ matched: false });
+
+            if (liveDescriptors.length) {
+                const results = await this.recognizeFaces(liveDescriptors);
+                liveIndices.forEach((originalIndex, resultIndex) => {
+                    recognitionFallback[originalIndex] = results[resultIndex] || { matched: false };
+                });
+            }
+
+            recognitionResults = this.normalizeResults(recognitionFallback, boxes.length);
             this.lastResults = recognitionResults;
             this.lastRecognitionTime = now;
         } else {
@@ -328,11 +513,20 @@ class HybridFaceRecognition {
 
         this.currentDetections = boxes.map((box, index) => {
             const result = recognitionResults[index];
+            const liveState = livenessStates[index] || {};
             const matched = result && result.matched;
+            let status = matched ? 'matched' : 'unknown';
+
+            if (liveState.status === 'spoof') {
+                status = 'spoof';
+            } else if (liveState.status === 'liveness_required') {
+                status = 'needs_motion';
+            }
             return {
                 box: box,
                 result: result,
-                status: matched ? 'matched' : 'unknown'
+                status: status,
+                live: liveState
             };
         });
 
