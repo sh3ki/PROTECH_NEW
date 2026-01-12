@@ -53,7 +53,8 @@ def teacher_non_advisory_dashboard(request):
     from datetime import timedelta
     
     today = timezone.now().date()
-    current_date = timezone.now().strftime('%A, %B %d, %Y')
+    current_date = timezone.now()  # Pass as datetime object for template filters
+    current_date_formatted = timezone.now().strftime('%A, %B %d, %Y')
     
     # Get all students and today's attendance
     total_students = Student.objects.filter(status='ACTIVE').count()
@@ -158,6 +159,7 @@ def teacher_non_advisory_dashboard(request):
     
     context = {
         'current_date': current_date,
+        'current_date_formatted': current_date_formatted,
         'stats': {
             'total_students': total_students,
             'present_count': present_count,
