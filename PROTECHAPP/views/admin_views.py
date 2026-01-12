@@ -5441,7 +5441,9 @@ def admin_settings(request):
     
     context = {
         'current_mode': settings_obj.attendance_mode,
-        'late_cutoff_time': late_cutoff_display
+        'late_cutoff_time': late_cutoff_display,
+        'email_enabled': settings_obj.email_notifications_enabled,
+        'sms_enabled': settings_obj.sms_notifications_enabled,
     }
     return render(request, 'admin/settings.html', context)
 
@@ -5504,6 +5506,43 @@ def save_late_time_cutoff(request):
             messages.error(request, 'Invalid time format. Please use HH:MM format.')
     else:
         messages.error(request, 'Please provide a valid time.')
+    
+    return redirect('admin_settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def save_notification_settings(request):
+    """Save notification settings (email and SMS toggles)"""
+    from PROTECHAPP.models import SystemSettings
+    
+    # Get checkbox values (unchecked checkboxes don't appear in POST data)
+    email_enabled = request.POST.get('email_notifications_enabled') == 'on'
+    sms_enabled = request.POST.get('sms_notifications_enabled') == 'on'
+    
+    try:
+        # Get or create settings
+        settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
+        settings_obj.email_notifications_enabled = email_enabled
+        settings_obj.sms_notifications_enabled = sms_enabled
+        settings_obj.save()
+        
+        # Build status message
+        statuses = []
+        if email_enabled:
+            statuses.append('Email notifications enabled')
+        else:
+            statuses.append('Email notifications disabled')
+            
+        if sms_enabled:
+            statuses.append('SMS notifications enabled')
+        else:
+            statuses.append('SMS notifications disabled')
+        
+        messages.success(request, f'Notification settings updated: {" and ".join(statuses)}')
+    except Exception as e:
+        messages.error(request, f'Error saving notification settings: {str(e)}')
     
     return redirect('admin_settings')
 
