@@ -10912,6 +10912,11 @@ def admin_unauthorized_logs(request):
         camera_filter = request.GET.get('camera', '').strip()
         date_filter = request.GET.get('date', '').strip()
         
+        # Set default date to today if not provided
+        if not date_filter:
+            from datetime import date
+            date_filter = date.today().strftime('%Y-%m-%d')
+        
         # Start with all unauthorized logs
         logs = UnauthorizedLog.objects.all()
         
@@ -10935,9 +10940,17 @@ def admin_unauthorized_logs(request):
         # Order by latest first
         logs = logs.order_by('-timestamp')
         
-        # Pagination
+        # Pagination with per_page parameter
+        per_page = request.GET.get('per_page', '10')
+        try:
+            per_page = int(per_page)
+            if per_page not in [10, 20, 50, 100]:
+                per_page = 10
+        except ValueError:
+            per_page = 10
+        
         page = request.GET.get('page', 1)
-        paginator = Paginator(logs, 20)  # 20 logs per page
+        paginator = Paginator(logs, per_page)
         
         try:
             logs_page = paginator.page(page)
