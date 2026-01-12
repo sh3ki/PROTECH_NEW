@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
 from PROTECHAPP.face_recognition_engine import face_engine
-from PROTECHAPP.models import Attendance, Student
+from PROTECHAPP.models import Attendance, Student, UnauthorizedLog
 from django.utils import timezone
 from datetime import datetime, time as datetime_time
 import pytz
@@ -13,6 +13,10 @@ from django.conf import settings
 from threading import Thread
 from PROTECHAPP.philsms_service import send_sms
 import requests
+import os
+import base64
+import cv2
+import numpy as np
 
 def time_in(request):
     """Time In page for face recognition attendance"""
@@ -610,6 +614,81 @@ def check_gate_queue(request):
             })
     except Exception as e:
         print(f"Error in check_gate_queue: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def save_unauthorized_face(request):
+    """
+    Save unauthorized face photo to local file and database
+    Called when a face is detected but not recognized
+    """
+    try:
+        data = json.loads(request.body)
+        image_data = data.get('image')  # Base64 encoded image
+        camera_name = data.get('camera_name', 'Unknown Camera')
+        
+        if not image_data:
+            return JsonResponse({'error': 'No image data provided'}, status=400)
+        
+        # Decode base64 image
+        try:
+            # Remove data URL prefix if present
+            if ',' in image_data:
+                image_data = image_data.split(',')[1]
+            
+            # Decode base64
+            image_bytes = base64.b64decode(image_data)
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if img is None:
+                return JsonResponse({'error': 'Invalid image data'}, status=400)
+        except Exception as e:
+            print(f"Error decoding image: {e}")
+            return JsonResponse({'error': 'Failed to decode image'}, status=400)
+        
+        # Create date folder structure
+        manila_tz = pytz.timezone('Asia/Manila')
+        now_manila = timezone.now().astimezone(manila_tz)
+        date_folder = now_manila.strftime('%Y-%m-%d')
+        
+        # Build folder path
+        unauthorized_dir = os.path.join(settings.MEDIA_ROOT, 'unauthorized_faces', date_folder)
+        os.makedirs(unauthorized_dir, exist_ok=True)
+        
+        # Generate unique filename
+        timestamp_str = now_manila.strftime('%Y%m%d_%H%M%S_%f')
+        filename = f"unauthorized_{timestamp_str}.jpg"
+        file_path = os.path.join(unauthorized_dir, filename)
+        
+        # Save image to file
+        cv2.imwrite(file_path, img)
+        
+        # Create relative path for database storage
+        relative_path = os.path.join('unauthorized_faces', date_folder, filename)
+        
+        # Save to database
+        unauthorized_log = UnauthorizedLog.objects.create(
+            photo_path=relative_path,
+            camera_name=camera_name,
+            timestamp=timezone.now()
+        )
+        
+        print(f"✅ Unauthorized face saved: {relative_path} from {camera_name}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Unauthorized face saved',
+            'log_id': unauthorized_log.id,
+            'photo_path': relative_path
+        })
+        
+    except Exception as e:
+        print(f"Error in save_unauthorized_face: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
