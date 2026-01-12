@@ -37,8 +37,10 @@ urlpatterns = [
     # NOTE: Specific paths MUST come before parameterized paths to avoid incorrect matching
     path('api/messages/conversations/create/', message_views.create_conversation, name='create_conversation'),
     path('api/messages/conversations/', message_views.get_conversations, name='get_conversations'),
+    path('api/messages/conversations/poll/', message_views.poll_conversations, name='poll_conversations'),
     path('api/messages/conversations/<str:conversation_id>/', message_views.get_conversation, name='get_conversation'),
     path('api/messages/conversations/<str:conversation_id>/add-participants/', message_views.add_participants, name='add_participants'),
+    path('api/messages/conversations/<str:conversation_id>/poll/', message_views.poll_new_messages, name='poll_new_messages'),
     path('api/messages/send/', message_views.send_message, name='send_message'),
     path('api/messages/unread-count/', message_views.get_unread_count, name='get_unread_count'),
     path('api/messages/search-users/', message_views.search_users, name='search_users'),
