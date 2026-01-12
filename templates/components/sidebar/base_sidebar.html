@@ -54,12 +54,12 @@
     
     <!-- Logout button - always at the bottom -->
     <div class="px-2 py-3 pt-2 mt-auto">
-        <a href="{% url 'logout' %}" class="menu-item hover:bg-red-700" data-ajax-navigation="false" title="Logout">
+        <button type="button" id="logout-btn" class="menu-item hover:bg-red-700 w-full" title="Logout">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             <span class="sidebar-text">Logout</span>
-        </a>
+        </button>
     </div>
 </div>
 
@@ -200,6 +200,50 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Logout confirmation modal
+    const logoutBtn = document.getElementById('logout-btn');
+    const logoutModal = document.getElementById('logout-modal');
+    const cancelLogoutBtn = document.getElementById('cancel-logout-btn');
+    
+    if (logoutBtn && logoutModal) {
+        logoutBtn.addEventListener('click', function() {
+            logoutModal.classList.remove('hidden');
+            logoutModal.classList.add('flex');
+            setTimeout(() => {
+                logoutModal.classList.remove('opacity-0');
+                logoutModal.classList.add('opacity-100');
+                const modalContent = logoutModal.querySelector('div > div');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }
+            }, 10);
+        });
+        
+        if (cancelLogoutBtn) {
+            cancelLogoutBtn.addEventListener('click', function() {
+                logoutModal.classList.add('opacity-0');
+                logoutModal.classList.remove('opacity-100');
+                const modalContent = logoutModal.querySelector('div > div');
+                if (modalContent) {
+                    modalContent.classList.add('scale-95');
+                    modalContent.classList.remove('scale-100');
+                }
+                setTimeout(() => {
+                    logoutModal.classList.add('hidden');
+                    logoutModal.classList.remove('flex');
+                }, 300);
+            });
+        }
+        
+        // Close modal on backdrop click
+        logoutModal.addEventListener('click', function(e) {
+            if (e.target === logoutModal) {
+                cancelLogoutBtn.click();
+            }
+        });
+    }
+    
     // Universal sidebar toggle button (works for both mobile and desktop)
     const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
     const sidebar = document.getElementById('sidebar');
