@@ -1,0 +1,452 @@
+{% extends 'components/base_component.html' %}
+{% load static %}
+
+{% block title %}PROTECH - Unauthorized Logs{% endblock %}
+{% block page_title %}Unauthorized Face Logs{% endblock %}
+
+{% block sidebar %}
+    {% include 'components/sidebar/principal_sidebar.html' with active='unauthorized_logs' %}
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+{% include 'components/toast_notification.html' %}
+
+<!-- Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Total Logs -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-red-500 dark:border-red-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Unauthorized</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ total_logs }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today's Logs -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-orange-500 dark:border-orange-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-orange-100 dark:bg-orange-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-600 dark:text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Today's Detections</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ logs|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unique Cameras -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4 border-blue-500 dark:border-blue-400 transition-all hover:shadow-md">
+        <div class="flex items-center">
+            <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Cameras</p>
+                <h3 class="font-bold text-2xl text-gray-900 dark:text-white">{{ camera_names|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-col md:flex-row gap-4 w-full lg:w-3/4 xl:w-2/3">
+            <div class="relative flex-grow">
+                <input type="text" id="log-search" placeholder="Search by camera name..." 
+                    class="pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white w-full shadow-sm text-md"
+                    value="{{ search_query }}">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2">
+                <!-- Camera filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="camera-filter" class="appearance-none pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full">
+                        <option value="">All Cameras</option>
+                        {% for camera in camera_names %}
+                            <option value="{{ camera }}" {% if camera_filter == camera %}selected{% endif %}>{{ camera }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Date filter -->
+                <div class="relative w-full sm:w-auto">
+                    <input type="date" id="date-filter" class="pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors dark:bg-gray-700 dark:text-white shadow-sm text-md w-full" value="{{ date_filter|default:'' }}">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary dark:text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs table -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Photo</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Camera</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% if logs %}
+                    {% for log in logs %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" data-log-id="{{ log.id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button onclick="viewPhoto('{{ log.photo_path }}')" class="group relative">
+                                <img src="/media/{{ log.photo_path }}" alt="Unauthorized Face" class="h-20 w-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary dark:hover:border-tertiary transition-all cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105">
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 transition-all rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                    </svg>
+                                </div>
+                            </button>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ log.camera_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ log.timestamp|date:"M d, Y" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ log.timestamp|date:"h:i A" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="text-gray-500 dark:text-gray-400 text-lg font-medium mb-2">No unauthorized faces detected</p>
+                                <p class="text-gray-400 dark:text-gray-500 text-sm">All detected faces have been recognized</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if logs %}
+    <div class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 w-full">
+            <!-- Left: Per-page selector -->
+            <div class="flex items-center space-x-2">
+                <label for="per-page-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">Show:</label>
+                <select id="per-page-select" onchange="changePerPage()" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 dark:focus:ring-tertiary/50 focus:border-primary dark:focus:border-tertiary transition-colors">
+                    <option value="10" {% if request.GET.per_page == '10' or not request.GET.per_page %}selected{% endif %}>10</option>
+                    <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
+                    <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50</option>
+                    <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100</option>
+                </select>
+                <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+            </div>
+            
+            <!-- Right: Pagination controls with results info -->
+            <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <!-- Results info -->
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing <span class="font-medium">{{ logs.start_index }}</span> to 
+                    <span class="font-medium">{{ logs.end_index }}</span> of 
+                    <span class="font-medium">{{ logs.paginator.count }}</span> results
+                </div>
+                
+                <!-- Pagination buttons -->
+                <div class="flex items-center space-x-1">
+                <!-- First button -->
+                {% if logs.number > 1 %}
+                    <a href="?page=1{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if camera_filter %}&camera={{ camera_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" title="First page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% else %}
+                    <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed" title="First page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                {% endif %}
+                
+                <!-- Previous button -->
+                {% if logs.has_previous %}
+                    <a href="?page={{ logs.previous_page_number }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if camera_filter %}&camera={{ camera_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% else %}
+                    <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                {% endif %}
+                
+                <!-- Page numbers -->
+                <div class="hidden md:flex">
+                    {% for num in logs.paginator.page_range %}
+                        {% if logs.number == num %}
+                            <button disabled aria-current="page" class="z-10 bg-primary dark:bg-tertiary border-primary dark:border-tertiary text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ num }}
+                            </button>
+                        {% elif num > logs.number|add:'-3' and num < logs.number|add:'3' %}
+                            <a href="?page={{ num }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if camera_filter %}&camera={{ camera_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" class="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 relative inline-flex items-center px-4 py-2 border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600">
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Next button -->
+                {% if logs.has_next %}
+                    <a href="?page={{ logs.next_page_number }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if camera_filter %}&camera={{ camera_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% else %}
+                    <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                {% endif %}
+                
+                <!-- Last button -->
+                {% if logs.number < logs.paginator.num_pages %}
+                    <a href="?page={{ logs.paginator.num_pages }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if camera_filter %}&camera={{ camera_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" title="Last page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0zm-6 0a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% else %}
+                    <button disabled class="relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed" title="Last page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0zm-6 0a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Photo Modal -->
+<div id="photo-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="closePhotoModal(event)">
+    <div class="relative max-w-4xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Close button -->
+        <button onclick="closePhotoModal()" class="absolute top-4 right-4 p-2 bg-white/90 dark:bg-gray-800/90 rounded-full hover:bg-white dark:hover:bg-gray-700 transition-all z-10 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <!-- Photo -->
+        <div class="p-4">
+            <img id="modal-photo" src="" alt="Unauthorized Face" class="w-full h-auto max-h-[80vh] object-contain rounded-lg">
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set default date to today on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateFilter = document.getElementById('date-filter');
+        if (!dateFilter.value) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateFilter.value = `${yyyy}-${mm}-${dd}`;
+        }
+    });
+    
+    // Photo modal functions
+    function viewPhoto(photoPath) {
+        const modal = document.getElementById('photo-modal');
+        const modalPhoto = document.getElementById('modal-photo');
+        modalPhoto.src = '/media/' + photoPath;
+        modal.classList.remove('hidden');
+    }
+    
+    function closePhotoModal(event) {
+        // Only close if clicking the backdrop or close button
+        if (!event || event.target.id === 'photo-modal') {
+            document.getElementById('photo-modal').classList.add('hidden');
+        }
+    }
+    
+    // Filter functionality
+    document.getElementById('log-search').addEventListener('input', function() {
+        applyFilters();
+    });
+    
+    document.getElementById('camera-filter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    document.getElementById('date-filter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    function applyFilters() {
+        const search = document.getElementById('log-search').value;
+        const camera = document.getElementById('camera-filter').value;
+        const date = document.getElementById('date-filter').value;
+        const perPage = document.getElementById('per-page-select') ? document.getElementById('per-page-select').value : '10';
+        
+        let url = '{% url "principal_unauthorized_logs" %}?';
+        const params = [];
+        
+        params.push('per_page=' + perPage);
+        if (search) params.push('search=' + encodeURIComponent(search));
+        if (camera) params.push('camera=' + encodeURIComponent(camera));
+        if (date) params.push('date=' + encodeURIComponent(date));
+        
+        window.location.href = url + params.join('&');
+    }
+    
+    // Handle per-page change
+    function changePerPage() {
+        const perPage = document.getElementById('per-page-select').value;
+        const search = document.getElementById('log-search').value;
+        const camera = document.getElementById('camera-filter').value;
+        const date = document.getElementById('date-filter').value;
+        
+        let url = '{% url "principal_unauthorized_logs" %}?per_page=' + perPage;
+        
+        if (search) url += '&search=' + encodeURIComponent(search);
+        if (camera) url += '&camera=' + encodeURIComponent(camera);
+        if (date) url += '&date=' + encodeURIComponent(date);
+        
+        window.location.href = url;
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Close modal with Escape key
+        if (e.key === 'Escape') {
+            closePhotoModal();
+        }
+    });
+
+    // Real-time polling for new logs
+    let pollTimeout;
+    
+    function startRealtimePolling() {
+        if (pollTimeout) {
+            clearTimeout(pollTimeout);
+        }
+        
+        pollTimeout = setTimeout(async () => {
+            try {
+                // Get current filters
+                const searchInput = document.getElementById('log-search');
+                const cameraSelect = document.getElementById('camera-filter');
+                const dateInput = document.getElementById('date-filter');
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (searchInput && searchInput.value) params.append('search', searchInput.value);
+                if (cameraSelect && cameraSelect.value) params.append('camera', cameraSelect.value);
+                if (dateInput && dateInput.value) params.append('date', dateInput.value);
+                params.append('limit', 50);
+                
+                // Fetch latest unauthorized logs
+                const response = await fetch(`/principal/unauthorized-logs/latest/?${params.toString()}`);
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.logs && data.logs.length > 0) {
+                    // Check if new logs have been added
+                    const currentLogIds = Array.from(document.querySelectorAll('tbody tr[data-log-id]')).map(tr => {
+                        return parseInt(tr.getAttribute('data-log-id'));
+                    });
+                    
+                    const hasNewLogs = data.logs.some(log => !currentLogIds.includes(log.id));
+                    
+                    if (hasNewLogs) {
+                        // Reload immediately to show new logs (keeping current filters)
+                        const search = searchInput ? searchInput.value : '';
+                        const camera = cameraSelect ? cameraSelect.value : '';
+                        const date = dateInput ? dateInput.value : '';
+                        const perPage = document.getElementById('per-page-select') ? document.getElementById('per-page-select').value : '10';
+                        
+                        let reloadUrl = '{% url "principal_unauthorized_logs" %}?per_page=' + perPage;
+                        if (search) reloadUrl += '&search=' + encodeURIComponent(search);
+                        if (camera) reloadUrl += '&camera=' + encodeURIComponent(camera);
+                        if (date) reloadUrl += '&date=' + encodeURIComponent(date);
+                        
+                        // Reload immediately for real-time update
+                        window.location.href = reloadUrl;
+                        return; // Stop polling after triggering reload
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for unauthorized logs:', error);
+            }
+            
+            // Schedule next poll
+            startRealtimePolling();
+        }, 3000); // Poll every 3 seconds
+    }
+    
+    // Start polling when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        startRealtimePolling();
+    });
+</script>
+
+{% endblock %}
