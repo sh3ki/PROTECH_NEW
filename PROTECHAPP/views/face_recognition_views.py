@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
 from PROTECHAPP.face_recognition_engine import face_engine
-from PROTECHAPP.models import Attendance, Student, UnauthorizedLog
+from PROTECHAPP.models import Attendance, Student, UnauthorizedLog, SystemSettings, GateMode
 from django.utils import timezone
 from datetime import datetime, time as datetime_time
 import pytz
@@ -94,99 +94,30 @@ def record_attendance_api(request):
         # Get current time in UTC (database will store UTC)
         utc_now = timezone.now()
         today = utc_now.date()
-        
-        # Check if attendance already exists for today
-        attendance, created = Attendance.objects.get_or_create(
-            student=student,
-            date=today,
-            defaults={
-                'status': 'ON TIME'  # Will be updated based on time
-            }
-        )
-        
-        # Save as UTC time (database stores UTC)
         current_time_utc = utc_now.time()
-        
-        if attendance_type == 'time_in':
-            # Record time in
-            if not attendance.time_in:
-                attendance.time_in = current_time_utc
-                
-                # Get class timing settings from SystemSettings
-                from PROTECHAPP.models import SystemSettings
-                settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
-                
-                # Calculate attendance status based on class timing and grace period
-                # Status is "Present" if within grace period, "Late" after grace period + 1 minute
-                status = 'LATE'  # Default to late
-                
-                # Check against first class
-                if settings_obj.first_class_start_time:
-                    grace_period = settings_obj.grace_period_minutes
-                    first_class_time = settings_obj.first_class_start_time
-                    
-                    # Calculate late threshold: class_start + grace_period + 1 minute
-                    from datetime import timedelta
-                    first_class_datetime = datetime.combine(today, first_class_time)
-                    late_threshold = first_class_datetime + timedelta(minutes=grace_period + 1)
-                    late_threshold_time = late_threshold.time()
-                    
-                    # Present window: 2 hours before class start to end of grace period
-                    present_start = first_class_datetime - timedelta(hours=2)
-                    present_end = first_class_datetime + timedelta(minutes=grace_period)
-                    
-                    current_datetime = datetime.combine(today, current_time_utc)
-                    
-                    if present_start <= current_datetime <= present_end:
-                        status = 'ON TIME'
-                
-                # Check against second class if it exists
-                if status == 'LATE' and settings_obj.second_class_start_time:
-                    second_class_time = settings_obj.second_class_start_time
-                    grace_period = settings_obj.grace_period_minutes
-                    
-                    from datetime import timedelta
-                    second_class_datetime = datetime.combine(today, second_class_time)
-                    
-                    # Present window: 2 hours before class start to end of grace period
-                    present_start = second_class_datetime - timedelta(hours=2)
-                    present_end = second_class_datetime + timedelta(minutes=grace_period)
-                    
-                    current_datetime = datetime.combine(today, current_time_utc)
-                    
-                    if present_start <= current_datetime <= present_end:
-                        status = 'ON TIME'
-                
-                attendance.status = status
-                attendance.save()
-                
-                # Convert to Manila time for display
-                manila_tz = pytz.timezone('Asia/Manila')
-                manila_time = utc_now.astimezone(manila_tz).time()
-                manila_datetime = utc_now.astimezone(manila_tz)
-                
-                # Send email and SMS notification to guardian(s) in background
-                def send_guardian_notification():
-                    try:
-                        # Check system settings for notification toggles
-                        from PROTECHAPP.models import SystemSettings
-                        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
-                        email_enabled = settings_obj.email_notifications_enabled
-                        sms_enabled = settings_obj.sms_notifications_enabled
-                        
-                        # Get all guardians for this student
-                        guardians = student.guardians.all()
-                        
-                        if guardians.exists():
-                            # Send individual email and SMS to each guardian
-                            for guardian in guardians:
-                                guardian_name = f"{guardian.first_name} {guardian.last_name}"
-                                
-                                # STEP 1: Send email first (if guardian has email AND email notifications are enabled)
-                                if guardian.email and email_enabled:
-                                    try:
-                                        subject = f"Student Time In Alert - {student.first_name} {student.last_name}"
-                                        message = f"""
+
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        gate_mode = getattr(settings_obj, 'gate_mode', GateMode.CLOSED)
+
+        manila_tz = pytz.timezone('Asia/Manila')
+        manila_time = utc_now.astimezone(manila_tz).time()
+        manila_datetime = utc_now.astimezone(manila_tz)
+
+        def notify_time_in(attendance_obj):
+            def _send():
+                try:
+                    email_enabled = settings_obj.email_notifications_enabled
+                    sms_enabled = settings_obj.sms_notifications_enabled
+                    guardians = student.guardians.all()
+
+                    if guardians.exists():
+                        for guardian in guardians:
+                            guardian_name = f"{guardian.first_name} {guardian.last_name}"
+
+                            if guardian.email and email_enabled:
+                                try:
+                                    subject = f"Student Time In Alert - {student.first_name} {student.last_name}"
+                                    message = f"""
 Dear Mr./Mrs. {guardian.first_name} {guardian.last_name},
 
 This is to inform you that your child has arrived at school.
@@ -199,113 +130,72 @@ Grade & Section: {student.grade.name if student.grade else 'N/A'} - {student.sec
 Time In Details:
 Date: {manila_datetime.strftime('%B %d, %Y')}
 Time: {manila_time.strftime('%I:%M %p')}
-Status: {attendance.status}
+Status: {attendance_obj.status}
 
 This is an automated message from PROTECH Attendance System.
 Please do not reply to this email.
 
 Best regards,
 PROTECH Administration
-                                        """.strip()
-                                        
-                                        # Send email
-                                        send_mail(
-                                            subject=subject,
-                                            message=message,
-                                            from_email=settings.DEFAULT_FROM_EMAIL,
-                                            recipient_list=[guardian.email],
-                                            fail_silently=True
-                                        )
-                                        print(f"✅ Email sent to {guardian_name} ({guardian.email})")
-                                    except Exception as e:
-                                        print(f"❌ Email failed for {guardian_name}: {e}")
-                                elif guardian.email and not email_enabled:
-                                    print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
-                                
-                                # STEP 2: Send SMS after email (if guardian has phone number AND SMS notifications are enabled)
-                                if guardian.phone and sms_enabled:
-                                    try:
-                                        sms_message = f"""PROTECH Time In Alert
+                                    """.strip()
+                                    send_mail(
+                                        subject=subject,
+                                        message=message,
+                                        from_email=settings.DEFAULT_FROM_EMAIL,
+                                        recipient_list=[guardian.email],
+                                        fail_silently=True
+                                    )
+                                    print(f"✅ Email sent to {guardian_name} ({guardian.email})")
+                                except Exception as e:
+                                    print(f"❌ Email failed for {guardian_name}: {e}")
+                            elif guardian.email and not email_enabled:
+                                print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
+
+                            if guardian.phone and sms_enabled:
+                                try:
+                                    sms_message = f"""PROTECH Time In Alert
 
 Student: {student.first_name} {student.last_name}
 ID: {student.lrn}
 Grade: {student.grade.name if student.grade else 'N/A'} - {student.section.name if student.section else 'N/A'}
 Date: {manila_datetime.strftime('%b %d, %Y')}
 Time: {manila_time.strftime('%I:%M %p')}
-Status: {attendance.status}
+Status: {attendance_obj.status}
 
 -PROTECH Attendance System"""
-                                        
-                                        # Send SMS after email
-                                        sms_result = send_sms(
-                                            phone_number=guardian.phone,
-                                            message=sms_message,
-                                            sender_id=getattr(settings, 'PHILSMS_SENDER_ID', None)
-                                        )
-                                        
-                                        # Log SMS result
-                                        if sms_result.get('success'):
-                                            print(f"✅ SMS sent to {guardian_name} ({guardian.phone})")
-                                        else:
-                                            print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
-                                    except Exception as e:
-                                        print(f"❌ SMS exception for {guardian_name}: {e}")
-                                elif guardian.phone and not sms_enabled:
-                                    print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
-                    except Exception as e:
-                        print(f"Error sending guardian notification: {e}")
-                
-                # Send email in background thread
-                Thread(target=send_guardian_notification).start()
-                
-                # Trigger gate opening
-                trigger_gate_opening()
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Time in recorded for {student.first_name} {student.last_name}',
-                    'status': attendance.status,
-                    'time': manila_time.strftime('%I:%M %p')
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Already timed in today'
-                }, status=400)
-        
-        elif attendance_type == 'time_out':
-            # Record time out
-            if attendance.time_in and not attendance.time_out:
-                attendance.time_out = current_time_utc
-                attendance.save()
-                
-                # Convert to Manila time for display
-                manila_tz = pytz.timezone('Asia/Manila')
-                manila_time = utc_now.astimezone(manila_tz).time()
-                manila_datetime = utc_now.astimezone(manila_tz)
-                
-                # Send email and SMS notification to guardian(s) in background
-                def send_guardian_notification():
-                    try:
-                        # Check system settings for notification toggles
-                        from PROTECHAPP.models import SystemSettings
-                        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
-                        email_enabled = settings_obj.email_notifications_enabled
-                        sms_enabled = settings_obj.sms_notifications_enabled
-                        
-                        # Get all guardians for this student
-                        guardians = student.guardians.all()
-                        
-                        if guardians.exists():
-                            # Send individual email and SMS to each guardian
-                            for guardian in guardians:
-                                guardian_name = f"{guardian.first_name} {guardian.last_name}"
-                                
-                                # STEP 1: Send email first (if guardian has email AND email notifications are enabled)
-                                if guardian.email and email_enabled:
-                                    try:
-                                        subject = f"Student Time Out Alert - {student.first_name} {student.last_name}"
-                                        message = f"""
+                                    sms_result = send_sms(
+                                        phone_number=guardian.phone,
+                                        message=sms_message,
+                                        sender_id=getattr(settings, 'PHILSMS_SENDER_ID', None)
+                                    )
+                                    if sms_result.get('success'):
+                                        print(f"✅ SMS sent to {guardian_name} ({guardian.phone})")
+                                    else:
+                                        print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
+                                except Exception as e:
+                                    print(f"❌ SMS exception for {guardian_name}: {e}")
+                            elif guardian.phone and not sms_enabled:
+                                print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
+                except Exception as e:
+                    print(f"Error sending guardian notification: {e}")
+
+            Thread(target=_send).start()
+
+        def notify_time_out(attendance_obj):
+            def _send():
+                try:
+                    email_enabled = settings_obj.email_notifications_enabled
+                    sms_enabled = settings_obj.sms_notifications_enabled
+                    guardians = student.guardians.all()
+
+                    if guardians.exists():
+                        for guardian in guardians:
+                            guardian_name = f"{guardian.first_name} {guardian.last_name}"
+
+                            if guardian.email and email_enabled:
+                                try:
+                                    subject = f"Student Time Out Alert - {student.first_name} {student.last_name}"
+                                    message = f"""
 Dear Mr./Mrs. {guardian.first_name} {guardian.last_name},
 
 This is to inform you that your child has left school.
@@ -324,26 +214,23 @@ Please do not reply to this email.
 
 Best regards,
 PROTECH Administration
-                                        """.strip()
-                                        
-                                        # Send email
-                                        send_mail(
-                                            subject=subject,
-                                            message=message,
-                                            from_email=settings.DEFAULT_FROM_EMAIL,
-                                            recipient_list=[guardian.email],
-                                            fail_silently=True
-                                        )
-                                        print(f"✅ Email sent to {guardian_name} ({guardian.email})")
-                                    except Exception as e:
-                                        print(f"❌ Email failed for {guardian_name}: {e}")
-                                elif guardian.email and not email_enabled:
-                                    print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
-                                
-                                # STEP 2: Send SMS after email (if guardian has phone number AND SMS notifications are enabled)
-                                if guardian.phone and sms_enabled:
-                                    try:
-                                        sms_message = f"""PROTECH Time Out Alert
+                                    """.strip()
+                                    send_mail(
+                                        subject=subject,
+                                        message=message,
+                                        from_email=settings.DEFAULT_FROM_EMAIL,
+                                        recipient_list=[guardian.email],
+                                        fail_silently=True
+                                    )
+                                    print(f"✅ Email sent to {guardian_name} ({guardian.email})")
+                                except Exception as e:
+                                    print(f"❌ Email failed for {guardian_name}: {e}")
+                            elif guardian.email and not email_enabled:
+                                print(f"📧 Email notifications disabled - skipping email to {guardian_name}")
+
+                            if guardian.phone and sms_enabled:
+                                try:
+                                    sms_message = f"""PROTECH Time Out Alert
 
 Student: {student.first_name} {student.last_name}
 ID: {student.lrn}
@@ -352,32 +239,147 @@ Date: {manila_datetime.strftime('%b %d, %Y')}
 Time: {manila_time.strftime('%I:%M %p')}
 
 -PROTECH Attendance System"""
-                                        
-                                        # Send SMS after email
-                                        sms_result = send_sms(
-                                            phone_number=guardian.phone,
-                                            message=sms_message,
-                                            sender_id=getattr(settings, 'PHILSMS_SENDER_ID', None)
-                                        )
-                                        
-                                        # Log SMS result
-                                        if sms_result.get('success'):
-                                            print(f"✅ SMS sent to {guardian_name} ({guardian.phone})")
-                                        else:
-                                            print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
-                                    except Exception as e:
-                                        print(f"❌ SMS exception for {guardian_name}: {e}")
-                                elif guardian.phone and not sms_enabled:
-                                    print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
-                    except Exception as e:
-                        print(f"Error sending guardian notification: {e}")
-                
-                # Send email in background thread
-                Thread(target=send_guardian_notification).start()
-                
-                # Trigger gate opening
+                                    sms_result = send_sms(
+                                        phone_number=guardian.phone,
+                                        message=sms_message,
+                                        sender_id=getattr(settings, 'PHILSMS_SENDER_ID', None)
+                                    )
+                                    if sms_result.get('success'):
+                                        print(f"✅ SMS sent to {guardian_name} ({guardian.phone})")
+                                    else:
+                                        print(f"❌ SMS failed for {guardian_name} ({guardian.phone}): {sms_result.get('error', 'Unknown error')}")
+                                except Exception as e:
+                                    print(f"❌ SMS exception for {guardian_name}: {e}")
+                            elif guardian.phone and not sms_enabled:
+                                print(f"📱 SMS notifications disabled - skipping SMS to {guardian_name}")
+                except Exception as e:
+                    print(f"Error sending guardian notification: {e}")
+
+            Thread(target=_send).start()
+
+        # -----------------
+        # Gate Mode: OPEN
+        # -----------------
+        if gate_mode == GateMode.OPEN:
+            latest_today = Attendance.objects.filter(student=student, date=today).order_by('-created_at').first()
+            inside = bool(latest_today and latest_today.time_in and not latest_today.time_out)
+
+            if attendance_type == 'time_in':
+                if inside:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Already timed in (open gate)'
+                    }, status=400)
+
+                attendance = Attendance.objects.create(
+                    student=student,
+                    date=today,
+                    time_in=current_time_utc,
+                    status='ON TIME'
+                )
+                notify_time_in(attendance)
                 trigger_gate_opening()
-                
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Time in recorded for {student.first_name} {student.last_name}',
+                    'status': attendance.status,
+                    'time': manila_time.strftime('%I:%M %p')
+                })
+
+            elif attendance_type == 'time_out':
+                if not inside or not latest_today:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'No active time in record to time out (open gate)'
+                    }, status=400)
+
+                latest_today.time_out = current_time_utc
+                latest_today.status = 'ON TIME'
+                latest_today.save()
+                notify_time_out(latest_today)
+                trigger_gate_opening()
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Time out recorded for {student.first_name} {student.last_name}',
+                    'time': manila_time.strftime('%I:%M %p')
+                })
+
+            return JsonResponse({'error': 'Invalid attendance type'}, status=400)
+
+        # -----------------
+        # Gate Mode: CLOSED (existing behavior)
+        # -----------------
+        attendance, created = Attendance.objects.get_or_create(
+            student=student,
+            date=today,
+            defaults={
+                'status': 'ON TIME'
+            }
+        )
+
+        if attendance_type == 'time_in':
+            if not attendance.time_in:
+                attendance.time_in = current_time_utc
+
+                # Calculate attendance status based on class timing and grace period
+                status = 'LATE'
+
+                if settings_obj.first_class_start_time:
+                    grace_period = settings_obj.grace_period_minutes
+                    first_class_time = settings_obj.first_class_start_time
+
+                    from datetime import timedelta
+                    first_class_datetime = datetime.combine(today, first_class_time)
+                    present_start = first_class_datetime - timedelta(hours=2)
+                    present_end = first_class_datetime + timedelta(minutes=grace_period)
+
+                    current_datetime = datetime.combine(today, current_time_utc)
+
+                    if present_start <= current_datetime <= present_end:
+                        status = 'ON TIME'
+
+                if status == 'LATE' and settings_obj.second_class_start_time:
+                    second_class_time = settings_obj.second_class_start_time
+                    grace_period = settings_obj.grace_period_minutes
+
+                    from datetime import timedelta
+                    second_class_datetime = datetime.combine(today, second_class_time)
+                    present_start = second_class_datetime - timedelta(hours=2)
+                    present_end = second_class_datetime + timedelta(minutes=grace_period)
+
+                    current_datetime = datetime.combine(today, current_time_utc)
+
+                    if present_start <= current_datetime <= present_end:
+                        status = 'ON TIME'
+
+                attendance.status = status
+                attendance.save()
+
+                notify_time_in(attendance)
+                trigger_gate_opening()
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Time in recorded for {student.first_name} {student.last_name}',
+                    'status': attendance.status,
+                    'time': manila_time.strftime('%I:%M %p')
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Already timed in today'
+                }, status=400)
+
+        elif attendance_type == 'time_out':
+            if attendance.time_in and not attendance.time_out:
+                attendance.time_out = current_time_utc
+                attendance.save()
+
+                notify_time_out(attendance)
+                trigger_gate_opening()
+
                 return JsonResponse({
                     'success': True,
                     'message': f'Time out recorded for {student.first_name} {student.last_name}',
@@ -393,7 +395,7 @@ Time: {manila_time.strftime('%I:%M %p')}
                     'success': False,
                     'message': 'Already timed out today'
                 }, status=400)
-        
+
         return JsonResponse({'error': 'Invalid attendance type'}, status=400)
         
     except Exception as e:
