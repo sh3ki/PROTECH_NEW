@@ -5566,12 +5566,195 @@ def delete_excused_absence(request, excused_id):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    """View for admin dashboard"""
+    """View for admin dashboard with comprehensive system metrics"""
+    from datetime import timedelta, date
+    from django.db.models import Q, Count, Avg
+    import json
+    
+    # Get current date in Manila timezone
+    current_date = timezone.now()
+    current_date_only = current_date.date()
+    
+    # ===== SYSTEM-WIDE STATISTICS =====
+    # Total users by role
+    total_users = CustomUser.objects.count()
+    total_students = Student.objects.filter(status='ACTIVE').count()
+    total_teachers = CustomUser.objects.filter(role=UserRole.TEACHER, is_active=True).count()
+    total_principals = CustomUser.objects.filter(role=UserRole.PRINCIPAL, is_active=True).count()
+    total_registrars = CustomUser.objects.filter(role=UserRole.REGISTRAR, is_active=True).count()
+    total_admins = CustomUser.objects.filter(role=UserRole.ADMIN, is_active=True).count()
+    
+    # Calculate percentage change (comparing to last month - simplified to 0 for now)
+    users_percentage_change = 0
+    
+    # ===== ATTENDANCE STATISTICS =====
+    # Today's attendance
+    today_attendance = Attendance.objects.filter(date=current_date_only)
+    total_present_today = today_attendance.filter(Q(status='ON TIME') | Q(status='LATE')).count()
+    total_late_today = today_attendance.filter(status='LATE').count()
+    total_absent_today = today_attendance.filter(status='ABSENT').count()
+    
+    # Calculate attendance rate
+    if total_students > 0:
+        attendance_rate = round((total_present_today / total_students) * 100, 1)
+    else:
+        attendance_rate = 0
+    
+    # Calculate percentage change for attendance (simplified to 0 for now)
+    attendance_percentage_change = 0
+    
+    # ===== 7-DAY ATTENDANCE TREND =====
+    chart_data = []
+    for i in range(6, -1, -1):
+        date_to_check = current_date_only - timedelta(days=i)
+        day_records = Attendance.objects.filter(date=date_to_check)
+        
+        present_count = day_records.filter(Q(status='ON TIME') | Q(status='LATE')).count()
+        absent_count = day_records.filter(status='ABSENT').count()
+        
+        # Calculate percentage for that day
+        if total_students > 0:
+            day_percentage = round((present_count / total_students) * 100, 1)
+        else:
+            day_percentage = 0
+        
+        chart_data.append({
+            'date': date_to_check.strftime('%b %d'),
+            'present': present_count,
+            'absent': absent_count,
+            'percentage': day_percentage
+        })
+    
+    # ===== UNAUTHORIZED ACCESS LOGS =====
+    # Count today's unauthorized access attempts
+    unauthorized_today = UnauthorizedLog.objects.filter(
+        timestamp__date=current_date_only
+    ).count()
+    
+    # Get recent unauthorized access logs (last 10)
+    recent_unauthorized = UnauthorizedLog.objects.all().order_by('-timestamp')[:10]
+    
+    # Calculate percentage change for unauthorized logs (simplified)
+    unauthorized_percentage_change = 0
+    
+    # ===== FACE ENROLLMENT STATISTICS =====
+    # Count students with face enrollment
+    total_face_enrolled = Student.objects.exclude(
+        Q(face_path__isnull=True) | Q(face_path__exact='') | Q(face_path__startswith='pending')
+    ).filter(status='ACTIVE').count()
+    
+    if total_students > 0:
+        face_enrollment_rate = round((total_face_enrolled / total_students) * 100, 1)
+    else:
+        face_enrollment_rate = 0
+    
+    # ===== GRADE AND SECTION STATISTICS =====
+    total_grades = Grade.objects.count()
+    total_sections = Section.objects.count()
+    
+    # Get section distribution
+    sections_by_grade = []
+    for grade in Grade.objects.annotate(section_count=Count('sections')).order_by('name'):
+        sections_by_grade.append({
+            'grade': grade.name,
+            'sections': grade.section_count
+        })
+    
+    # ===== EXCUSED ABSENCES =====
+    # Count total excused absences (no status field in model)
+    pending_excused = ExcusedAbsence.objects.count()
+    
+    # ===== RECENT ACTIVITIES =====
+    # Recent user registrations (last 5)
+    recent_users = CustomUser.objects.order_by('-created_at')[:5]
+    
+    # Recent attendance check-ins (last 10)
+    recent_checkins = Attendance.objects.select_related(
+        'student', 'student__section', 'student__grade'
+    ).filter(date=current_date_only).order_by('-time_in')[:10]
+    
+    # ===== ATTENDANCE BY GRADE =====
+    grades_attendance = []
+    for grade in Grade.objects.order_by('name'):
+        grade_students = Student.objects.filter(grade=grade, status='ACTIVE')
+        grade_total = grade_students.count()
+        
+        if grade_total > 0:
+            grade_present = Attendance.objects.filter(
+                student__in=grade_students,
+                date=current_date_only
+            ).filter(Q(status='ON TIME') | Q(status='LATE')).count()
+            
+            grade_rate = round((grade_present / grade_total) * 100, 1)
+        else:
+            grade_rate = 0
+            grade_present = 0
+        
+        grades_attendance.append({
+            'grade': grade.name,
+            'total': grade_total,
+            'present': grade_present,
+            'rate': grade_rate
+        })
+    
+    # ===== USERS BY ROLE PIE CHART DATA =====
+    users_by_role = [
+        {'role': 'Students', 'count': total_students},
+        {'role': 'Teachers', 'count': total_teachers},
+        {'role': 'Principals', 'count': total_principals},
+        {'role': 'Registrars', 'count': total_registrars},
+        {'role': 'Admins', 'count': total_admins},
+    ]
+    
     context = {
-        'current_date': timezone.now(),
-        'user_count': CustomUser.objects.count(),
-        'student_count': Student.objects.count(),
-        'teacher_count': CustomUser.objects.filter(role=UserRole.TEACHER).count(),
+        'current_date': current_date,
+        'current_date_formatted': current_date.strftime('%B %d, %Y'),
+        
+        # System-wide stats
+        'total_users': total_users,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_principals': total_principals,
+        'total_registrars': total_registrars,
+        'total_admins': total_admins,
+        'users_percentage_change': users_percentage_change,
+        
+        # Attendance stats
+        'attendance_rate': attendance_rate,
+        'attendance_percentage_change': attendance_percentage_change,
+        'total_present_today': total_present_today,
+        'total_late_today': total_late_today,
+        'total_absent_today': total_absent_today,
+        
+        # Chart data
+        'chart_data': json.dumps(chart_data),
+        
+        # Unauthorized access
+        'unauthorized_today': unauthorized_today,
+        'unauthorized_percentage_change': unauthorized_percentage_change,
+        'recent_unauthorized': recent_unauthorized,
+        
+        # Face enrollment
+        'total_face_enrolled': total_face_enrolled,
+        'face_enrollment_rate': face_enrollment_rate,
+        
+        # Grades and sections
+        'total_grades': total_grades,
+        'total_sections': total_sections,
+        'sections_by_grade': sections_by_grade,
+        
+        # Excused absences
+        'pending_excused': pending_excused,
+        
+        # Recent activities
+        'recent_users': recent_users,
+        'recent_checkins': recent_checkins,
+        
+        # Attendance by grade
+        'grades_attendance': grades_attendance,
+        
+        # Users by role
+        'users_by_role': json.dumps(users_by_role),
     }
     return render(request, 'admin/dashboard.html', context)
 
