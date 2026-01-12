@@ -162,6 +162,7 @@ urlpatterns = [
     # admin unauthorized logs route
     path('admin/unauthorized-logs/', admin_views.admin_unauthorized_logs, name='admin_unauthorized_logs'),
 
+    path('admin/unauthorized-logs/latest/', admin_views.get_latest_unauthorized_logs, name='admin_unauthorized_logs_latest'),
     # admin other routes
     path('profile-pics/', admin_views.serve_profile_pic_default, name='serve_profile_pic_default'),
     path('profile-pics/<path:path>/', admin_views.serve_profile_pic, name='serve_profile_pic'),
@@ -403,3 +404,4 @@ urlpatterns = [
     path('api/deactivate-account/', user_settings_views.deactivate_account, name='deactivate_account'),
     path('api/delete-account/', user_settings_views.delete_account, name='delete_account'),
 ]
+
