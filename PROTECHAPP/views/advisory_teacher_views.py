@@ -7,8 +7,9 @@ from django.utils import timezone
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
-from PROTECHAPP.models import CustomUser, Student, Attendance, Guardian, UserRole, Section, AdvisoryAssignment
+from PROTECHAPP.models import CustomUser, Student, Attendance, Guardian, UserRole, Section, AdvisoryAssignment, ExcusedAbsence
 import io
+import json
 from datetime import datetime
 
 
@@ -128,21 +129,137 @@ def is_advisory_teacher(user):
 @login_required
 @user_passes_test(is_advisory_teacher)
 def teacher_advisory_dashboard(request):
-    """View for advisory teacher dashboard"""
-    # Get current class attendance statistics
+    """View for advisory teacher dashboard with comprehensive attendance statistics"""
+    from django.db.models import Q, Count, Case, When
+    from datetime import timedelta
+    
     current_date = timezone.now()
+    today = current_date.date()
     section = request.user.section
     
-    # Get students in the teacher's advisory class
-    students_in_section = Student.objects.filter(section=section).count() if section else 0
+    if not section:
+        context = {
+            'current_date': current_date,
+            'section': None,
+            'stats': {
+                'total_students': 0,
+                'present_count': 0,
+                'absent_count': 0,
+                'late_count': 0,
+                'excused_count': 0,
+            }
+        }
+        return render(request, 'teacher/advisory/dashboard.html', context)
     
-    # Example data for dashboard
-    attendance_percentage = 96  # This would come from a database query
+    # Get all students in the teacher's advisory class
+    students = Student.objects.filter(section=section, status='ACTIVE')
+    total_students = students.count()
+    
+    # Get today's attendance records
+    today_attendance = Attendance.objects.filter(
+        student__section=section,
+        date=today
+    ).select_related('student')
+    
+    # Calculate attendance statistics for today
+    present_students = today_attendance.filter(
+        Q(time_in__isnull=False) & Q(status='PRESENT')
+    )
+    late_students = today_attendance.filter(status='LATE')
+    excused_students = today_attendance.filter(status='EXCUSED')
+    
+    present_count = present_students.count()
+    late_count = late_students.count()
+    excused_count = excused_students.count()
+    
+    # Students who have timed in (present + late)
+    timed_in_count = present_count + late_count
+    
+    # Calculate absent count (total - timed in - excused)
+    absent_count = total_students - timed_in_count - excused_count
+    
+    # Get list of absent students (those without attendance record today or marked absent)
+    students_with_attendance = today_attendance.values_list('student_id', flat=True)
+    absent_students = students.exclude(
+        id__in=students_with_attendance
+    ) | students.filter(
+        id__in=today_attendance.filter(status='ABSENT').values_list('student_id', flat=True)
+    )
+    absent_students_list = absent_students.distinct().order_by('last_name', 'first_name')[:10]
+    
+    # Calculate attendance percentage
+    if total_students > 0:
+        attendance_percentage = round((timed_in_count / total_students) * 100, 1)
+    else:
+        attendance_percentage = 0
+    
+    # Get last 7 days attendance for chart
+    seven_days_ago = today - timedelta(days=6)
+    last_7_days_data = []
+    
+    for i in range(7):
+        date = seven_days_ago + timedelta(days=i)
+        day_attendance = Attendance.objects.filter(
+            student__section=section,
+            date=date
+        )
+        day_present = day_attendance.filter(
+            Q(status='PRESENT') | Q(status='LATE')
+        ).count()
+        day_absent = total_students - day_present
+        
+        last_7_days_data.append({
+            'date': date.strftime('%a'),
+            'full_date': date.strftime('%Y-%m-%d'),
+            'present': day_present,
+            'absent': day_absent,
+            'percentage': round((day_present / total_students * 100), 1) if total_students > 0 else 0
+        })
+    
+    # Get recent excused absences
+    pending_excuses = ExcusedAbsence.objects.filter(
+        student__section=section
+    ).select_related('student').order_by('-created_at')[:5]
+    
+    # Get recent attendance activity
+    recent_activity = today_attendance.filter(
+        time_in__isnull=False
+    ).order_by('-time_in')[:5]
+    
+    # Yesterday's attendance for comparison
+    yesterday = today - timedelta(days=1)
+    yesterday_attendance = Attendance.objects.filter(
+        student__section=section,
+        date=yesterday,
+        status__in=['PRESENT', 'LATE']
+    ).count()
+    
+    if total_students > 0:
+        yesterday_percentage = round((yesterday_attendance / total_students) * 100, 1)
+        percentage_change = attendance_percentage - yesterday_percentage
+    else:
+        yesterday_percentage = 0
+        percentage_change = 0
     
     context = {
         'current_date': current_date,
-        'students_count': students_in_section,
-        'attendance_percentage': attendance_percentage
+        'section': section,
+        'stats': {
+            'total_students': total_students,
+            'present_count': present_count,
+            'absent_count': absent_count,
+            'late_count': late_count,
+            'excused_count': excused_count,
+            'attendance_percentage': attendance_percentage,
+            'percentage_change': percentage_change,
+        },
+        'absent_students': absent_students_list,
+        'absent_students_total': absent_students.distinct().count(),
+        'late_students_list': late_students[:5],
+        'pending_excuses': pending_excuses,
+        'pending_excuses_count': pending_excuses.count(),
+        'recent_activity': recent_activity,
+        'last_7_days': json.dumps(last_7_days_data),
     }
     
     return render(request, 'teacher/advisory/dashboard.html', context)
