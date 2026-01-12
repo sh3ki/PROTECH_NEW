@@ -727,8 +727,8 @@ function renderExcusedTable(records) {
         
         // Sort records by student name (A to Z)
         records.sort((a, b) => {
-            const nameA = a.student.full_name.toLowerCase();
-            const nameB = b.student.full_name.toLowerCase();
+            const nameA = (a.full_name || '').toLowerCase();
+            const nameB = (b.full_name || '').toLowerCase();
             return nameA.localeCompare(nameB);
         });
         
