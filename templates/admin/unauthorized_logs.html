@@ -611,10 +611,15 @@
     let pollInterval = 5000; // Poll every 5 seconds
     let pollTimeout = null;
     let lastPolledLogs = [];
+    let pollingEnabled = true;
     
     function startRealtimePolling() {
         if (pollTimeout) {
             clearTimeout(pollTimeout);
+        }
+        
+        if (!pollingEnabled) {
+            return;
         }
         
         pollTimeout = setTimeout(async () => {
@@ -632,7 +637,18 @@
                 params.append('limit', 50);
                 
                 // Fetch latest unauthorized logs
-                const response = await fetch(`/api/unauthorized-logs/latest/?${params.toString()}`);
+                const response = await fetch(`/admin/unauthorized-logs/latest/?${params.toString()}`);
+                
+                // Check if endpoint exists
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.warn('Polling endpoint not found. Disabling real-time updates. Please implement /admin/unauthorized-logs/latest/ endpoint.');
+                        pollingEnabled = false;
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.status === 'success' && data.logs && data.logs.length > 0) {
@@ -645,7 +661,6 @@
                     
                     if (hasNewLogs) {
                         // Reload the page to show new logs
-                        const currentUrl = new URL(window.location.href);
                         const search = searchInput ? searchInput.value : '';
                         const camera = cameraSelect ? cameraSelect.value : '';
                         const date = dateInput ? dateInput.value : '';
@@ -665,11 +680,16 @@
                     }
                 }
             } catch (error) {
-                console.error('Error polling for unauthorized log updates:', error);
+                // Silently fail - don't spam console
+                if (pollingEnabled) {
+                    console.warn('Polling temporarily unavailable:', error.message);
+                }
             }
             
-            // Schedule next poll
-            startRealtimePolling();
+            // Schedule next poll if still enabled
+            if (pollingEnabled) {
+                startRealtimePolling();
+            }
         }, pollInterval);
     }
     
