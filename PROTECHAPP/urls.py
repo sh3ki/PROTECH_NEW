@@ -337,6 +337,10 @@ urlpatterns = [
     path('teacher/advisory/excused/', advisory_teacher_views.teacher_advisory_excused, name='teacher_advisory_excused'),
     path('teacher/advisory/excused/export/', advisory_teacher_views.export_advisory_excused, name='export_advisory_excused'),
     path('teacher/advisory/calendar/', advisory_teacher_views.teacher_advisory_calendar, name='teacher_advisory_calendar'),
+    path('teacher/advisory/calendar/events/', advisory_teacher_views.get_teacher_advisory_calendar_events, name='get_teacher_advisory_calendar_events'),
+    path('teacher/advisory/calendar/add-event/', advisory_teacher_views.add_teacher_advisory_calendar_event, name='add_teacher_advisory_calendar_event'),
+    path('teacher/advisory/calendar/add-announcement/', advisory_teacher_views.add_teacher_advisory_calendar_announcement, name='add_teacher_advisory_calendar_announcement'),
+    path('teacher/advisory/calendar/delete-event/<int:event_id>/', advisory_teacher_views.delete_teacher_advisory_calendar_event, name='delete_teacher_advisory_calendar_event'),
     path('teacher/advisory/messages/', advisory_teacher_views.teacher_advisory_messages, name='teacher_advisory_messages'),
     path('teacher/advisory/settings/', advisory_teacher_views.teacher_advisory_settings, name='teacher_advisory_settings'),
 
@@ -385,6 +389,10 @@ urlpatterns = [
     path('teacher/non-advisory/excused/letter/<str:filename>/', non_advisory_teacher_views.teacher_non_advisory_serve_excuse_letter, name='teacher_non_advisory_serve_excuse_letter'),
 
     path('teacher/non-advisory/calendar/', non_advisory_teacher_views.teacher_non_advisory_calendar, name='teacher_non_advisory_calendar'),
+    path('teacher/non-advisory/calendar/events/', non_advisory_teacher_views.get_teacher_non_advisory_calendar_events, name='get_teacher_non_advisory_calendar_events'),
+    path('teacher/non-advisory/calendar/add-event/', non_advisory_teacher_views.add_teacher_non_advisory_calendar_event, name='add_teacher_non_advisory_calendar_event'),
+    path('teacher/non-advisory/calendar/add-announcement/', non_advisory_teacher_views.add_teacher_non_advisory_calendar_announcement, name='add_teacher_non_advisory_calendar_announcement'),
+    path('teacher/non-advisory/calendar/delete-event/<int:event_id>/', non_advisory_teacher_views.delete_teacher_non_advisory_calendar_event, name='delete_teacher_non_advisory_calendar_event'),
     path('teacher/non-advisory/messages/', non_advisory_teacher_views.teacher_non_advisory_messages, name='teacher_non_advisory_messages'),
     path('teacher/non-advisory/settings/', non_advisory_teacher_views.teacher_non_advisory_settings, name='teacher_non_advisory_settings'),
 
