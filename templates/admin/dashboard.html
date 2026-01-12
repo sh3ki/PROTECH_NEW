@@ -229,13 +229,9 @@ You are logged in as Administrator. You have full control over the system.
                 {% for user in recent_users %}
                 <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:shadow-sm transition-shadow">
                     <div class="flex-shrink-0">
-                        {% if user.profile_pic %}
-                        <img src="{{ user.profile_pic }}" alt="{{ user.first_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-blue-500">
-                        {% else %}
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm border-2 border-blue-500">
                             {{ user.first_name|first }}{{ user.last_name|first }}
                         </div>
-                        {% endif %}
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ user.first_name }} {{ user.last_name }}</p>
