@@ -2569,9 +2569,126 @@ def get_section_students(request, section_id):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def move_section_students(request, section_id):
+    """Move all students from one section to another"""
+    try:
+        import json
+        data = json.loads(request.body)
+        target_section_id = data.get('target_section_id')
+        
+        if not target_section_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Target section ID is required'
+            }, status=400)
+        
+        # Get source and target sections
+        source_section = get_object_or_404(Section, id=section_id)
+        target_section = get_object_or_404(Section, id=target_section_id)
+        
+        # Validate that sections are different
+        if source_section.id == target_section.id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Source and target sections cannot be the same'
+            }, status=400)
+        
+        # Get all students in the source section
+        students = Student.objects.filter(section=source_section)
+        student_count = students.count()
+        
+        if student_count == 0:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No students to move from this section'
+            }, status=400)
+        
+        # Move all students to target section
+        students.update(section=target_section, grade=target_section.grade)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Successfully moved {student_count} student(s) from {source_section.name} to {target_section.name}',
+            'moved_count': student_count,
+            'source_section': source_section.name,
+            'target_section': target_section.name
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+
 # ==========================
 #  STUDENTS MANAGEMENT VIEWS
 # ==========================
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def bulk_move_students(request):
+    """Bulk move multiple students to a new section"""
+    try:
+        import json
+        data = json.loads(request.body)
+        student_ids = data.get('student_ids', [])
+        target_section_id = data.get('target_section_id')
+        
+        if not student_ids or not target_section_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student IDs and target section ID are required'
+            }, status=400)
+        
+        if not isinstance(student_ids, list):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student IDs must be an array'
+            }, status=400)
+        
+        # Get target section
+        target_section = get_object_or_404(Section, id=target_section_id)
+        
+        # Get all students
+        students = Student.objects.filter(id__in=student_ids)
+        student_count = students.count()
+        
+        if student_count == 0:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No valid students found'
+            }, status=400)
+        
+        # Update all students to new section and grade
+        students.update(section=target_section, grade=target_section.grade)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Successfully moved {student_count} student(s) to {target_section.name}',
+            'moved_count': student_count,
+            'target_section': target_section.name
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 @login_required
 @user_passes_test(is_admin)
@@ -2651,6 +2768,7 @@ def search_students(request):
         status_filter = request.GET.get('status', '')
         page_number = request.GET.get('page', 1)
         items_per_page = request.GET.get('items_per_page', 10)
+        get_all_ids = request.GET.get('get_all_ids', '') == 'true'
 
         students = Student.objects.select_related('grade', 'section').all().order_by('-created_at')
 
@@ -2668,6 +2786,15 @@ def search_students(request):
             students = students.filter(status=status_filter)
 
         total_count = students.count()
+        
+        # If requested, return all student IDs matching the filter
+        if get_all_ids:
+            all_ids = list(students.values_list('id', flat=True))
+            return JsonResponse({
+                'status': 'success',
+                'all_student_ids': all_ids,
+                'total_count': total_count
+            })
         try:
             page_number = int(page_number)
             items_per_page = int(items_per_page)
