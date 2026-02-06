@@ -24,6 +24,7 @@ def time_in(request):
     settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
     return render(request, 'face_recognition/time_in.html', {
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+        'holiday_mode': getattr(settings_obj, 'holiday_mode', False),
     })
 
 def time_out(request):
@@ -32,6 +33,7 @@ def time_out(request):
     settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
     return render(request, 'face_recognition/time_out.html', {
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+        'holiday_mode': getattr(settings_obj, 'holiday_mode', False),
     })
 
 def hybrid_attendance(request):
@@ -40,6 +42,7 @@ def hybrid_attendance(request):
     settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
     return render(request, 'face_recognition/hybrid_attendance.html', {
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
+        'holiday_mode': getattr(settings_obj, 'holiday_mode', False),
     })
 
 @csrf_exempt
@@ -50,6 +53,14 @@ def recognize_faces_api(request):
     Receives face embeddings and returns recognition results
     """
     try:
+        # Check if holiday mode is enabled
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        if getattr(settings_obj, 'holiday_mode', False):
+            return JsonResponse({
+                'success': False,
+                'error': 'Face recognition is disabled during Holiday Mode'
+            }, status=403)
+        
         data = json.loads(request.body)
         face_embeddings = data.get('face_embeddings', [])
         
@@ -78,6 +89,14 @@ def record_attendance_api(request):
     Record attendance when face is recognized
     """
     try:
+        # Check if holiday mode is enabled
+        settings_obj, _ = SystemSettings.objects.get_or_create(pk=1)
+        if getattr(settings_obj, 'holiday_mode', False):
+            return JsonResponse({
+                'success': False,
+                'error': 'Attendance recording is disabled during Holiday Mode'
+            }, status=403)
+        
         data = json.loads(request.body)
         student_id = data.get('student_id')
         attendance_type = data.get('type')  # 'time_in' or 'time_out'
