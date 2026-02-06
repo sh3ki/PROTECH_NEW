@@ -225,6 +225,17 @@
             <table id="students-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
+                        <th class="px-4 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="select-all-students" class="w-4 h-4 text-primary dark:text-tertiary border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary dark:focus:ring-tertiary cursor-pointer">
+                                <button id="bulk-move-students-btn" class="hidden text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-200 transition-colors px-2 py-1.5 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg flex items-center gap-1" title="Move Selected Students">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                    <span class="text-sm font-medium">Move (0)</span>
+                                </button>
+                            </div>
+                        </th>
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile</th>
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LRN</th>
                         <th class="px-6 py-3.5 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
@@ -1241,6 +1252,97 @@
     </div>
 </div>
 
+<!-- Bulk Move Students Confirmation Modal -->
+<div id="bulk-move-confirmation-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" id="bulk-move-confirmation-backdrop" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Move Students</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2" id="bulk-move-confirmation-text">
+                    Are you sure you want to move the selected students? This action cannot be undone.
+                </p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" id="cancel-bulk-move-confirmation" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" id="confirm-bulk-move-confirmation" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                    <span id="confirm-bulk-move-btn-text">Move Students</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Move Students Modal -->
+<div id="bulk-move-students-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6">
+                    <div class="sm:flex sm:items-start mb-4">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-grow">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white">Move Selected Students</h3>
+                                <button type="button" id="close-bulk-move-modal-x" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Move <span id="bulk-selected-count" class="font-semibold">0</span> selected student(s) to another section
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Form -->
+                    <form id="bulk-move-students-form" class="space-y-4">
+                        <!-- Grade Dropdown -->
+                        <div>
+                            <label for="bulk-move-grade-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Grade
+                            </label>
+                            <select id="bulk-move-grade-select" name="grade" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500/50 dark:focus:ring-orange-400/50 focus:border-orange-500 dark:focus:border-orange-400 transition-colors dark:bg-gray-700 dark:text-white">
+                                <option value="">-- Select Grade --</option>
+                                {% for grade in grades %}
+                                    <option value="{{ grade.id }}">{{ grade.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Section Dropdown -->
+                        <div>
+                            <label for="bulk-move-section-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Section
+                            </label>
+                            <select id="bulk-move-section-select" name="section" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500/50 dark:focus:ring-orange-400/50 focus:border-orange-500 dark:focus:border-orange-400 transition-colors dark:bg-gray-700 dark:text-white" disabled>
+                                <option value="">-- Select Grade First --</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="confirm-bulk-move-students" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-base font-medium text-white hover:from-orange-700 hover:to-orange-600 dark:from-orange-700 dark:to-orange-600 dark:hover:from-orange-800 dark:hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300" disabled>
+                        Move Students
+                    </button>
+                    <button type="button" id="cancel-bulk-move-students" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/pagination-component.js' %}"></script>
 <script>
@@ -1264,6 +1366,9 @@ let currentStudentData = null;
 let currentPage = 1;
 let isLoading = false;
 let searchTimeout = null;
+
+// CSRF token
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
 // Update the getProfilePicUrl function to correctly handle URLs
 function getProfilePicUrl(filename) {
@@ -2091,6 +2196,9 @@ function renderStudentsTable(students) {
 
     studentTableBody.innerHTML = students.map(student => `
         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+                <input type="checkbox" class="student-checkbox w-4 h-4 text-primary dark:text-tertiary border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary dark:focus:ring-tertiary cursor-pointer" data-student-id="${student.id}" data-student-name="${student.full_name}">
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
@@ -2153,6 +2261,9 @@ function renderStudentsTable(students) {
             </td>
         </tr>
     `).join('');
+    
+    // Attach checkbox handlers after rendering
+    attachCheckboxHandlers();
 
     // Add event listeners for the newly created buttons
     document.querySelectorAll('.deactivate-student').forEach(button => {
@@ -3612,6 +3723,293 @@ function submitImport() {
 }
 
 // Add these styles to the <style> section
+
+// ============================================
+// BULK MOVE STUDENTS FUNCTIONALITY
+// ============================================
+
+let selectedStudentIds = new Set();
+let isSelectingAll = false;
+const bulkMoveBtn = document.getElementById('bulk-move-students-btn');
+const selectAllCheckbox = document.getElementById('select-all-students');
+const bulkMoveModal = document.getElementById('bulk-move-students-modal');
+const bulkMoveConfirmationModal = document.getElementById('bulk-move-confirmation-modal');
+const bulkMoveGradeSelect = document.getElementById('bulk-move-grade-select');
+const bulkMoveSectionSelect = document.getElementById('bulk-move-section-select');
+const confirmBulkMoveBtn = document.getElementById('confirm-bulk-move-students');
+
+// Handle individual checkbox changes
+function handleCheckboxChange(event) {
+    if (event && event.target) {
+        const checkbox = event.target;
+        const studentId = checkbox.dataset.studentId;
+        
+        if (checkbox.checked) {
+            selectedStudentIds.add(studentId);
+        } else {
+            selectedStudentIds.delete(studentId);
+            isSelectingAll = false;
+        }
+    }
+    
+    updateSelectAllCheckboxState();
+    updateBulkMoveButton();
+}
+
+// Update select all checkbox state
+function updateSelectAllCheckboxState() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    const currentPageIds = Array.from(checkboxes).map(cb => cb.dataset.studentId);
+    const currentPageSelectedCount = currentPageIds.filter(id => selectedStudentIds.has(id)).length;
+    
+    if (isSelectingAll) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else if (currentPageSelectedCount === checkboxes.length && checkboxes.length > 0) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else if (currentPageSelectedCount > 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    }
+}
+
+// Update bulk move button
+function updateBulkMoveButton() {
+    if (selectedStudentIds.size > 0) {
+        bulkMoveBtn.classList.remove('hidden');
+        bulkMoveBtn.querySelector('span').textContent = `Move (${selectedStudentIds.size})`;
+    } else {
+        bulkMoveBtn.classList.add('hidden');
+    }
+}
+
+// Fetch all student IDs
+async function fetchAllStudentIds() {
+    const params = new URLSearchParams({
+        search: searchInput.value,
+        grade: gradeFilter.value,
+        section: sectionFilter.value,
+        status: statusFilter.value,
+        get_all_ids: 'true'
+    });
+    
+    try {
+        const response = await fetch(`{% url 'admin_search_students' %}?${params}`);
+        const data = await response.json();
+        if (data.status === 'success' && data.all_student_ids) {
+            return data.all_student_ids;
+        }
+    } catch (error) {
+        console.error('Error fetching all student IDs:', error);
+    }
+    return [];
+}
+
+// Handle select all checkbox
+selectAllCheckbox.addEventListener('change', async function() {
+    if (this.checked) {
+        isSelectingAll = true;
+        const allIds = await fetchAllStudentIds();
+        selectedStudentIds.clear();
+        allIds.forEach(id => selectedStudentIds.add(String(id)));
+        
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+    } else {
+        isSelectingAll = false;
+        selectedStudentIds.clear();
+        
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+    }
+    
+    updateBulkMoveButton();
+});
+
+// Open bulk move modal
+bulkMoveBtn.addEventListener('click', function() {
+    const selectedCount = selectedStudentIds.size;
+    document.getElementById('bulk-selected-count').textContent = selectedCount;
+    
+    // Reset form
+    bulkMoveGradeSelect.value = '';
+    bulkMoveSectionSelect.value = '';
+    bulkMoveSectionSelect.disabled = true;
+    bulkMoveSectionSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+    confirmBulkMoveBtn.disabled = true;
+    
+    bulkMoveModal.classList.remove('hidden');
+});
+
+// Close bulk move modal
+document.getElementById('close-bulk-move-modal-x').addEventListener('click', function() {
+    bulkMoveModal.classList.add('hidden');
+});
+document.getElementById('cancel-bulk-move-students').addEventListener('click', function() {
+    bulkMoveModal.classList.add('hidden');
+});
+
+// Grade selection - populate sections from existing data
+bulkMoveGradeSelect.addEventListener('change', function() {
+    const selectedGradeId = this.value;
+    
+    // Reset section dropdown
+    bulkMoveSectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+    bulkMoveSectionSelect.disabled = true;
+    confirmBulkMoveBtn.disabled = true;
+    
+    if (!selectedGradeId) {
+        bulkMoveSectionSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+        return;
+    }
+    
+    // Filter sections for the selected grade from allSections data
+    const filteredSections = allSections.filter(section => 
+        section.gradeId === selectedGradeId
+    );
+    
+    if (filteredSections.length === 0) {
+        bulkMoveSectionSelect.innerHTML = '<option value="">-- No sections available --</option>';
+        bulkMoveSectionSelect.disabled = true;
+    } else {
+        filteredSections.forEach(section => {
+            const option = document.createElement('option');
+            option.value = section.id;
+            option.textContent = section.name;
+            bulkMoveSectionSelect.appendChild(option);
+        });
+        bulkMoveSectionSelect.disabled = false;
+    }
+});
+
+// Section selection - enable move button
+bulkMoveSectionSelect.addEventListener('change', function() {
+    confirmBulkMoveBtn.disabled = !this.value;
+});
+
+// Confirm bulk move - show confirmation modal
+confirmBulkMoveBtn.addEventListener('click', function() {
+    const targetSectionId = bulkMoveSectionSelect.value;
+    const targetSectionName = bulkMoveSectionSelect.options[bulkMoveSectionSelect.selectedIndex].text;
+    const gradeName = bulkMoveGradeSelect.options[bulkMoveGradeSelect.selectedIndex].text;
+    
+    if (!targetSectionId) {
+        showToast('Please select a target section', 'error');
+        return;
+    }
+    
+    // Store target info for confirmation
+    window.bulkMoveTargetSectionId = targetSectionId;
+    
+    // Update confirmation modal text
+    document.getElementById('bulk-move-confirmation-text').innerHTML = `
+        Are you sure you want to move <strong>${selectedStudentIds.size} student(s)</strong> to 
+        <strong>"${gradeName} - ${targetSectionName}"</strong>?
+        <br><br>
+        <span class="text-sm">This will update all selected students' section assignments. This action cannot be undone.</span>
+    `;
+    
+    // Show confirmation modal
+    bulkMoveConfirmationModal.classList.remove('hidden');
+});
+
+// Cancel bulk move confirmation
+document.getElementById('cancel-bulk-move-confirmation').addEventListener('click', function() {
+    bulkMoveConfirmationModal.classList.add('hidden');
+});
+
+// Close confirmation modal on backdrop click
+document.getElementById('bulk-move-confirmation-backdrop').addEventListener('click', function() {
+    bulkMoveConfirmationModal.classList.add('hidden');
+});
+
+// Execute bulk move
+document.getElementById('confirm-bulk-move-confirmation').addEventListener('click', async function() {
+    const confirmBtn = this;
+    const confirmBtnText = document.getElementById('confirm-bulk-move-btn-text');
+    const targetSectionId = window.bulkMoveTargetSectionId;
+    
+    // Disable button and show loading
+    confirmBtn.disabled = true;
+    confirmBtnText.innerHTML = `
+        <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Moving...
+    `;
+    
+    try {
+        const response = await fetch('/admin/students/bulk-move/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                student_ids: Array.from(selectedStudentIds),
+                target_section_id: targetSectionId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showToast(data.message || `Successfully moved ${data.moved_count} student(s)`, 'success');
+            bulkMoveConfirmationModal.classList.add('hidden');
+            bulkMoveModal.classList.add('hidden');
+            
+            // Reset selections
+            selectedStudentIds.clear();
+            isSelectingAll = false;
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+            bulkMoveBtn.classList.add('hidden');
+            
+            // Refresh the students list
+            loadStudents(currentPage);
+        } else {
+            showToast(data.message || 'Failed to move students', 'error');
+            bulkMoveConfirmationModal.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error moving students:', error);
+        showToast('An error occurred while moving students', 'error');
+        bulkMoveConfirmationModal.classList.add('hidden');
+    } finally {
+        // Reset button
+        confirmBtn.disabled = false;
+        confirmBtnText.textContent = 'Move Students';
+    }
+});
+
+// Close bulk move modal on outside click
+window.addEventListener('click', function(event) {
+    if (event.target === bulkMoveModal) {
+        bulkMoveModal.classList.add('hidden');
+    }
+});
+
+// Attach checkbox change handlers after table render
+function attachCheckboxHandlers() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => {
+        const studentId = cb.dataset.studentId;
+        if (selectedStudentIds.has(studentId)) {
+            cb.checked = true;
+        }
+        cb.addEventListener('change', handleCheckboxChange);
+    });
+    
+    updateSelectAllCheckboxState();
+    updateBulkMoveButton();
+}
+
 </script>
 
 <style>
