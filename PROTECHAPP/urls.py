@@ -95,6 +95,7 @@ urlpatterns = [
     path('admin/sections/<int:section_id>/update/', admin_views.update_section, name='admin_update_section'),
     path('admin/sections/<int:section_id>/delete/', admin_views.delete_section, name='admin_delete_section'),
     path('admin/sections/<int:section_id>/students/', admin_views.get_section_students, name='admin_get_section_students'),
+    path('admin/sections/<int:section_id>/move-students/', admin_views.move_section_students, name='admin_move_section_students'),
     path('admin/sections/export/', admin_views.export_sections, name='admin_export_sections'),
     path('admin/sections/import/', admin_views.import_sections, name='import_sections'),
     path('admin/sections/import/template/', admin_views.download_sections_template, name='download_sections_template'),
@@ -109,6 +110,7 @@ urlpatterns = [
     path('admin/students/<int:student_id>/reset-password/', admin_views.reset_student_password, name='admin_reset_student_password'),
     path('admin/students/save-face-embedding/', admin_views.save_face_embedding, name='admin_save_face_embedding'),
     path('admin/students/export/', admin_views.export_students, name='admin_export_students'),
+    path('admin/students/bulk-move/', admin_views.bulk_move_students, name='admin_bulk_move_students'),
     
     # admin/face-enroll routes
     path('admin/face-enroll/', registrar_views.registrar_face_enroll, name='admin_face_enroll'),
