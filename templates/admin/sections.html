@@ -379,8 +379,120 @@
                             Print Class List
                         </span>
                     </button>
+                    <button type="button" id="move-students-btn" class="mt-3 w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-base font-medium text-white hover:from-orange-700 hover:to-orange-600 dark:from-orange-700 dark:to-orange-600 dark:hover:from-orange-800 dark:hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Move
+                        </span>
+                    </button>
                     <button type="button" id="close-view-section-modal" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                         Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move Students Confirmation Modal -->
+<div id="move-students-confirmation-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" id="move-confirmation-backdrop" aria-hidden="true"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-auto shadow-xl transform transition-all p-6">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-4">Move Students</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2" id="move-confirmation-text">
+                    Are you sure you want to move all students? This action cannot be undone.
+                </p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button type="button" id="cancel-move-confirmation" class="mr-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="button" id="confirm-move-confirmation" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                    <span id="confirm-move-btn-text">Move Students</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move Students Modal -->
+<div id="move-students-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm transition-opacity">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700 animate-fadeIn">
+            <div class="modal-animate-target">
+                <div class="bg-white dark:bg-gray-800 px-5 pt-5 pb-4 sm:p-6">
+                    <div class="sm:flex sm:items-start mb-4">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 sm:mx-0 sm:h-12 sm:w-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-grow">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl leading-6 font-bold text-gray-900 dark:text-white">Move All Students</h3>
+                                <button type="button" id="close-move-students-modal-x" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Move all students from <span id="move-from-section" class="font-semibold"></span> to another section
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Form -->
+                    <form id="move-students-form" class="space-y-4">
+                        <!-- Grade Dropdown -->
+                        <div>
+                            <label for="move-grade-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Grade
+                            </label>
+                            <select id="move-grade-select" name="grade" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500/50 dark:focus:ring-orange-400/50 focus:border-orange-500 dark:focus:border-orange-400 transition-colors dark:bg-gray-700 dark:text-white">
+                                <option value="">-- Select Grade --</option>
+                                {% for grade in grades %}
+                                    <option value="{{ grade.id }}">{{ grade.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Section Dropdown -->
+                        <div>
+                            <label for="move-section-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Section
+                            </label>
+                            <select id="move-section-select" name="section" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500/50 dark:focus:ring-orange-400/50 focus:border-orange-500 dark:focus:border-orange-400 transition-colors dark:bg-gray-700 dark:text-white" disabled>
+                                <option value="">-- Select Grade First --</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Only sections from the selected grade will be shown (excluding current section)
+                            </p>
+                        </div>
+                        
+                        <!-- Student Count Info -->
+                        <div id="move-student-count-info" class="hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="move-student-count"></span> student(s) will be moved
+                            </p>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-5 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="confirm-move-students" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-base font-medium text-white hover:from-orange-700 hover:to-orange-600 dark:from-orange-700 dark:to-orange-600 dark:hover:from-orange-800 dark:hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300" disabled>
+                        Move Students
+                    </button>
+                    <button type="button" id="cancel-move-students" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-tertiary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -948,6 +1060,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const gradeName = this.dataset.gradeName;
                 const advisorName = this.dataset.advisor || 'No Advisor';
                 
+                // Store current section ID for move functionality
+                currentMoveFromSectionId = sectionId;
+                currentMoveFromSectionName = `${gradeName} - ${sectionName}`;
+                
                 // Set modal title and details
                 document.getElementById('view-section-title').textContent = `${gradeName} - ${sectionName}`;
                 document.getElementById('view-section-advisor').textContent = advisorName;
@@ -1159,6 +1275,201 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('close-view-section-modal-x').addEventListener('click', function() {
         document.getElementById('view-section-modal').classList.add('hidden');
+    });
+
+    // Move Students Modal Variables
+    let currentMoveFromSectionId = null;
+    let currentMoveFromSectionName = '';
+    let currentMoveStudentCount = 0;
+    const moveStudentsModal = document.getElementById('move-students-modal');
+    const moveGradeSelect = document.getElementById('move-grade-select');
+    const moveSectionSelect = document.getElementById('move-section-select');
+    const confirmMoveStudentsBtn = document.getElementById('confirm-move-students');
+    const moveStudentCountInfo = document.getElementById('move-student-count-info');
+    const moveStudentCountSpan = document.getElementById('move-student-count');
+
+    // Open Move Students Modal
+    document.getElementById('move-students-btn').addEventListener('click', function() {
+        // Get student count from the already loaded student list
+        const studentRows = document.querySelectorAll('#view-section-students .grid.grid-cols-12.py-3');
+        currentMoveStudentCount = studentRows.length;
+        
+        document.getElementById('move-from-section').textContent = currentMoveFromSectionName;
+        document.getElementById('move-student-count').textContent = currentMoveStudentCount;
+        
+        // Reset form
+        moveGradeSelect.value = '';
+        moveSectionSelect.value = '';
+        moveSectionSelect.disabled = true;
+        moveSectionSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+        confirmMoveStudentsBtn.disabled = true;
+        
+        if (currentMoveStudentCount > 0) {
+            moveStudentCountInfo.classList.remove('hidden');
+        } else {
+            moveStudentCountInfo.classList.add('hidden');
+        }
+        
+        moveStudentsModal.classList.remove('hidden');
+    });
+
+    // Close Move Students Modal
+    document.getElementById('close-move-students-modal-x').addEventListener('click', function() {
+        moveStudentsModal.classList.add('hidden');
+    });
+    document.getElementById('cancel-move-students').addEventListener('click', function() {
+        moveStudentsModal.classList.add('hidden');
+    });
+
+    // Grade selection - fetch sections
+    moveGradeSelect.addEventListener('change', async function() {
+        const gradeId = this.value;
+        moveSectionSelect.innerHTML = '<option value="">-- Loading... --</option>';
+        moveSectionSelect.disabled = true;
+        confirmMoveStudentsBtn.disabled = true;
+        
+        if (!gradeId) {
+            moveSectionSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/admin/grades/${gradeId}/sections/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                moveSectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+                
+                // Filter out current section
+                const sections = data.sections.filter(s => s.id.toString() !== currentMoveFromSectionId);
+                
+                if (sections.length === 0) {
+                    moveSectionSelect.innerHTML = '<option value="">-- No other sections available --</option>';
+                    moveSectionSelect.disabled = true;
+                } else {
+                    sections.forEach(section => {
+                        const option = document.createElement('option');
+                        option.value = section.id;
+                        option.textContent = `${section.name} (${section.students_count || 0} students)`;
+                        moveSectionSelect.appendChild(option);
+                    });
+                    moveSectionSelect.disabled = false;
+                }
+            } else {
+                moveSectionSelect.innerHTML = '<option value="">-- Error loading sections --</option>';
+                showToast('Failed to load sections', 'error');
+            }
+        } catch (error) {
+            console.error('Error fetching sections:', error);
+            moveSectionSelect.innerHTML = '<option value="">-- Error loading sections --</option>';
+            showToast('Failed to load sections', 'error');
+        }
+    });
+
+    // Section selection - enable move button
+    moveSectionSelect.addEventListener('change', function() {
+        confirmMoveStudentsBtn.disabled = !this.value;
+    });
+
+    // Confirm Move Students
+    confirmMoveStudentsBtn.addEventListener('click', function() {
+        const targetSectionId = moveSectionSelect.value;
+        const targetSectionName = moveSectionSelect.options[moveSectionSelect.selectedIndex].text;
+        
+        if (!targetSectionId || !currentMoveFromSectionId) {
+            showToast('Please select a target section', 'error');
+            return;
+        }
+        
+        // Store target info for confirmation
+        window.moveTargetSectionId = targetSectionId;
+        window.moveTargetSectionName = targetSectionName;
+        
+        // Update confirmation modal text
+        document.getElementById('move-confirmation-text').innerHTML = `
+            Are you sure you want to move <strong>${currentMoveStudentCount} student(s)</strong> from 
+            <strong>"${currentMoveFromSectionName}"</strong> to <strong>"${targetSectionName}"</strong>?
+            <br><br>
+            <span class="text-sm">This will update all students' section assignments. This action cannot be undone.</span>
+        `;
+        
+        // Show confirmation modal
+        document.getElementById('move-students-confirmation-modal').classList.remove('hidden');
+    });
+
+    // Cancel move confirmation
+    document.getElementById('cancel-move-confirmation').addEventListener('click', function() {
+        document.getElementById('move-students-confirmation-modal').classList.add('hidden');
+    });
+
+    // Close confirmation modal on backdrop click
+    document.getElementById('move-confirmation-backdrop').addEventListener('click', function() {
+        document.getElementById('move-students-confirmation-modal').classList.add('hidden');
+    });
+
+    // Confirm and execute move
+    document.getElementById('confirm-move-confirmation').addEventListener('click', async function() {
+        const confirmBtn = this;
+        const confirmBtnText = document.getElementById('confirm-move-btn-text');
+        const targetSectionId = window.moveTargetSectionId;
+        
+        // Disable button and show loading
+        confirmBtn.disabled = true;
+        confirmBtnText.innerHTML = `
+            <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Moving...
+        `;
+        
+        try {
+            const response = await fetch(`/admin/sections/${currentMoveFromSectionId}/move-students/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    target_section_id: targetSectionId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showToast(data.message || `Successfully moved ${data.moved_count} student(s)`, 'success');
+                document.getElementById('move-students-confirmation-modal').classList.add('hidden');
+                moveStudentsModal.classList.add('hidden');
+                document.getElementById('view-section-modal').classList.add('hidden');
+                fetchSections(currentPage); // Refresh the sections list
+            } else {
+                showToast(data.message || 'Failed to move students', 'error');
+                document.getElementById('move-students-confirmation-modal').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error moving students:', error);
+            showToast('An error occurred while moving students', 'error');
+            document.getElementById('move-students-confirmation-modal').classList.add('hidden');
+        } finally {
+            // Reset button
+            confirmBtn.disabled = false;
+            confirmBtnText.textContent = 'Move Students';
+        }
+    });
+
+    // Close move modal on outside click
+    window.addEventListener('click', function(event) {
+        if (event.target === moveStudentsModal) {
+            moveStudentsModal.classList.add('hidden');
+        }
     });
 
     // Print Class List
