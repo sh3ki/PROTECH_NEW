@@ -378,6 +378,11 @@ class SystemSettings(models.Model):
         default=True,
         help_text="Enable or disable the prototype gate system and gate queue check functionality"
     )
+
+    holiday_mode = models.BooleanField(
+        default=False,
+        help_text="When enabled, face recognition attendance is disabled on all devices (Time In, Time Out, Hybrid)"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
