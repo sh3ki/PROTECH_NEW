@@ -183,6 +183,7 @@ urlpatterns = [
     path('admin/settings/save-display-mode/', admin_views.save_display_mode, name='save_display_mode'),
     path('admin/settings/save-spoof-proofing/', admin_views.save_spoof_proofing, name='save_spoof_proofing'),
     path('admin/settings/save-prototype-gate-system/', admin_views.save_prototype_gate_system, name='save_prototype_gate_system'),
+    path('admin/settings/save-holiday-mode/', admin_views.save_holiday_mode, name='save_holiday_mode'),
     path('admin/settings/download-backup/', admin_views.download_database_backup, name='download_database_backup'),
     path('admin/settings/backup-status/', admin_views.get_backup_status, name='get_backup_status'),
 
