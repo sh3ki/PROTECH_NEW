@@ -35,6 +35,10 @@ class UltraFastFaceRecognition {
         this.unauthorizedCooldown = new Map(); // Track unauthorized faces to avoid duplicate saves
         this.unauthorizedCooldownMs = 2000; // Save same unauthorized face only once per 2 seconds
         this.spoofProofEnabled = window.SPOOF_PROOF_ENABLED !== false;
+        
+        // Announcement queue system
+        this.announcementQueue = [];
+        this.isAnnouncing = false;
     }
 
     async initialize() {
@@ -622,6 +626,11 @@ class UltraFastFaceRecognition {
                 this.recognitionCooldown.set(studentId, now);
                 this.showNotification(data.message || 'Attendance recorded.', 'success');
                 this.playSound('success');
+                
+                // Play ding-dong sound and speak student name
+                if (result.first_name && result.last_name) {
+                    this.playDingDongAndSpeak(result.first_name, result.last_name);
+                }
             } else {
                 console.warn('Attendance recording failed:', data ? (data.error || data.message) : 'Unknown error');
             }
@@ -746,6 +755,135 @@ class UltraFastFaceRecognition {
         const audio = new Audio(src);
         audio.volume = 0.3;
         audio.play().catch(() => {});
+    }
+
+    playDingDong() {
+        // Create AudioContext for enthusiastic ding-dong sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        
+        // First DING (bright, high pitch)
+        const oscillator1 = audioContext.createOscillator();
+        const gainNode1 = audioContext.createGain();
+        oscillator1.connect(gainNode1);
+        gainNode1.connect(audioContext.destination);
+        oscillator1.frequency.value = 1000; // Bright high pitch
+        oscillator1.type = 'sine';
+        gainNode1.gain.setValueAtTime(0.4, now);
+        gainNode1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        oscillator1.start(now);
+        oscillator1.stop(now + 0.3);
+        
+        // Second DONG (cheerful mid pitch)
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+        oscillator2.frequency.value = 750; // Cheerful mid pitch
+        oscillator2.type = 'sine';
+        gainNode2.gain.setValueAtTime(0, now + 0.3);
+        gainNode2.gain.setValueAtTime(0.4, now + 0.31);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+        oscillator2.start(now + 0.3);
+        oscillator2.stop(now + 0.7);
+    }
+
+    speakName(firstName, lastName) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(`${firstName} ${lastName}`);
+            
+            // Try to find Filipino English voice, fallback to en-PH or en-US
+            const voices = window.speechSynthesis.getVoices();
+            const filipinoVoice = voices.find(voice => 
+                voice.lang.includes('fil') || 
+                voice.lang.includes('tl') || 
+                voice.lang.includes('en-PH') ||
+                voice.name.toLowerCase().includes('filipino') ||
+                voice.name.toLowerCase().includes('tagalog')
+            );
+            
+            if (filipinoVoice) {
+                utterance.voice = filipinoVoice;
+            }
+            
+            utterance.rate = 0.95; // Slightly slower for Filipino accent clarity
+            utterance.pitch = 1.1; // Slightly higher pitch typical of Filipino English
+            utterance.volume = 1.0;
+            utterance.lang = 'en-PH'; // Filipino English locale
+            
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    playDingDongAndSpeak(firstName, lastName) {
+        // Add to queue
+        this.announcementQueue.push({ firstName, lastName });
+        
+        // Process queue if not already processing
+        if (!this.isAnnouncing) {
+            this.processAnnouncementQueue();
+        }
+    }
+
+    async processAnnouncementQueue() {
+        if (this.announcementQueue.length === 0) {
+            this.isAnnouncing = false;
+            return;
+        }
+
+        this.isAnnouncing = true;
+        const { firstName, lastName } = this.announcementQueue.shift();
+
+        // Play ding-dong sound
+        this.playDingDong();
+        
+        // Wait 1 second (1000ms) after ding-dong completes before speaking
+        await new Promise(resolve => setTimeout(resolve, 1700)); // 700ms ding-dong + 1000ms pause
+        
+        // Speak the name
+        await this.speakNameAsync(firstName, lastName);
+        
+        // Wait for speech to complete, then process next in queue
+        setTimeout(() => {
+            this.processAnnouncementQueue();
+        }, 500); // Small buffer between announcements
+    }
+
+    speakNameAsync(firstName, lastName) {
+        return new Promise((resolve) => {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(`${firstName} ${lastName}`);
+                
+                // Try to find Filipino English voice
+                const voices = window.speechSynthesis.getVoices();
+                const filipinoVoice = voices.find(voice => 
+                    voice.lang.includes('fil') || 
+                    voice.lang.includes('tl') || 
+                    voice.lang.includes('en-PH') ||
+                    voice.name.toLowerCase().includes('filipino') ||
+                    voice.name.toLowerCase().includes('tagalog')
+                );
+                
+                if (filipinoVoice) {
+                    utterance.voice = filipinoVoice;
+                }
+                
+                utterance.rate = 0.95;
+                utterance.pitch = 1.1;
+                utterance.volume = 1.0;
+                utterance.lang = 'en-PH';
+                
+                utterance.onend = () => resolve();
+                utterance.onerror = () => resolve();
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                resolve();
+            }
+        });
     }
 
     stop() {
