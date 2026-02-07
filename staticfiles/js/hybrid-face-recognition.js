@@ -35,11 +35,21 @@ class HybridFaceRecognition {
         this.lastResults = [];
         this.modelsLoaded = false;
         this.detectorOptions = null;
+        this.previousDetections = [];
+        this.motionThreshold = 0.012; // Minimum normalized motion to accept as live
+        this.maxStaticFrames = 6; // Frames a face can stay static before being blocked
+        this.blinkEarThreshold = 0.21; // Eye Aspect Ratio threshold for blink detection
+        this.blinkConsecutiveFrames = 2;
+        this.spoofProofEnabled = window.SPOOF_PROOF_ENABLED !== false;
+        this.unauthorizedCooldown = new Map(); // Track unauthorized faces to avoid duplicate saves
+        this.unauthorizedCooldownMs = 2000; // Save same unauthorized face only once per 2 seconds
+        
+        // Announcement queue system
+        this.announcementQueue = [];
+        this.isAnnouncing = false;
         
         // Track recognized students
         this.recognizedStudents = new Map();
-        this.unauthorizedCooldown = new Map(); // Track unauthorized faces to avoid duplicate saves
-        this.unauthorizedCooldownMs = 2000; // Save same unauthorized face only once per 2 seconds
     }
 
     async initialize() {
@@ -212,6 +222,20 @@ class HybridFaceRecognition {
                     labelLines: lines.length ? lines : ['Recognized'],
                     labelColor: '#000000'
                 });
+            } else if (detection.status === 'needs_motion') {
+                this.drawStyledBox(detection.box, {
+                    stroke: '#F97316',
+                    fill: 'rgba(249, 115, 22, 0.18)',
+                    labelLines: ['Move face to verify'],
+                    labelColor: '#FFFFFF'
+                });
+            } else if (detection.status === 'spoof') {
+                this.drawStyledBox(detection.box, {
+                    stroke: '#EF4444',
+                    fill: 'rgba(239, 68, 68, 0.25)',
+                    labelLines: ['Spoof blocked'],
+                    labelColor: '#FFFFFF'
+                });
             } else {
                 this.drawStyledBox(detection.box, {
                     stroke: '#EF4444',
@@ -280,6 +304,151 @@ class HybridFaceRecognition {
         this.ctx.restore();
     }
 
+    evaluateLiveness(detections) {
+        if (!this.spoofProofEnabled) {
+            const liveResults = detections.map(detection => {
+                const box = detection.detection.box;
+                const landmarks = detection.landmarks.positions.map(pt => ({ x: pt.x, y: pt.y }));
+                const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+                return {
+                    status: 'live',
+                    motionScore: 1,
+                    blink: { detected: false, ear: 1 },
+                    landmarks,
+                    center,
+                    staticFrames: 0
+                };
+            });
+            this.previousDetections = liveResults.map(item => ({ center: item.center, landmarks: item.landmarks, staticFrames: 0 }));
+            return liveResults;
+        }
+
+        const results = [];
+        const previous = [...this.previousDetections];
+        const usedPrev = new Set();
+
+        detections.forEach(detection => {
+            const box = detection.detection.box;
+            const landmarks = detection.landmarks.positions.map(pt => ({ x: pt.x, y: pt.y }));
+            const center = {
+                x: box.x + box.width / 2,
+                y: box.y + box.height / 2
+            };
+
+            const prevIndex = this.matchPreviousDetection(center, previous, usedPrev);
+            const prev = prevIndex !== -1 ? previous[prevIndex] : null;
+
+            const centerDelta = prev ? { dx: center.x - prev.center.x, dy: center.y - prev.center.y } : { dx: 0, dy: 0 };
+
+            const motionScore = prev ? this.computeMotionScore(prev.landmarks, landmarks, box, centerDelta) : 0;
+            const blinkInfo = this.detectBlink(landmarks);
+
+            let staticFrames = prev ? prev.staticFrames : 0;
+            let status = 'liveness_required';
+
+            if (motionScore >= this.motionThreshold || blinkInfo.detected) {
+                staticFrames = 0;
+                status = 'live';
+            } else {
+                staticFrames += 1;
+                if (staticFrames >= this.maxStaticFrames) {
+                    status = 'spoof';
+                }
+            }
+
+            results.push({
+                status,
+                motionScore,
+                blink: blinkInfo,
+                landmarks,
+                center,
+                staticFrames
+            });
+        });
+
+        this.previousDetections = results.map(item => ({
+            center: item.center,
+            landmarks: item.landmarks,
+            staticFrames: item.staticFrames
+        }));
+
+        return results;
+    }
+
+    matchPreviousDetection(center, previous, usedPrev) {
+        let bestIndex = -1;
+        let bestDistance = Infinity;
+
+        previous.forEach((prev, idx) => {
+            if (usedPrev.has(idx)) {
+                return;
+            }
+            const dx = center.x - prev.center.x;
+            const dy = center.y - prev.center.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = idx;
+            }
+        });
+
+        if (bestIndex !== -1) {
+            usedPrev.add(bestIndex);
+        }
+
+        return bestIndex;
+    }
+
+    computeMotionScore(prevLandmarks, currentLandmarks, box, centerDelta) {
+        if (!prevLandmarks || !currentLandmarks || !prevLandmarks.length || !currentLandmarks.length) {
+            return 0;
+        }
+
+        const len = Math.min(prevLandmarks.length, currentLandmarks.length);
+        let total = 0;
+
+        for (let i = 0; i < len; i++) {
+            const dx = (currentLandmarks[i].x - prevLandmarks[i].x) - centerDelta.dx;
+            const dy = (currentLandmarks[i].y - prevLandmarks[i].y) - centerDelta.dy;
+            total += Math.hypot(dx, dy);
+        }
+
+        const average = total / len;
+        const normalization = Math.max(box.width + box.height, 1);
+        return average / normalization;
+    }
+
+    detectBlink(landmarks) {
+        if (!landmarks || landmarks.length < 48) {
+            return { detected: false, ear: 1 };
+        }
+
+        const leftEye = [36, 37, 38, 39, 40, 41].map(i => landmarks[i]);
+        const rightEye = [42, 43, 44, 45, 46, 47].map(i => landmarks[i]);
+
+        const leftEAR = this.calculateEAR(leftEye);
+        const rightEAR = this.calculateEAR(rightEye);
+        const ear = (leftEAR + rightEAR) / 2;
+
+        return {
+            detected: ear < this.blinkEarThreshold,
+            ear
+        };
+    }
+
+    calculateEAR(eyePoints) {
+        if (!eyePoints || eyePoints.length < 6) {
+            return 1;
+        }
+
+        const vertical1 = Math.hypot(eyePoints[1].x - eyePoints[5].x, eyePoints[1].y - eyePoints[5].y);
+        const vertical2 = Math.hypot(eyePoints[2].x - eyePoints[4].x, eyePoints[2].y - eyePoints[4].y);
+        const horizontal = Math.hypot(eyePoints[0].x - eyePoints[3].x, eyePoints[0].y - eyePoints[3].y);
+
+        const ear = (vertical1 + vertical2) / (2 * horizontal || 1);
+        return ear;
+    }
+
     async processFrame() {
         if (!this.modelsLoaded || !this.video || this.video.readyState < 2) {
             return;
@@ -299,6 +468,7 @@ class HybridFaceRecognition {
         if (!detections.length) {
             this.currentDetections = [];
             this.lastResults = [];
+            this.previousDetections = [];
             this.updateFPS();
             return;
         }
@@ -311,16 +481,35 @@ class HybridFaceRecognition {
             };
         });
 
+        const livenessStates = this.evaluateLiveness(detections);
+
         const now = Date.now();
         const shouldRecognize = now - this.lastRecognitionTime >= this.processIntervalMs;
 
         let recognitionResults;
 
         if (shouldRecognize) {
-            const descriptors = detections.map(det => Array.from(det.descriptor));
+            const liveDescriptors = [];
+            const liveIndices = [];
 
-            const results = await this.recognizeFaces(descriptors);
-            recognitionResults = this.normalizeResults(results, boxes.length);
+            detections.forEach((det, index) => {
+                const liveState = livenessStates[index];
+                if (liveState && liveState.status === 'live') {
+                    liveDescriptors.push(Array.from(det.descriptor));
+                    liveIndices.push(index);
+                }
+            });
+
+            const recognitionFallback = new Array(detections.length).fill({ matched: false });
+
+            if (liveDescriptors.length) {
+                const results = await this.recognizeFaces(liveDescriptors);
+                liveIndices.forEach((originalIndex, resultIndex) => {
+                    recognitionFallback[originalIndex] = results[resultIndex] || { matched: false };
+                });
+            }
+
+            recognitionResults = this.normalizeResults(recognitionFallback, boxes.length);
             this.lastResults = recognitionResults;
             this.lastRecognitionTime = now;
         } else {
@@ -330,11 +519,20 @@ class HybridFaceRecognition {
 
         this.currentDetections = boxes.map((box, index) => {
             const result = recognitionResults[index];
+            const liveState = livenessStates[index] || {};
             const matched = result && result.matched;
+            let status = matched ? 'matched' : 'unknown';
+
+            if (liveState.status === 'spoof') {
+                status = 'spoof';
+            } else if (liveState.status === 'liveness_required') {
+                status = 'needs_motion';
+            }
             return {
                 box: box,
                 result: result,
-                status: matched ? 'matched' : 'unknown'
+                status: status,
+                live: liveState
             };
         });
 
@@ -342,75 +540,15 @@ class HybridFaceRecognition {
             for (const detection of this.currentDetections) {
                 if (detection.status === 'matched') {
                     await this.autoRecordAttendance(detection.result);
-                }
                 } else if (detection.status === 'spoof' && this.spoofProofEnabled) {
                     // Log spoof attempts as unauthorized when spoof-proofing is on
                     this.saveUnauthorizedFace(detection).catch(error => {
                         console.error(`[${this.attendanceType}] Failed to save spoof attempt:`, error);
                     });
+                }
             }
         }
 
-                if (!detection || !detection.box) {
-                    return;
-                }
-
-                // Generate a hash of the box position to track unique faces
-                const boxHash = `${Math.floor(detection.box.start[0])}_${Math.floor(detection.box.start[1])}`;
-
-                const now = Date.now();
-                if (this.unauthorizedCooldown.has(boxHash)) {
-                    const last = this.unauthorizedCooldown.get(boxHash);
-                    if (now - last < this.unauthorizedCooldownMs) {
-                        return; // Don't save the same face too frequently
-                    }
-                }
-
-                try {
-                    // Capture the face region from video
-                    const canvas = document.createElement('canvas');
-                    const box = detection.box;
-
-                    const padding = 50;
-                    const x = Math.max(0, box.start[0] - padding);
-                    const y = Math.max(0, box.start[1] - padding);
-                    const width = Math.min(this.video.videoWidth - x, box.end[0] - box.start[0] + padding * 2);
-                    const height = Math.min(this.video.videoHeight - y, box.end[1] - box.start[1] + padding * 2);
-
-                    canvas.width = width;
-                    canvas.height = height;
-
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(this.video, x, y, width, height, 0, 0, width, height);
-
-                    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-
-                    const cameraName = this.attendanceType === 'time_in' ? 'Time In Camera' :
-                                       this.attendanceType === 'time_out' ? 'Time Out Camera' :
-                                       'Hybrid Camera';
-
-                    const response = await fetch('/api/save-unauthorized-face/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            image: imageData,
-                            camera_name: cameraName
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data && data.success) {
-                        this.unauthorizedCooldown.set(boxHash, now);
-                        console.log(`[${this.attendanceType}] ✅ Unauthorized face saved:`, data.photo_path);
-                    } else {
-                        console.warn(`[${this.attendanceType}] Failed to save unauthorized face:`, data ? data.error : 'Unknown error');
-                    }
-                } catch (error) {
-                    console.error(`[${this.attendanceType}] Error saving unauthorized face:`, error);
-                }
-            }
         this.updateFPS();
     }
 
@@ -493,11 +631,78 @@ class HybridFaceRecognition {
                 this.addStudentToList(result);
                 this.showNotification(data.message || 'Attendance recorded.', 'success');
                 this.playSound('success');
+                
+                // Play ding-dong sound and speak student name
+                if (result.first_name && result.last_name) {
+                    this.playDingDongAndSpeak(result.first_name, result.last_name);
+                }
             } else {
                 console.warn(`[${this.attendanceType}] Attendance recording failed:`, data ? (data.error || data.message) : 'Unknown error');
             }
         } catch (error) {
             console.error(`[${this.attendanceType}] Failed to record attendance:`, error);
+        }
+    }
+
+    async saveUnauthorizedFace(detection) {
+        if (!detection || !detection.box) {
+            return;
+        }
+
+        // Generate a hash of the box position to track unique faces
+        const boxHash = `${Math.floor(detection.box.start[0])}_${Math.floor(detection.box.start[1])}`;
+
+        const now = Date.now();
+        if (this.unauthorizedCooldown.has(boxHash)) {
+            const last = this.unauthorizedCooldown.get(boxHash);
+            if (now - last < this.unauthorizedCooldownMs) {
+                return; // Don't save the same face too frequently
+            }
+        }
+
+        try {
+            // Capture the face region from video
+            const canvas = document.createElement('canvas');
+            const box = detection.box;
+
+            const padding = 50;
+            const x = Math.max(0, box.start[0] - padding);
+            const y = Math.max(0, box.start[1] - padding);
+            const width = Math.min(this.video.videoWidth - x, box.end[0] - box.start[0] + padding * 2);
+            const height = Math.min(this.video.videoHeight - y, box.end[1] - box.start[1] + padding * 2);
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(this.video, x, y, width, height, 0, 0, width, height);
+
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+
+            const cameraName = this.attendanceType === 'time_in' ? 'Time In Camera' :
+                               this.attendanceType === 'time_out' ? 'Time Out Camera' :
+                               'Hybrid Camera';
+
+            const response = await fetch('/api/save-unauthorized-face/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image: imageData,
+                    camera_name: cameraName
+                })
+            });
+
+            const data = await response.json();
+            if (data && data.success) {
+                this.unauthorizedCooldown.set(boxHash, now);
+                console.log(`[${this.attendanceType}] ✅ Unauthorized face saved:`, data.photo_path);
+            } else {
+                console.warn(`[${this.attendanceType}] Failed to save unauthorized face:`, data ? data.error : 'Unknown error');
+            }
+        } catch (error) {
+            console.error(`[${this.attendanceType}] Error saving unauthorized face:`, error);
         }
     }
 
@@ -587,6 +792,135 @@ class HybridFaceRecognition {
         const audio = new Audio(src);
         audio.volume = 0.3;
         audio.play().catch(() => {});
+    }
+
+    playDingDong() {
+        // Create AudioContext for enthusiastic ding-dong sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        
+        // First DING (bright, high pitch)
+        const oscillator1 = audioContext.createOscillator();
+        const gainNode1 = audioContext.createGain();
+        oscillator1.connect(gainNode1);
+        gainNode1.connect(audioContext.destination);
+        oscillator1.frequency.value = 1000; // Bright high pitch
+        oscillator1.type = 'sine';
+        gainNode1.gain.setValueAtTime(0.4, now);
+        gainNode1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        oscillator1.start(now);
+        oscillator1.stop(now + 0.3);
+        
+        // Second DONG (cheerful mid pitch)
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+        oscillator2.frequency.value = 750; // Cheerful mid pitch
+        oscillator2.type = 'sine';
+        gainNode2.gain.setValueAtTime(0, now + 0.3);
+        gainNode2.gain.setValueAtTime(0.4, now + 0.31);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+        oscillator2.start(now + 0.3);
+        oscillator2.stop(now + 0.7);
+    }
+
+    speakName(firstName, lastName) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(`${firstName} ${lastName}`);
+            
+            // Try to find Filipino English voice, fallback to en-PH or en-US
+            const voices = window.speechSynthesis.getVoices();
+            const filipinoVoice = voices.find(voice => 
+                voice.lang.includes('fil') || 
+                voice.lang.includes('tl') || 
+                voice.lang.includes('en-PH') ||
+                voice.name.toLowerCase().includes('filipino') ||
+                voice.name.toLowerCase().includes('tagalog')
+            );
+            
+            if (filipinoVoice) {
+                utterance.voice = filipinoVoice;
+            }
+            
+            utterance.rate = 0.95; // Slightly slower for Filipino accent clarity
+            utterance.pitch = 1.1; // Slightly higher pitch typical of Filipino English
+            utterance.volume = 1.0;
+            utterance.lang = 'en-PH'; // Filipino English locale
+            
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    playDingDongAndSpeak(firstName, lastName) {
+        // Add to queue
+        this.announcementQueue.push({ firstName, lastName });
+        
+        // Process queue if not already processing
+        if (!this.isAnnouncing) {
+            this.processAnnouncementQueue();
+        }
+    }
+
+    async processAnnouncementQueue() {
+        if (this.announcementQueue.length === 0) {
+            this.isAnnouncing = false;
+            return;
+        }
+
+        this.isAnnouncing = true;
+        const { firstName, lastName } = this.announcementQueue.shift();
+
+        // Play ding-dong sound
+        this.playDingDong();
+        
+        // Wait 1 second (1000ms) after ding-dong completes before speaking
+        await new Promise(resolve => setTimeout(resolve, 1700)); // 700ms ding-dong + 1000ms pause
+        
+        // Speak the name
+        await this.speakNameAsync(firstName, lastName);
+        
+        // Wait for speech to complete, then process next in queue
+        setTimeout(() => {
+            this.processAnnouncementQueue();
+        }, 500); // Small buffer between announcements
+    }
+
+    speakNameAsync(firstName, lastName) {
+        return new Promise((resolve) => {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(`${firstName} ${lastName}`);
+                
+                // Try to find Filipino English voice
+                const voices = window.speechSynthesis.getVoices();
+                const filipinoVoice = voices.find(voice => 
+                    voice.lang.includes('fil') || 
+                    voice.lang.includes('tl') || 
+                    voice.lang.includes('en-PH') ||
+                    voice.name.toLowerCase().includes('filipino') ||
+                    voice.name.toLowerCase().includes('tagalog')
+                );
+                
+                if (filipinoVoice) {
+                    utterance.voice = filipinoVoice;
+                }
+                
+                utterance.rate = 0.95;
+                utterance.pitch = 1.1;
+                utterance.volume = 1.0;
+                utterance.lang = 'en-PH';
+                
+                utterance.onend = () => resolve();
+                utterance.onerror = () => resolve();
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                resolve();
+            }
+        });
     }
 
     stop() {
