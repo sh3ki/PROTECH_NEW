@@ -6009,6 +6009,7 @@ def admin_settings(request):
     
     context = {
         'current_mode': settings_obj.attendance_mode,
+        'camera_count': getattr(settings_obj, 'camera_count', 1),
         'first_class_time': first_class_display,
         'second_class_time': second_class_display,
         'grace_period': settings_obj.grace_period_minutes,
@@ -6028,17 +6029,33 @@ def admin_settings(request):
 @user_passes_test(is_admin)
 @require_http_methods(["POST"])
 def save_attendance_mode(request):
-    """Save the attendance mode setting"""
+    """Save the attendance mode setting and camera count"""
     from PROTECHAPP.models import SystemSettings
     
     attendance_mode = request.POST.get('attendance_mode')
+    camera_count = request.POST.get('camera_count', '1')
     
     if attendance_mode in ['SEPARATE', 'HYBRID']:
         settings_obj, created = SystemSettings.objects.get_or_create(pk=1)
         settings_obj.attendance_mode = attendance_mode
+        
+        # Only save camera_count if in SEPARATE mode
+        if attendance_mode == 'SEPARATE':
+            try:
+                camera_count_int = int(camera_count)
+                if 1 <= camera_count_int <= 4:
+                    settings_obj.camera_count = camera_count_int
+                else:
+                    settings_obj.camera_count = 1
+            except (ValueError, TypeError):
+                settings_obj.camera_count = 1
+        
         settings_obj.save()
         
-        messages.success(request, f'Attendance mode successfully changed to {attendance_mode.title()} mode!')
+        if attendance_mode == 'SEPARATE' and settings_obj.camera_count > 1:
+            messages.success(request, f'Attendance mode set to {attendance_mode.title()} with {settings_obj.camera_count} cameras!')
+        else:
+            messages.success(request, f'Attendance mode successfully changed to {attendance_mode.title()} mode!')
     else:
         messages.error(request, 'Invalid attendance mode selected.')
     
