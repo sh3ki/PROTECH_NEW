@@ -7,8 +7,9 @@
 const FACE_API_MODEL_URL = window.FACE_API_MODEL_URL || 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
 
 class UltraFastFaceRecognition {
-    constructor(attendanceType = 'time_in') {
+    constructor(attendanceType = 'time_in', cameraNum = null) {
         this.attendanceType = attendanceType;
+        this.cameraNum = cameraNum; // Store camera number for multi-camera support
         this.video = null;
         this.canvas = null;
         this.ctx = null;
@@ -41,13 +42,26 @@ class UltraFastFaceRecognition {
         this.isAnnouncing = false;
     }
 
-    async initialize() {
+    async initialize(cameraNum = null) {
         try {
-            this.video = document.getElementById('webcam');
-            this.canvas = document.getElementById('overlay-canvas');
+            // Store camera number if passed during initialization
+            if (cameraNum !== null) {
+                this.cameraNum = cameraNum;
+            }
+            
+            // Support both single and multi-camera setups
+            const videoId = this.cameraNum ? `webcam-${this.cameraNum}` : 'webcam';
+            const canvasId = this.cameraNum ? `overlay-canvas-${this.cameraNum}` : 'overlay-canvas';
+            
+            this.video = document.getElementById(videoId);
+            this.canvas = document.getElementById(canvasId);
 
             if (!this.video || !this.canvas) {
-                console.error('Video or canvas element not found.');
+                if (this.cameraNum) {
+                    console.warn(`Video or canvas element not found for camera ${this.cameraNum}.`);
+                } else {
+                    console.error('Video or canvas element not found.');
+                }
                 return;
             }
 
@@ -721,7 +735,9 @@ class UltraFastFaceRecognition {
             this.frameCount = 0;
             this.lastFpsUpdate = now;
 
-            const fpsElement = document.getElementById('fps-counter');
+            // Support both single and multi-camera FPS counters
+            const fpsElementId = this.cameraNum ? `fps-counter-${this.cameraNum}` : 'fps-counter';
+            const fpsElement = document.getElementById(fpsElementId);
             if (fpsElement) {
                 fpsElement.textContent = this.fps + ' FPS';
                 if (this.fps >= 10) {
@@ -898,16 +914,33 @@ class UltraFastFaceRecognition {
     }
 }
 
-let faceRecognition = null;
+let faceRecognitionInstances = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const attendanceType = document.body.dataset.attendanceType || 'time_in';
-    faceRecognition = new UltraFastFaceRecognition(attendanceType);
-    faceRecognition.initialize();
+    
+    // Check if this is a multi-camera setup
+    const cameraCount = parseInt(document.body.dataset.cameraCount) || 1;
+    
+    if (cameraCount === 1) {
+        // Single camera setup (original behavior)
+        const faceRecognition = new UltraFastFaceRecognition(attendanceType, null);
+        faceRecognition.initialize();
+        faceRecognitionInstances.push(faceRecognition);
+    } else {
+        // Multi-camera setup - create instance for each camera
+        for (let i = 1; i <= cameraCount; i++) {
+            const faceRecognition = new UltraFastFaceRecognition(attendanceType, i);
+            faceRecognition.initialize(i);
+            faceRecognitionInstances.push(faceRecognition);
+        }
+    }
 });
 
 window.addEventListener('beforeunload', () => {
-    if (faceRecognition) {
-        faceRecognition.stop();
-    }
+    faceRecognitionInstances.forEach(instance => {
+        if (instance) {
+            instance.stop();
+        }
+    });
 });
