@@ -340,6 +340,11 @@ class SystemSettings(models.Model):
         default=AttendanceMode.SEPARATE,
         help_text="Select whether attendance devices show separate or combined time in/out screens"
     )
+    camera_count = models.IntegerField(
+        default=1,
+        choices=[(1, '1 Camera'), (2, '2 Cameras'), (3, '3 Cameras'), (4, '4 Cameras')],
+        help_text="Number of cameras to display in Separate Screens mode (1-4)"
+    )
     # Notification Settings
     email_notifications_enabled = models.BooleanField(
         default=True,
