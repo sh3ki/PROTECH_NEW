@@ -25,6 +25,7 @@ def time_in(request):
     return render(request, 'face_recognition/time_in.html', {
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
         'holiday_mode': getattr(settings_obj, 'holiday_mode', False),
+        'camera_count': getattr(settings_obj, 'camera_count', 1),
     })
 
 def time_out(request):
@@ -34,6 +35,7 @@ def time_out(request):
     return render(request, 'face_recognition/time_out.html', {
         'spoof_proof_enabled': settings_obj.spoof_proof_enabled,
         'holiday_mode': getattr(settings_obj, 'holiday_mode', False),
+        'camera_count': getattr(settings_obj, 'camera_count', 1),
     })
 
 def hybrid_attendance(request):
