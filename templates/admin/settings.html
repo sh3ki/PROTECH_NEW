@@ -64,6 +64,23 @@
                 </label>
             </div>
 
+            <!-- Camera Count Selection (Only shown when Separate Screens is selected) -->
+            <div x-show="attendanceMode === 'SEPARATE'" x-transition class="space-y-3">
+                <label class="block">
+                    <span class="text-sm font-semibold text-primary dark:text-tertiary mb-2 block">Number of Cameras</span>
+                    <select name="camera_count" 
+                            class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-900 dark:text-white transition-all">
+                        <option value="1" {% if camera_count == 1 %}selected{% endif %}>1 Camera (1x1)</option>
+                        <option value="2" {% if camera_count == 2 %}selected{% endif %}>2 Cameras (1x2 side by side)</option>
+                        <option value="3" {% if camera_count == 3 %}selected{% endif %}>3 Cameras (2x2 grid, bottom right empty)</option>
+                        <option value="4" {% if camera_count == 4 %}selected{% endif %}>4 Cameras (2x2 full grid)</option>
+                    </select>
+                </label>
+                <p class="text-xs text-gray-600 dark:text-gray-400">
+                    Select how many cameras to display on Time In and Time Out pages. Grid layout adjusts automatically.
+                </p>
+            </div>
+
             <!-- Info Card -->
             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
                 <div class="flex gap-3">
