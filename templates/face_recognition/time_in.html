@@ -111,7 +111,7 @@
         }
     </style>
 </head>
-<body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300" data-attendance-type="time_in">
+<body class="bg-light dark:bg-dark text-dark dark:text-light min-h-screen flex flex-col transition-colors duration-300" data-attendance-type="time_in" data-camera-count="{{ camera_count|default:1 }}">
     <!-- Background image with overlay -->
     <div class="fixed inset-0 z-[-1] bg-white/40 dark:bg-gray-800/30">
         <img src="{% static 'public/images/protechlogo.svg' %}" alt="Background"
@@ -180,56 +180,142 @@
         {% else %}
         <!-- Main container with side-by-side layout -->
         <div class="flex gap-6 h-[calc(100vh-150px)]">
-            <!-- Webcam feed container: 2/3 width -->
-            <div class="w-2/3 webcam-container">
-                <!-- Status indicator bar -->
-                <div class="bg-gradient-to-r from-primary to-secondary px-4 py-2 flex justify-between items-center">
-                    <div class="flex items-center">
-                        <div id="camera-status" class="flex items-center">
-                            <span class="relative flex h-3 w-3 mr-2">
-                                <span id="status-indicator" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                            </span>
-                            <span id="status-text" class="text-white font-medium">Inactive</span>
+            <!-- Camera grid container: 2/3 width -->
+            <div class="w-2/3">
+                {% if camera_count == 1 %}
+                <!-- Single camera (original layout) -->
+                <div class="webcam-container h-full">
+                    <!-- Status indicator bar -->
+                    <div class="bg-gradient-to-r from-primary to-secondary px-4 py-2 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <div id="camera-status" class="flex items-center">
+                                <span class="relative flex h-3 w-3 mr-2">
+                                    <span id="status-indicator" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                </span>
+                                <span id="status-text" class="text-white font-medium">Inactive</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Camera selection dropdown -->
+                        <div class="flex items-center space-x-3">
+                            <label for="camera-select" class="text-white font-medium">Camera:</label>
+                            <select id="camera-select" class="dropdown py-1 px-3 text-sm">
+                                <option value="">Select a camera</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <!-- Camera selection dropdown with improved design -->
-                    <div class="flex items-center space-x-3">
-                        <label for="camera-select" class="text-white font-medium">Camera:</label>
-                        <select id="camera-select" class="dropdown py-1 px-3 text-sm">
-                            <option value="">Select a camera</option>
-                        </select>
+                    <!-- Webcam feed container -->
+                    <div class="flex-1 flex items-center justify-center relative bg-black/40" style="height: calc(100% - 50px);">
+                        <!-- Camera placeholder -->
+                        <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-white">
+                            <div class="w-24 h-24 rounded-full bg-gray-700/50 pulse-ring flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <p class="text-xl font-medium text-center">No Camera Selected</p>
+                            <p class="text-sm text-gray-400 mt-1 mb-4">Please select a camera from the dropdown above</p>
+                        </div>
+                        
+                        <!-- Video element -->
+                        <video id="webcam" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                        
+                        <!-- Canvas overlay for bounding boxes -->
+                        <canvas id="overlay-canvas" style="position: absolute !important; z-index: 999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none !important;"></canvas>
+                        
+                        <!-- FPS Counter -->
+                        <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg z-[1000]">
+                            <span id="fps-counter" class="text-green-500 font-bold">0 FPS</span>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Webcam placeholder/feed container -->
-                <div class="flex-1 flex items-center justify-center relative bg-black/40">
-                    <!-- Camera placeholder (shown when no camera) -->
-                    <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-white">
-                        <div class="w-24 h-24 rounded-full bg-gray-700/50 pulse-ring flex items-center justify-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+                {% elif camera_count == 2 %}
+                <!-- 2 cameras side by side (1x2) -->
+                <div class="grid grid-cols-2 gap-4 h-full">
+                    {% for i in "12" %}
+                    <div class="webcam-container">
+                        <!-- Status bar -->
+                        <div class="bg-gradient-to-r from-primary to-secondary px-3 py-2 flex justify-between items-center text-sm">
+                            <div class="flex items-center">
+                                <span class="relative flex h-2 w-2 mr-2">
+                                    <span id="status-indicator-{{ forloop.counter }}" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span id="status-dot-{{ forloop.counter }}" class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                <span id="status-text-{{ forloop.counter }}" class="text-white font-medium text-xs">Cam {{ forloop.counter }}</span>
+                            </div>
+                            <select id="camera-select-{{ forloop.counter }}" class="dropdown py-1 px-2 text-xs">
+                                <option value="">Select</option>
+                            </select>
                         </div>
-                        <p class="text-xl font-medium text-center">No Camera Selected</p>
-                        <p class="text-sm text-gray-400 mt-1 mb-4">Please select a camera from the dropdown above</p>
+                        
+                        <!-- Video container -->
+                        <div class="relative bg-black/40" style="height: calc(100% - 42px);">
+                            <div id="camera-placeholder-{{ forloop.counter }}" class="absolute inset-0 flex flex-col items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-sm">Camera {{ forloop.counter }}</p>
+                            </div>
+                            <video id="webcam-{{ forloop.counter }}" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                            <canvas id="overlay-canvas-{{ forloop.counter }}" style="position: absolute !important; z-index: 999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none !important;"></canvas>
+                            <div class="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs z-[1000]">
+                                <span id="fps-counter-{{ forloop.counter }}" class="text-green-500 font-bold">0 FPS</span>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Actual video element -->
-                    <video id="webcam" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
-                    
-                    <!-- Canvas overlay for bounding boxes - MUST be on top -->
-                    <canvas id="overlay-canvas" style="position: absolute !important; z-index: 999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none !important;"></canvas>
-                    
-                    <!-- FPS Counter -->
-                    <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg z-[1000]" style="z-index: 1000 !important;">
-                        <span id="fps-counter" class="text-green-500 font-bold">0 FPS</span>
-                    </div>
+                    {% endfor %}
                 </div>
+                
+                {% else %}
+                <!-- 3 or 4 cameras in 2x2 grid -->
+                <div class="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+                    {% for i in "1234" %}
+                    {% if forloop.counter <= camera_count %}
+                    <div class="webcam-container">
+                        <!-- Status bar -->
+                        <div class="bg-gradient-to-r from-primary to-secondary px-3 py-2 flex justify-between items-center text-sm">
+                            <div class="flex items-center">
+                                <span class="relative flex h-2 w-2 mr-2">
+                                    <span id="status-indicator-{{ forloop.counter }}" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span id="status-dot-{{ forloop.counter }}" class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                <span id="status-text-{{ forloop.counter }}" class="text-white font-medium text-xs">Cam {{ forloop.counter }}</span>
+                            </div>
+                            <select id="camera-select-{{ forloop.counter }}" class="dropdown py-1 px-2 text-xs">
+                                <option value="">Select</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Video container -->
+                        <div class="relative bg-black/40" style="height: calc(100% - 42px);">
+                            <div id="camera-placeholder-{{ forloop.counter }}" class="absolute inset-0 flex flex-col items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-sm">Camera {{ forloop.counter }}</p>
+                            </div>
+                            <video id="webcam-{{ forloop.counter }}" autoplay playsinline muted style="position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                            <canvas id="overlay-canvas-{{ forloop.counter }}" style="position: absolute !important; z-index: 999 !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none !important;"></canvas>
+                            <div class="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs z-[1000]">
+                                <span id="fps-counter-{{ forloop.counter }}" class="text-green-500 font-bold">0 FPS</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Empty grid cell for camera_count = 3 -->
+                    <div class="bg-gray-800/20 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center">
+                        <p class="text-gray-500 text-sm">Empty</p>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
             
-            <!-- Student info container: 1/3 width -->
+            <!-- Student info container: 1/3 width (remains the same) -->
             <div class="w-1/3 flex flex-col rounded-xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 <!-- Header section with count and stats -->
                 <div class="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
@@ -258,7 +344,7 @@
         {% endif %}
     </main>
     
-    <!-- Camera test modal with improved design -->
+    <!-- Camera test modal for single camera (1x1) -->
     <div id="camera-test-modal" class="fixed inset-0 z-50 hidden">
         <!-- Modal backdrop with blur effect -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300"></div>
@@ -309,6 +395,50 @@
             </div>
         </div>
     </div>
+    
+    <!-- Camera test modals for multi-camera (Cameras 1-4) -->
+    {% for i in "1234" %}
+    <div id="camera-test-modal-{{ forloop.counter }}" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 w-11/12 max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300">
+            <div class="bg-gradient-to-r from-primary to-secondary px-5 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Camera {{ forloop.counter }} Test
+                </h3>
+                <button class="close-modal-{{ forloop.counter }} text-white hover:bg-white/20 rounded-full p-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col items-center">
+                <p class="mb-4 text-gray-700 dark:text-gray-300 text-center">
+                    Testing Camera {{ forloop.counter }}. Please make sure the camera is working fine before confirming.
+                </p>
+                <div class="bg-black rounded-lg overflow-hidden w-full h-120 mb-4 shadow-inner border border-gray-700">
+                    <video id="test-video-{{ forloop.counter }}" autoplay playsinline muted class="w-full h-full object-cover" style="transform: scaleX(-1);"></video>
+                </div>
+                <div class="flex justify-center gap-6 mt-6">
+                    <button class="cancel-camera-{{ forloop.counter }} px-8 py-2.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-100 rounded-lg font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                    <button class="confirm-camera-{{ forloop.counter }} px-8 py-2.5 bg-gradient-to-r from-secondary to-tertiary text-white font-medium rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg hover:from-secondary/90 hover:to-tertiary/90 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        Confirm Camera
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
     
     <!-- Footer with improved design -->
     <footer class="bg-primary/95 backdrop-blur-sm text-white py-3 border-t border-primary">
@@ -361,14 +491,30 @@
     <!-- Camera selection and testing script with improved functionality -->
     {% if not holiday_mode %}
     <script>
+        const CAMERA_COUNT = {{ camera_count|default:1 }};
+        
+        // Initialize camera management for each camera
         document.addEventListener('DOMContentLoaded', () => {
+            // For single camera (original behavior)
+            if (CAMERA_COUNT === 1) {
+                initializeSingleCamera();
+            } else {
+                // For multiple cameras
+                for (let i = 1; i <= CAMERA_COUNT; i++) {
+                    initializeCamera(i);
+                }
+            }
+        });
+        
+        // Single camera initialization (original code)
+        function initializeSingleCamera() {
             const cameraSelect = document.getElementById('camera-select');
             const modal = document.getElementById('camera-test-modal');
             const closeModal = document.getElementById('close-modal');
             const cancelCamera = document.getElementById('cancel-camera');
             const confirmCamera = document.getElementById('confirm-camera');
             const testVideo = document.getElementById('test-video');
-            const webcamFeed = document.getElementById('webcam'); // Changed from 'webcam-feed' to 'webcam'
+            const webcamFeed = document.getElementById('webcam');
             const cameraPlaceholder = document.getElementById('camera-placeholder');
             const statusIndicator = document.getElementById('status-indicator');
             const statusDot = document.getElementById('status-dot');
@@ -376,7 +522,7 @@
             
             let currentStream = null;
             let activeCameraId = null;
-            let mainStream = null; // Track main webcam stream separately
+            let mainStream = null;
             
             // Detect if we're on a mobile device (tablet or phone)
             const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -766,7 +912,358 @@
                 stopMediaStream(currentStream);
                 stopMediaStream(mainStream);
             });
-        });
+        } // End of initializeSingleCamera
+        
+        // Multi-camera initialization - EXACT CARBON COPY of single camera with modals
+        function initializeCamera(cameraNum) {
+            const cameraSelect = document.getElementById(`camera-select-${cameraNum}`);
+            const modal = document.getElementById(`camera-test-modal-${cameraNum}`);
+            const closeModalButtons = document.querySelectorAll(`.close-modal-${cameraNum}`);
+            const cancelButton = document.querySelector(`.cancel-camera-${cameraNum}`);
+            const confirmButton = document.querySelector(`.confirm-camera-${cameraNum}`);
+            const testVideo = document.getElementById(`test-video-${cameraNum}`);
+            const webcamFeed = document.getElementById(`webcam-${cameraNum}`);
+            const cameraPlaceholder = document.getElementById(`camera-placeholder-${cameraNum}`);
+            const statusIndicator = document.getElementById(`status-indicator-${cameraNum}`);
+            const statusDot = document.getElementById(`status-dot-${cameraNum}`);
+            const statusText = document.getElementById(`status-text-${cameraNum}`);
+            
+            if (!cameraSelect || !webcamFeed) {
+                console.warn(`Camera ${cameraNum} elements not found`);
+                return;
+            }
+            
+            let currentStream = null;
+            let activeCameraId = null;
+            let mainStream = null;
+            
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Helper function to safely stop any active stream
+            function stopMediaStream(stream) {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    return null;
+                }
+                return null;
+            }
+            
+            // Update camera status
+            function updateCameraStatus(active) {
+                if (active) {
+                    if (statusIndicator) {
+                        statusIndicator.classList.remove('bg-red-400');
+                        statusIndicator.classList.add('bg-green-400');
+                    }
+                    if (statusDot) {
+                        statusDot.classList.remove('bg-red-500');
+                        statusDot.classList.add('bg-green-500');
+                    }
+                    if (statusText) statusText.textContent = `Cam ${cameraNum} Active`;
+                } else {
+                    if (statusIndicator) {
+                        statusIndicator.classList.remove('bg-green-400');
+                        statusIndicator.classList.add('bg-red-400');
+                    }
+                    if (statusDot) {
+                        statusDot.classList.remove('bg-green-500');
+                        statusDot.classList.add('bg-red-500');
+                    }
+                    if (statusText) statusText.textContent = `Cam ${cameraNum}`;
+                }
+            }
+            
+            // Get available camera devices
+            async function getAvailableCameras() {
+                try {
+                    cameraSelect.innerHTML = '';
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select';
+                    cameraSelect.appendChild(defaultOption);
+                    
+                    await navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            stream.getTracks().forEach(track => track.stop());
+                            return navigator.mediaDevices.enumerateDevices();
+                        })
+                        .then(devices => {
+                            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                            videoDevices.forEach((device, index) => {
+                                const option = document.createElement('option');
+                                option.value = device.deviceId;
+                                let label = device.label || `Camera ${index + 1}`;
+                                
+                                // Identify front/back on mobile
+                                if (isMobileDevice && device.label) {
+                                    if (/front/i.test(device.label)) {
+                                        label = `Front Camera (${label})`;
+                                    } else if (/back/i.test(device.label)) {
+                                        label = `Back Camera (${label})`;
+                                    }
+                                }
+                                
+                                option.textContent = label;
+                                cameraSelect.appendChild(option);
+                            });
+                            
+                            if (videoDevices.length === 0) {
+                                const option = document.createElement('option');
+                                option.textContent = 'No cameras found';
+                                option.disabled = true;
+                                cameraSelect.appendChild(option);
+                            } else if (videoDevices.length === 1) {
+                                // Auto-select single camera
+                                cameraSelect.value = videoDevices[0].deviceId;
+                                startCameraTest(videoDevices[0].deviceId);
+                            }
+                        });
+                } catch (error) {
+                    console.error(`Error getting cameras for Camera ${cameraNum}:`, error);
+                    const errorOption = document.createElement('option');
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorOption.textContent = 'Camera permission denied';
+                    } else if (error.name === 'NotFoundError') {
+                        errorOption.textContent = 'No cameras available';
+                    } else {
+                        errorOption.textContent = 'Error accessing cameras';
+                    }
+                    
+                    errorOption.disabled = true;
+                    cameraSelect.innerHTML = '';
+                    cameraSelect.appendChild(errorOption);
+                    
+                    let errorMsg = `Unable to access cameras for Camera ${cameraNum}.`;
+                    if (isMobileDevice) {
+                        errorMsg += ' Please ensure you have granted camera permissions in your browser settings.';
+                    } else {
+                        errorMsg += ' Please ensure your camera is connected and you have granted permission.';
+                    }
+                    alert(errorMsg);
+                }
+            }
+            
+            // Create video constraints
+            function createVideoConstraints(deviceId) {
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                    }
+                };
+                
+                if (isMobileDevice) {
+                    constraints.video.width = { ideal: 720 };
+                    constraints.video.height = { ideal: 1280 };
+                    constraints.video.facingMode = { ideal: "user" };
+                } else {
+                    constraints.video.width = { ideal: 1280 };
+                    constraints.video.height = { ideal: 720 };
+                }
+                
+                return constraints;
+            }
+            
+            // Start camera for testing (MODAL)
+            async function startCameraTest(deviceId) {
+                try {
+                    currentStream = stopMediaStream(currentStream);
+                    const constraints = createVideoConstraints(deviceId);
+                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    testVideo.srcObject = currentStream;
+                    
+                    // Show the modal
+                    modal.classList.remove('hidden');
+                    
+                    // Handle orientation change for mobile
+                    if (isMobileDevice) {
+                        window.addEventListener('orientationchange', function handleOrientation() {
+                            setTimeout(() => {
+                                const track = currentStream.getVideoTracks()[0];
+                                if (track) {
+                                    track.applyConstraints({
+                                        width: { ideal: window.innerWidth },
+                                        height: { ideal: window.innerHeight }
+                                    }).catch(err => console.error(`Failed to update constraints for Camera ${cameraNum}:`, err));
+                                }
+                            }, 300);
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error testing camera ${cameraNum}:`, error);
+                    let errorMsg = `Failed to access Camera ${cameraNum}.`;
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMsg += ' Permission was denied.';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMsg += ' The camera is already in use.';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMsg += ' Camera not found.';
+                    } else {
+                        errorMsg += ' Please try again.';
+                    }
+                    
+                    alert(errorMsg);
+                    cameraSelect.value = '';
+                }
+            }
+            
+            // Start the main webcam feed
+            async function startWebcamFeed(deviceId) {
+                try {
+                    mainStream = stopMediaStream(mainStream);
+                    
+                    if (!webcamFeed) {
+                        console.error(`Webcam video element not found for Camera ${cameraNum}!`);
+                        return;
+                    }
+                    
+                    if (webcamFeed.srcObject) {
+                        webcamFeed.srcObject = null;
+                    }
+                    
+                    const constraints = createVideoConstraints(deviceId);
+                    console.log(`Starting webcam feed for Camera ${cameraNum} with device ID:`, deviceId);
+                    
+                    mainStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    console.log(`Stream obtained successfully for Camera ${cameraNum}`);
+                    
+                    webcamFeed.srcObject = mainStream;
+                    if (cameraPlaceholder) cameraPlaceholder.classList.add('hidden');
+                    
+                    activeCameraId = deviceId;
+                    updateCameraStatus(true);
+                    
+                    webcamFeed.onplay = () => {
+                        console.log(`Camera ${cameraNum} webcam feed playing successfully`);
+                    };
+                    
+                    webcamFeed.onerror = (event) => {
+                        console.error(`Video element error for Camera ${cameraNum}:`, event);
+                        updateCameraStatus(false);
+                        resetCameraUI();
+                    };
+                    
+                } catch (error) {
+                    console.error(`Error starting webcam feed for Camera ${cameraNum}:`, error);
+                    let errorMsg = `Failed to start Camera ${cameraNum}.`;
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMsg += ' Camera permission was denied.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMsg += ' The camera is already in use or not readable.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMsg += ' The selected camera cannot be configured as required.';
+                    } else {
+                        errorMsg += ' Please try again or select a different camera.';
+                    }
+                    
+                    alert(errorMsg);
+                    updateCameraStatus(false);
+                    resetCameraUI();
+                }
+            }
+            
+            // Reset the camera UI
+            function resetCameraUI() {
+                if (cameraPlaceholder) cameraPlaceholder.classList.remove('hidden');
+                activeCameraId = null;
+                updateCameraStatus(false);
+            }
+            
+            // Close modal and stop test stream
+            function closeTestModal() {
+                currentStream = stopMediaStream(currentStream);
+                modal.classList.add('hidden');
+                
+                if (!activeCameraId) {
+                    cameraSelect.value = '';
+                    updateCameraStatus(false);
+                }
+            }
+            
+            // Handle camera selection change - SHOW MODAL
+            cameraSelect.addEventListener('change', () => {
+                const deviceId = cameraSelect.value;
+                if (deviceId) {
+                    startCameraTest(deviceId);
+                } else {
+                    currentStream = stopMediaStream(currentStream);
+                    mainStream = stopMediaStream(mainStream);
+                    resetCameraUI();
+                    updateCameraStatus(false);
+                }
+            });
+            
+            // Close modal handlers
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', closeTestModal);
+            });
+            cancelButton.addEventListener('click', closeTestModal);
+            
+            // Confirm camera button - start main feed
+            confirmButton.addEventListener('click', () => {
+                const deviceId = cameraSelect.value;
+                
+                // Get the test stream's track to potentially reuse
+                const testTrack = currentStream ? currentStream.getVideoTracks()[0] : null;
+                const cloneTrack = testTrack ? testTrack.clone() : null;
+                
+                // Stop the test stream
+                currentStream = stopMediaStream(currentStream);
+                
+                // Close the modal
+                modal.classList.add('hidden');
+                
+                // Add a small delay before starting the main feed
+                setTimeout(() => {
+                    // Try to reuse cloned track
+                    if (cloneTrack && webcamFeed) {
+                        try {
+                            const newStream = new MediaStream([cloneTrack]);
+                            webcamFeed.srcObject = newStream;
+                            if (cameraPlaceholder) cameraPlaceholder.classList.add('hidden');
+                            mainStream = newStream;
+                            activeCameraId = deviceId;
+                            updateCameraStatus(true);
+                            console.log(`Successfully reused camera track for Camera ${cameraNum}`);
+                            return;
+                        } catch (e) {
+                            console.warn(`Failed to reuse track for Camera ${cameraNum}, falling back to new stream:`, e);
+                        }
+                    }
+                    
+                    // Start the main webcam feed
+                    startWebcamFeed(deviceId);
+                }, 500);
+            });
+            
+            // Initialize - get available cameras
+            getAvailableCameras();
+            
+            // Orientation change handling for mobile
+            if (isMobileDevice) {
+                window.addEventListener('orientationchange', () => {
+                    if (mainStream) {
+                        setTimeout(() => {
+                            const track = mainStream.getVideoTracks()[0];
+                            if (track) {
+                                track.applyConstraints({
+                                    width: { ideal: window.innerWidth },
+                                    height: { ideal: window.innerHeight }
+                                }).catch(err => console.error(`Failed to update constraints for Camera ${cameraNum}:`, err));
+                            }
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                stopMediaStream(currentStream);
+                stopMediaStream(mainStream);
+            });
+        } // End of initializeCamera
     </script>
 
     <!-- Attendance List Auto-Refresh Script -->
